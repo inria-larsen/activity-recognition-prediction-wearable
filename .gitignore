@@ -1,8 +1,33 @@
+# Future improvements
+**/*vrnn.py
 
+# Mac editor files
 .DS_Store
 *~
 
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
 
+
+# Tensorflow event logs
+**/log_dir/
+
+# Saved trained models
+**/checkpoints
+**/grid_search
+**/training_errors
+**/tmp
+
+# Notebook checkpoints
+**/.ipynb_checkpoints
+
+
+# Input data
+**/MNIST_data/
+
+**/animations/
+
+**/*.witz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -21,7 +46,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
