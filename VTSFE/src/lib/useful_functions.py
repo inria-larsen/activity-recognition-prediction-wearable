@@ -56,7 +56,8 @@ def interval_limiter(x, lim):
 
 
 def gaussian(t, mu, sigma):
-    return np.exp(-np.square(t - mu)/(2*np.square(sigma)))
+    two_sigma_sq = 2*np.square(sigma)
+    return np.divide(np.exp(-np.square(t - mu)/two_sigma_sq), np.sqrt(two_sigma_sq*np.pi))
 
 
 def get_available_gpus():

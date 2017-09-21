@@ -18,7 +18,7 @@ from klepto.archives import file_archive
 class Data_driver():
 
     DATA_PARAMS = {
-        "path": "./data/7x10_actions/XSens/xml",
+        "path": "./xsens_data/xml",
         "nb_frames": 70,
         "nb_samples_per_mov": 10,
         "mov_types": [
@@ -42,7 +42,7 @@ class Data_driver():
         "use_center_of_mass": True
     }
 
-    chen_db_path = './data/5x1_actions/ChenDB/mocap_dataset.mat'
+    chen_db_path = '/home/mchavero/Experiments/Nutan_DB/mocap_dataset.mat'
 
     hard_segments = [
         24, 25, 26,
@@ -478,7 +478,11 @@ class Data_driver():
 
 
     def split(self, nb_blocks, nb_samples, train_proportion=0, test_proportion=0, eval_proportion=0):
+        if train_proportion < 0 or test_proportion < 0 or eval_proportion < 0:
+            return None
         norm_sum = train_proportion + test_proportion + eval_proportion
+        if norm_sum == 0:
+            return None
         block_size = int(nb_samples / nb_blocks)
         nb_train_blocks = int(train_proportion * nb_blocks / norm_sum)
         nb_test_blocks = int(test_proportion * nb_blocks / norm_sum)
@@ -487,21 +491,27 @@ class Data_driver():
 
 
     def to_set(self, data):
-        # set shape = [nb_samples, nb_frames, n_input]]
+        # set shape = [nb_samples, nb_frames, n_input]
         return np.concatenate(data, axis=0)
 
 
     def get_whole_data_set(self, shuffle_dataset=True):
-        return self.get_data_set(self.nb_samples_per_mov, shuffle_dataset=shuffle_dataset, shuffle_samples=False)[0]
+        return self.get_data_set(range(self.nb_samples_per_mov), shuffle_dataset=shuffle_dataset, shuffle_samples=False)[0]
 
 
-    def get_data_set(self, nb_samples_per_mov, shuffle_samples=True, shuffle_dataset=True):
+    def get_data_set(self, sample_indices, shuffle_samples=True, shuffle_dataset=True):
         data_copy = np.copy(self.data)
+        if sample_indices is not None:
+            remains_indices = []
+            for index in range(self.nb_samples_per_mov):
+                if index not in sample_indices:
+                    remains_indices.append(index)
         if shuffle_samples:
             for mov_type in data_copy:
                 np.random.shuffle(mov_type)
-        samples = np.reshape(data_copy[:, :nb_samples_per_mov], [-1, self.nb_frames, self.input_dim])
-        remains = np.reshape(data_copy[:, nb_samples_per_mov:], [-1, self.nb_frames, self.input_dim])
+        samples = np.reshape(data_copy[:, sample_indices], [-1, self.nb_frames, self.input_dim])
+        remains = np.reshape(data_copy[:, remains_indices], [-1, self.nb_frames, self.input_dim])
         if shuffle_dataset:
             np.random.shuffle(samples)
+            np.random.shuffle(remains)
         return samples, remains

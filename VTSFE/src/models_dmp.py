@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
-from .lib.useful_functions import *
+from lib.useful_functions import *
 
 
 class DMP_NN():
@@ -50,7 +50,13 @@ class DMP_NN():
         n_z = self.vtsfe.vae_architecture["n_z"]
         with tf.variable_scope("vae_dmp.encoder") as scope:
             # system_noise_log_scale_sq = tf.get_variable("system_noise_log_scale_sq", initializer=glorot_init(1, n_z))
-            self.system_noise_log_scale_sq = tf.get_variable("system_noise_log_scale_sq", initializer=tf.zeros([1, n_z], dtype=tf.float32))
+            if self.scaling_noise:
+                self.system_noise_log_scale_sq = tf.get_variable("system_noise_log_scale_sq", initializer=tf.zeros([1, n_z], dtype=tf.float32))
+            else:
+                self.system_noise_log_scale_sq = tf.add(
+                    tf.zeros([1, n_z], dtype=tf.float32),
+                    tf.constant(1, dtype=tf.float32)
+                )
         print("system_noise_log_scale_sq weights initialized.")
 
         self.A = tf.constant([
@@ -69,7 +75,7 @@ class DMP_NN():
             self.c_3 = tf.constant(self.vtsfe.delta**2, dtype=tf.float32)
 
 
-    def forcing_term_weights_network(self, x_sequence):
+    def forcing_term_weights_network(self, x_sequence, reuse_weights=False):
         # x_sequence shape = [nb_frames, batch_size, n_input]
 
         self.network_weights = self.intialize_1hlayer_through_time(
@@ -77,7 +83,8 @@ class DMP_NN():
             self.f_architecture["h"],
             self.nb_frames_mvt,
             self.vtsfe.vae_architecture["n_input"],
-            self.vtsfe.vae_architecture["n_z"]
+            self.vtsfe.vae_architecture["n_z"],
+            reuse_weights=reuse_weights
         )
 
         weights = self.network_weights ["weights"]
@@ -125,19 +132,19 @@ class DMP_NN():
                 )
 
 
-    def intialize_1hlayer_through_time(self, n_out, h, nb_frames, n_input, n_z):
+    def intialize_1hlayer_through_time(self, n_out, h, nb_frames, n_input, n_z, reuse_weights=False):
         all_weights = {}
         all_weights['weights'] = {}
         all_weights['biases'] = {}
 
-        with tf.variable_scope("dmp.gaussian_mixture_weights") as scope:
+        with tf.variable_scope("dmp.gaussian_mixture_weights", reuse=reuse_weights) as scope:
             nb_digits = len(str(nb_frames))
             for n in range(nb_frames):
-                all_weights['weights']['h'+str(n).zfill(nb_digits)] = tf.Variable(glorot_init(n_input, h), name='h'+str(n).zfill(nb_digits))
-                all_weights['biases']['b'+str(n).zfill(nb_digits)] = tf.Variable(tf.zeros([h], dtype=tf.float32), name='b'+str(n).zfill(nb_digits))
+                all_weights['weights']['h'+str(n).zfill(nb_digits)] = tf.get_variable('h'+str(n).zfill(nb_digits), initializer=glorot_init(n_input, h))
+                all_weights['biases']['b'+str(n).zfill(nb_digits)] = tf.get_variable('b'+str(n).zfill(nb_digits), initializer=tf.zeros([h], dtype=tf.float32))
 
-            all_weights['weights']['w_out'] = tf.Variable(glorot_init(nb_frames*h, n_out*n_z), name='w_out')
-            all_weights['biases']['b_w_out'] = tf.Variable(tf.zeros([n_out*n_z], dtype=tf.float32), name='b_w_out')
+            all_weights['weights']['w_out'] = tf.get_variable('w_out', initializer=glorot_init(nb_frames*h, n_out*n_z))
+            all_weights['biases']['b_w_out'] = tf.get_variable('b_w_out', initializer=tf.zeros([n_out*n_z], dtype=tf.float32))
 
         return all_weights
 
@@ -224,7 +231,7 @@ class DMP_NN():
         for i in range(self.vtsfe.vae_architecture["n_z"]):
             # w shape = [batch_size, n]
             w = f_weights[i]
-            # f shape = [batch_size, 1]
+            # f_component shape = [batch_size, 1]
             f_component = tf.matmul(w, base_functions_samples)
             # f shape = [n_z, batch_size]
             f.append(tf.reshape(f_component, [-1]))
@@ -252,7 +259,7 @@ class DMP_NN():
 
         print("---- MODEL WIRING ----")
 
-        if self.monte_carlo_recurrence:
+        if not self.only_dynamics_loss_on_mean and self.monte_carlo_recurrence:
             nb_recurrence_iter = self.prior_monte_carlo_sampling
         else:
             nb_recurrence_iter = 1
@@ -313,7 +320,7 @@ class DMP_NN():
                         x_seq = tf.concat([list(x_reconstr_sequence)], axis=0)
                         x_seq = tf.concat([x_reconstr_sequence_pre, x_seq, x_reconstr_sequence_post], axis=0)
                         # expensive computation
-                        w = self.forcing_term_weights_network(x_seq)
+                        w = self.forcing_term_weights_network(x_seq, reuse_weights=True)
                         print("NEW FORCING TERM WEIGHTS "+str((i,j,k)))
 
                         for t in range(2, self.vtsfe.sub_sequences_size):
@@ -324,19 +331,29 @@ class DMP_NN():
                             )
                             f = self.forcing_term_network(t, weights=w)
 
-                            reconstr_loss_sq_sub = tf.square(tf.subtract(vae.f, f), name="f_reconstr_loss_sq_sub")
-                            # reconstr_loss_division = tf.divide(reconstr_loss_sq_sub, f_sigma_sq, name="f_reconstr_loss_division")
-                            reconstr_loss_division = tf.divide(reconstr_loss_sq_sub, tf.exp(system_noise_log_scale_sq), name="f_reconstr_loss_division")
-                            # reconstr_losses shape = [batch_size]
-                            reconstr_loss = tf.add(
-                                tf.reduce_sum(reconstr_loss_division, 1),
-                                tf.add(
-                                    tf.reduce_sum(system_noise_log_scale_sq, 1),
-                                    n_input_log_2pi
+                            reconstr_loss_sq_sub = tf.square(tf.subtract(f, vae.f), name="f_reconstr_loss_sq_sub")
+                            if self.use_dynamics_sigma:
+                                reconstr_loss_division = tf.divide(reconstr_loss_sq_sub, tf.exp(system_noise_log_scale_sq), name="f_reconstr_loss_division")
+                                # reconstr_losses shape = [batch_size, n_z]
+                                reconstr_loss = tf.scalar_mul(
+                                    half,
+                                    tf.add(
+                                        reconstr_loss_division,
+                                        tf.add(
+                                            system_noise_log_scale_sq,
+                                            tf.log(2. * np.pi)
+                                        )
+                                    )
                                 )
-                            )
-                            # reconstr_losses shape = [L**3, batch_size]
-                            f_costs[t].append(reconstr_loss)
+                                # reconstr_losses shape = [L**3, batch_size, n_z]
+                                f_costs[t].append(reconstr_loss)
+                            else:
+                                f_costs[t].append(
+                                    tf.scalar_mul(
+                                        tf.constant(np.pi, dtype=tf.float32),
+                                        reconstr_loss_sq_sub
+                                    )
+                                )
 
         for t in range(2, self.vtsfe.sub_sequences_size):
             vae = self.vtsfe.vae_subsequence[t]
@@ -347,13 +364,10 @@ class DMP_NN():
                 ),
                 tf.constant(nb_recurrence_iter_goal*nb_recurrence_iter**2, dtype=tf.float32)
             )
-            f_cost = tf.scalar_mul(
-                half,
-                f_cost
-            )
             # insertion of that new cost in the corresponding vae
-            vae.cost_add = tf.add(vae.cost_add, f_cost)
-            vae.cost, vae.variance = tf.nn.moments(vae.cost_add, [0])
+            vae.model_loss_raw = f_cost
+            # vae.reconstr_loss = tf.add(vae.reconstr_loss, f_cost)
+            vae.update_costs_and_variances()
 
         print("---- MODEL WIRING ---- END")
 

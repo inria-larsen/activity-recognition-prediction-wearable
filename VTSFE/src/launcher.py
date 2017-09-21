@@ -5,16 +5,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from .data_driver import Data_driver
-from .vtsfe import VTSFE
+from data_driver import Data_driver
+from vtsfe import VTSFE
 
 
 class Launcher():
 
     def __init__(self, config, lrs, restore_path=None, save_path=None):
         # For test purposes : initialization always starts with the same random values
-        np.random.seed(0)
-        tf.set_random_seed(0)
+        # np.random.seed(0)
+        # tf.set_random_seed(0)
+        np.random.seed(None)
+        tf.set_random_seed(None)
 
         self.lrs = lrs
         self.vtsfe = None
@@ -34,7 +36,8 @@ class Launcher():
         self.config.DATA_VISUALIZATION = {
             "data_driver": self.data_driver,
             "displayed_movs": self.data_driver.mov_types,
-            "transform_with_all_vtsfe": False
+            "transform_with_all_vtsfe": False,
+            "average_reconstruction": False
         }
         self.config.TRAINING["data_driver"] = self.data_driver
 
@@ -47,7 +50,7 @@ class Launcher():
     def show_data(self, sample_indices=None, only_hard_joints=True):
         self.init_vtsfe()
 
-        if sample_indices == None:
+        if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
         else:
             s_indices = sample_indices
@@ -59,7 +62,7 @@ class Launcher():
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
         self.vtsfe.show_data(
-            **self.config.DATA_VISUALIZATION
+            self.config.DATA_VISUALIZATION
         )
 
 
@@ -71,33 +74,32 @@ class Launcher():
             restore=resume,
             save_path=save_path
         )
-        self.global_error, self.vae_errors, self.vae_variances = self.vtsfe.train(data, self.config.TRAINING)
+        e = self.vtsfe.train(data, self.config.TRAINING)
         if show_error:
-            self.plot_error(self.global_error, self.vae_errors, self.vae_variances)
+            self.plot_error(e)
 
 
-    def plot_error(self, global_error, vae_errors, vae_variances):
-        self.vtsfe.plot_error(global_error, vae_errors, vae_variances)
+    def plot_error(self, errors):
+        self.vtsfe.plot_error(errors)
 
 
     def plot_error(self, path):
         self.init_vtsfe()
         errors = self.data_driver.read_data("./training_errors/"+path, "errors")
-        self.vtsfe.plot_error(errors[0], errors[1], errors[2])
+        self.vtsfe.plot_error(errors)
 
 
-    def get_reconstruction_squarred_error(self, data):
+    def get_reconstruction_squarred_error(self, data, reconstruction, transform_with_all_vtsfe=True):
         self.init_vtsfe()
-        return self.vtsfe.get_reconstruction_squarred_error(data, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
+        return self.vtsfe.get_reconstruction_squarred_error(data, reconstruction, transform_with_all_vtsfe=transform_with_all_vtsfe)
 
 
-    def plot_variance_histogram(self, data, nb_samples_per_mov):
-        fig = plt.figure()
+    def plot_variance_histogram(self, data):
+        nb_samples_per_mov = int(data.shape[0]/len(self.data_driver.mov_types))
+        fig = plt.figure(figsize=(20, 10))
         ax = fig.gca(projection='3d')
 
         se = self.get_reconstruction_squarred_error(data)
-
-
         mse, vse = np.mean(se, axis=1), np.var(se, axis=1)
 
         print("Total MSE = "+str(np.mean(mse)))
@@ -124,9 +126,41 @@ class Launcher():
         plt.show()
 
 
+    def plot_mse(self, compare_to_other_models=True, sample_indices=None):
+        self.init_vtsfe()
+        x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+        self.init_x_reconstr()
+        if sample_indices is None:
+            s_indices = range(self.data_driver.nb_samples_per_mov)
+        else:
+            s_indices = sample_indices
+
+        # se = self.se[:,:6,:,:]
+        se = self.se
+        se_dataset = [se]
+        se_names = [self.save_path]
+        if compare_to_other_models:
+            for lr in self.lrs:
+                if lr.x_reconstr is not None:
+                    # se = lr.se[:,:6,:,:]
+                    se = lr.se
+                    se_dataset.append(se)
+                    se_names.append(lr.save_path)
+        se_dataset = np.array(se_dataset)
+        DATA_VISUALIZATION = {
+            "se_dataset": se_dataset,
+            "se_names": se_names,
+            "displayed_movs": self.data_driver.mov_types,
+            "s_indices": s_indices
+        }
+        self.vtsfe.plot_mse(
+            DATA_VISUALIZATION
+        )
+
+
     def init_vtsfe(self):
-        if self.vtsfe == None:
-            if self.restore_path != None:
+        if self.vtsfe is None:
+            if self.restore_path is not None:
                 restore = True
             else:
                 restore = False
@@ -140,17 +174,50 @@ class Launcher():
 
 
     def init_x_reconstr(self):
-        if self.x_reconstr == None:
+        if self.x_reconstr is None:
             self.init_vtsfe()
+            # x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+            # # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
+            # self.x_reconstr = np.transpose(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"]), [0, 2, 1, 3])
+            #
+            # # x_reconstr shape = [nb_sub_sequences, sub_sequences_size, nb_samples, n_input]
+            # x_reconstr = np.array(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"], fill=False))
+            # # se shape = [nb_samples, nb_frames, n_input]
+            # se = self.get_reconstruction_squarred_error(x_samples, x_reconstr, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
+            # # reshaped se shape = [nb_mov_types, nb_samples_per_mov, nb_frames, n_input]
+            # self.se = np.reshape(se, [len(self.data_driver.mov_types), -1, self.vtsfe.nb_frames, self.vtsfe.vae_architecture["n_input"]])
+
+
             x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+            if self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"] and self.config.DATA_VISUALIZATION["average_reconstruction"]:
+                # x_reconstr shape = [1, nb_frames, nb_samples, n_input]
+                x_reconstr = np.array(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=False, fill=False))
+            else:
+                # x_reconstr shape = [nb_sub_sequences, sub_sequences_size, nb_samples, n_input] or [1, nb_frames, nb_samples, n_input]
+                x_reconstr = np.array(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"], fill=False))
+
+            if self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"] and not self.config.DATA_VISUALIZATION["average_reconstruction"]:
+                # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
+                    self.x_reconstr = np.array(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=True))
+            else:
+                if self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"]:
+                    self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"] = False
+                    # x_reconstr shape [1, nb_frames, nb_samples, n_input]
+                    x_reconstr = np.reshape(self.vtsfe.from_subsequences_to_sequence(x_samples, x_reconstr), [1, self.vtsfe.nb_frames, -1, self.vtsfe.vae_architecture["n_input"]])
+                self.x_reconstr = x_reconstr
+            # se shape = [nb_samples, nb_frames, n_input]
+            se = self.get_reconstruction_squarred_error(x_samples, x_reconstr, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
             # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
-            self.x_reconstr = np.transpose(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"]), [0, 2, 1, 3])
+            self.x_reconstr = np.transpose(self.x_reconstr, [0, 2, 1, 3])
+            # reshaped se shape = [nb_mov_types, nb_samples_per_mov, nb_frames, n_input]
+            self.se = np.reshape(se, [len(self.data_driver.mov_types), -1, self.vtsfe.nb_frames, self.vtsfe.vae_architecture["n_input"]])
 
 
     def destroy_vtsfe(self):
-        if self.vtsfe != None:
+        if self.vtsfe is not None:
             self.vtsfe.session.close()
             tf.reset_default_graph()
+            self.vtsfe = None
 
 
     def grid_search_dmp(self, data, save_path="default"):
@@ -211,7 +278,12 @@ class Launcher():
                 resume=False,
                 save_path=save_path+"-dim_"+str(dim)+".cpkt"
             )
-            errors.append((self.global_error, self.vae_errors, self.vae_variances))
+            errors.append((
+                self.global_error,
+                self.vae_errors, self.vae_variances,
+                self.vae_reconstr_errors, self.vae_reconstr_variances,
+                self.vae_latent_errors, self.vae_latent_variances
+            ))
 
             reconstr_error = self.get_reconstruction_squarred_error(transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
             mse = np.mean(reconstr_error)
@@ -225,7 +297,7 @@ class Launcher():
         plt.show()
 
         for e in errors:
-            self.plot_error(*e)
+            self.plot_error(e)
 
         self.config.VTSFE_PARAMS["vae_architecture"]["n_z"] = default_dim_value
 
@@ -302,6 +374,186 @@ class Launcher():
         return training_set, test_set, min_error, model_path, mean_error, error
 
 
+    def leave_one_out(self, double_validation=False, resume=False):
+        nb_samples_per_mov = self.data_driver.nb_samples_per_mov
+        data = self.data_driver.data
+        def extract_set(data, i, nb_blocks_in_set):
+            index_i = i
+            nb_samples = len(data[0])
+            exceeding = index_i+nb_blocks_in_set - nb_samples
+            if exceeding < 0:
+                exceeding = 0
+
+            data_set = np.concatenate(
+                [
+                    data[:, :exceeding],
+                    data[:, index_i:index_i+nb_blocks_in_set]
+                ],
+                axis=1
+            )
+            data_remains = np.concatenate(
+                [
+                    data[:, exceeding:index_i],
+                    data[:, index_i+nb_blocks_in_set:]
+                ],
+                axis=1
+            )
+            return data_set, data_remains
+
+        winners = []
+        for test_index in range(nb_samples_per_mov):
+
+            params = {
+                "batch_size": 7,
+                "nb_epochs": 60,
+                "display_step": 1,
+                "checkpoint_step": 10
+            }
+
+            if resume:
+                resume_index = 6
+                resume_index_started = False
+                if resume_index_started and test_index == resume_index:
+                    params.update({
+                        "nb_epochs": 30
+                    })
+
+            if double_validation:
+                test_data, train_eval_data = extract_set(data, test_index, 1)
+                # if double cross-validation
+                eval_mses = []
+                for eval_index in range(nb_samples_per_mov):
+                    if eval_index == test_index:
+                        continue
+                    rel_eval_index = eval_index
+                    if eval_index > test_index:
+                        rel_eval_index = eval_index-1
+                    eval_data, training_data = extract_set(train_eval_data, rel_eval_index, 1)
+                    flat_training_data = np.reshape(training_data, [-1, self.data_driver.nb_frames, self.data_driver.input_dim])
+                    ticket = self.save_path+"_test_"+str(test_index)+"_eval_"+str(eval_index)
+                    self.x_reconstr = None
+                    self.config.TRAINING.update(params)
+                    self.train(
+                        # flat_training_data shape = [nb_samples, nb_frames, n_input]]
+                        flat_training_data,
+                        show_error=False,
+                        resume=False,
+                        save_path=ticket
+                    )
+                    self.init_x_reconstr()
+                    # se shape = [nb_mov_types, nb_samples_per_mov, nb_frames, n_input]
+                    se = self.se[:, eval_index]
+                    mse = np.mean(se)
+                    eval_mses.append((mse, ticket, np.mean(self.se[:, test_index])))
+
+                winner = winners[0][1]
+                best_mse = winners[0][0]
+                n = 0
+                num = 0
+                for mse,ticket,t in eval_mses:
+                    if mse < best_mse:
+                        best_mse = mse
+                        winner = ticket
+                        n = num
+                    num += 1
+                winners.append(eval_mses[n])
+            else:
+                # if simple cross-validation
+                test_data, flat_training_data = self.data_driver.get_data_set([test_index], shuffle_samples=False)
+                # flat_training_data = np.reshape(train_eval_data, [-1, self.data_driver.nb_frames, self.data_driver.input_dim])
+                ticket = self.save_path+"_test_"+str(test_index)
+                self.x_reconstr = None
+                self.config.TRAINING.update(params)
+
+                if resume:
+                    if test_index < resume_index:
+                        self.destroy_vtsfe()
+                        restore_path = self.restore_path
+                        self.restore_path = ticket
+                        self.init_vtsfe()
+                        self.restore_path = restore_path
+                    if test_index == resume_index:
+                        self.train(
+                            # flat_training_data shape = [nb_samples, nb_frames, n_input]]
+                            flat_training_data,
+                            show_error=False,
+                            resume=resume_index_started,
+                            save_path=ticket
+                        )
+                    if test_index > resume_index:
+                        self.train(
+                            # flat_training_data shape = [nb_samples, nb_frames, n_input]]
+                            flat_training_data,
+                            show_error=False,
+                            resume=False,
+                            save_path=ticket
+                        )
+                else:
+                    self.train(
+                        # flat_training_data shape = [nb_samples, nb_frames, n_input]]
+                        flat_training_data,
+                        show_error=False,
+                        resume=False,
+                        save_path=ticket
+                    )
+                self.init_x_reconstr()
+                # se shape = [nb_mov_types, nb_samples_per_mov, nb_frames, n_input]
+                se = self.se[:, test_index]
+                mse = np.mean(se)
+                print("MSE = "+str(mse))
+                winners.append((mse, ticket))
+
+        if double_validation:
+            mse = np.mean(np.array(np.array(winners)[:,2], dtype=np.float32))
+        else:
+            mse = np.mean(np.array(np.array(winners)[:,0], dtype=np.float32))
+
+        # winner = winners[0][1]
+        # best_mse = winners[0][0]
+        # n = 0
+        # for num,_,ticket,test_mse in enumerate(winners):
+        #     if test_mse < best_mse:
+        #         best_mse = test_mse
+        #         winner = ticket
+        #         n = num
+        f = './leave-one-out/'+self.save_path
+        self.data_driver.save_data(f, "mse", mse)
+        self.data_driver.save_data(f, "winners", winners)
+
+        return mse
+
+
+    def get_leave_one_out_winner_full_path(self):
+        f = './leave-one-out/'+self.save_path
+        winner = None
+        try:
+            winners = self.data_driver.read_data(f, "winners")
+            winner = winners[0][1]
+            n = 0
+            num = 0
+            if len(winners[0]) > 2:
+                # double cross-validation
+                best_mse = winners[0][2]
+                for _,ticket,test_mse in winners:
+                    if test_mse < best_mse:
+                        best_mse = test_mse
+                        winner = ticket
+                        n = num
+                    num += 1
+            else:
+                # simple cross-validation
+                best_mse = winners[0][0]
+                for test_mse,ticket in winners:
+                    if test_mse < best_mse:
+                        best_mse = test_mse
+                        winner = ticket
+                        n = num
+                    num += 1
+        except KeyError:
+            print("No leave-one-out made with that path.")
+        return winner
+
+
     def show_reconstr_error_through_training_set_dim(self, train_proportions=None, save_path=None):
         nb_samples = self.data_driver.nb_samples_per_mov
         nb_blocks = nb_samples
@@ -309,12 +561,12 @@ class Launcher():
         min_mses = []
         errors = []
 
-        if save_path != None:
+        if save_path is not None:
             path = save_path
         else:
             path = "validation"
 
-        if train_proportions == None:
+        if train_proportions is None:
             iterations = range(1, nb_blocks-1)
         else:
             iterations = train_proportions
@@ -348,16 +600,16 @@ class Launcher():
         plt.show()
 
         for e in errors:
-            self.plot_error(*e)
+            self.plot_error(e)
 
 
     def show_latent_space(self, sample_indices=None, data=None):
         self.init_vtsfe()
-        if sample_indices == None:
+        if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
         else:
             s_indices = sample_indices
-        if data == None:
+        if data is None:
             x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
         else:
             x_samples = data
@@ -372,7 +624,7 @@ class Launcher():
             show_frames=False
         )
 
-        if self.config.use_z_derivative:
+        if self.config.VTSFE_PARAMS["use_z_derivative"]:
             z_derivatives = self.vtsfe.transform_derivative(x_samples)
             self.vtsfe.show_latent_space(
                 self.data_driver,
@@ -385,13 +637,10 @@ class Launcher():
             )
 
 
-    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True):
+    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True):
         self.init_vtsfe()
-        # if data == None:
-        #     x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
-        # else:
-        #     x_samples = data
-        if sample_indices == None:
+
+        if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
         else:
             s_indices = sample_indices
@@ -399,12 +648,12 @@ class Launcher():
         x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
 
         # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
-        self.x_reconstr = np.transpose(self.vtsfe.reconstruct(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"]), [0, 2, 1, 3])
+        self.init_x_reconstr()
         x_reconstr = [self.x_reconstr]
         x_reconstr_names = [self.save_path]
         if compare_to_other_models:
             for lr in self.lrs:
-                if lr.x_reconstr != None:
+                if lr.x_reconstr is not None:
                     x_reconstr.append(lr.x_reconstr)
                     x_reconstr_names.append(lr.save_path)
         x_reconstr = np.array(x_reconstr)
@@ -416,13 +665,13 @@ class Launcher():
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
         self.vtsfe.show_data(
-            **self.config.DATA_VISUALIZATION
+            self.config.DATA_VISUALIZATION
         )
 
 
     def show_inferred_parameters(self, data=None):
         self.init_vtsfe()
-        if data == None:
+        if data is None:
             x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
         else:
             x_samples = data

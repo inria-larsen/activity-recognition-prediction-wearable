@@ -1,60 +1,105 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
 import numpy as np
 
 from src.launcher import Launcher
 
-from app.vae_dmp_joint_mvnx_2D import vae_dmp_joint_mvnx_2D
-from app.vae_dmp_joint_mvnx_5D import vae_dmp_joint_mvnx_5D
+# config files
+## joints
+from config.vae_only_joint_mvnx_2D import vae_only_joint_mvnx_2D
+from config.vae_only_joint_mvnx_5D import vae_only_joint_mvnx_5D
+from config.vae_only_joint_mvnx_7D import vae_only_joint_mvnx_7D
 
-from app.tighter_lb_joint_mvnx_2D_L15 import tighter_lb_joint_mvnx_2D_L15
-from app.tighter_lb_joint_mvnx_5D_L15 import tighter_lb_joint_mvnx_5D_L15
+from config.vae_dmp_no_z_derivative_joint_mvnx_2D_separated import vae_dmp_no_z_derivative_joint_mvnx_2D_separated
+from config.vae_dmp_no_z_derivative_joint_mvnx_2D import vae_dmp_no_z_derivative_joint_mvnx_2D
 
-from app.tighter_lb_joint_mvnx_2D_L30 import tighter_lb_joint_mvnx_2D_L30
-from app.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
+from config.vae_dmp_joint_mvnx_2D_separated import vae_dmp_joint_mvnx_2D_separated
+from config.vae_dmp_joint_mvnx_5D_separated import vae_dmp_joint_mvnx_5D_separated
+from config.vae_dmp_joint_mvnx_7D_separated import vae_dmp_joint_mvnx_7D_separated
 
-from app.tighter_lb_light_joint_mvnx_2D import tighter_lb_light_joint_mvnx_2D
-from app.tighter_lb_light_joint_mvnx_5D import tighter_lb_light_joint_mvnx_5D
+# from config.vae_dmp_joint_mvnx_5D import vae_dmp_joint_mvnx_5D
+# from config.vae_dmp_joint_mvnx_7D import vae_dmp_joint_mvnx_7D
+
+# from config.tighter_lb_joint_mvnx_2D_L15 import tighter_lb_joint_mvnx_2D_L15
+# from config.tighter_lb_joint_mvnx_5D_L15 import tighter_lb_joint_mvnx_5D_L15
+# from config.tighter_lb_joint_mvnx_7D_L15 import tighter_lb_joint_mvnx_7D_L15
+
+# from config.tighter_lb_joint_mvnx_2D_L30 import tighter_lb_joint_mvnx_2D_L30
+# from config.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
+# from config.tighter_lb_joint_mvnx_7D_L30 import tighter_lb_joint_mvnx_7D_L30
+
+from config.vae_dmp_joint_mvnx_2D import vae_dmp_joint_mvnx_2D
+from config.tighter_lb_light_joint_mvnx_2D import tighter_lb_light_joint_mvnx_2D
+from config.tighter_lb_joint_mvnx_2D_L15_separated import tighter_lb_joint_mvnx_2D_L15_separated
+from config.tighter_lb_joint_mvnx_5D_L15_separated import tighter_lb_joint_mvnx_5D_L15_separated
+from config.tighter_lb_joint_mvnx_2D_L30_separated import tighter_lb_joint_mvnx_2D_L30_separated
+
+from config.tighter_lb_light_joint_mvnx_2D_separated import tighter_lb_light_joint_mvnx_2D_separated
+from config.tighter_lb_light_joint_mvnx_5D_separated import tighter_lb_light_joint_mvnx_5D_separated
+from config.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_mvnx_7D_separated
+
+# from config.tighter_lb_light_joint_mvnx_5D import tighter_lb_light_joint_mvnx_5D
+# from config.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
+
+## positions
+# from config.vae_dmp_position_mvnx_2D import vae_dmp_position_mvnx_2D
+# from config.vae_dmp_position_mvnx_5D import vae_dmp_position_mvnx_5D
+# from config.vae_dmp_joint_mvnx_7D import vae_dmp_joint_mvnx_7D
+
+# from config.tighter_lb_position_mvnx_2D_L15 import tighter_lb_position_mvnx_2D_L15
+# from config.tighter_lb_position_mvnx_5D_L15 import tighter_lb_position_mvnx_5D_L15
+# from config.tighter_lb_joint_mvnx_7D_L15 import tighter_lb_joint_mvnx_7D_L15
+
+# from config.tighter_lb_joint_mvnx_2D_L30 import tighter_lb_joint_mvnx_2D_L30
+# from config.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
+# from config.tighter_lb_joint_mvnx_7D_L30 import tighter_lb_joint_mvnx_7D_L30
+
+# from config.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
+# from config.tighter_lb_light_position_mvnx_5D import tighter_lb_light_position_mvnx_5D
+# from config.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
 
 
 trainings = []
 
 #######################################################################################################################################################
 # EXPERIMENTS   #######################################################################################################################################
-# trainings.append(("dmp-dvbf-2D-nutan_nutanDB", vae_dmp_joint_chendb_2D)) # Pending
-# trainings.append(("dmp-dvbf-5D-nutan_nutanDB", vae_dmp_joint_chendb_5D)) # Pending
 
-# trainings.append(("dmp-dvbf-params_nutan_model_joint_mvnx_2D", vae_dmp_joint_mvnx_2D))  # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_joint_mvnx_2D_light", tighter_lb_light_joint_mvnx_2D))   # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_joint_mvnx_2D", tighter_lb_joint_mvnx_2D_L15))   # OK
-# trainings.append(("tighter_lb_joint_mvnx_2D_L30", tighter_lb_joint_mvnx_2D_L30))   # Pending
+# leave-one-out ###################
+l_o_o = False
+test_index = 8
+if l_o_o:
+    ti = ''
+else:
+    ti = "_test_"+str(test_index)
 
-# trainings.append(("dmp-dvbf-params_nutan_model_joint_mvnx_5D", vae_dmp_joint_mvnx_5D))  # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_joint_mvnx_5D_light", tighter_lb_light_joint_mvnx_5D))   # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_joint_mvnx_5D", tighter_lb_joint_mvnx_5D_L15))   # OK
-trainings.append(("tighter_lb_joint_mvnx_5D_L30", tighter_lb_joint_mvnx_5D_L30))   # Pending
+trainings.append(("vae_only_joint_mvnx_2D"+ti, vae_only_joint_mvnx_2D))    # OK
+# trainings.append(("vae_only_joint_mvnx_5D"+ti, vae_only_joint_mvnx_5D))    # OK
+# trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK
 
-#######################################################################################################################################################
-# USELESS    ##########################################################################################################################################
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_joint_mvnx_2D_light_with_xreconstr_sigma", params_tighter_lower_bound_without_attractor_joint_mvnx_2D_light_with_xreconstr_sigma))   # OK
-# trainings.append(("dmp-dvbf-2D-without_z_derivative_nutanDB", params_without_z_derivative_nutanDB_2D))    # Pending
-#######################################################################################################################################################
-# GRID SEARCH   #######################################################################################################################################
-# trainings.append(("dmp-dvbf-no_sequence_encoders-optimize_all-without_z_derivative-2D_grid_search", params))
-#######################################################################################################################################################
-# DEPRECATED    #######################################################################################################################################
-# trainings.append(("dmp-dvbf-2D-nutan", params_nutan_model_mvnx_data_2D))  # OK
-# trainings.append(("dmp-dvbf-5D-nutan", params_nutan_model_mvnx_data_5D))  # OK
-# trainings.append(("dmp-dvbf-params_without_attractor_mvnx_2D", params_without_attractor_mvnx_2D))   # OK
-# trainings.append(("dmp-dvbf-params_without_attractor_mvnx_5D", params_without_attractor_mvnx_5D))   # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_mvnx_2D", params_tighter_lower_bound_without_attractor_mvnx_2D))   # OK
-# trainings.append(("dmp-dvbf-params_tighter_lower_bound_without_attractor_mvnx_5D", params_tighter_lower_bound_without_attractor_mvnx_5D))   # OK
-#######################################################################################################################################################
+# trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D_separated_encoder_variables", vae_dmp_no_z_derivative_joint_mvnx_2D_separated))  # OK
+# trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D", vae_dmp_no_z_derivative_joint_mvnx_2D))  # OK
+
+trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
+# trainings.append(("vae_dmp_joint_mvnx_5D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_5D_separated))  # OK
+# trainings.append(("vae_dmp_joint_mvnx_7D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_7D_separated))  # OK
+
+trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
+# trainings.append(("tighter_lb_light_joint_mvnx_5D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_5D_separated))   # OK
+# trainings.append(("tighter_lb_light_joint_mvnx_7D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_7D_separated))   # OK
+
+# trainings.append(("tighter_lb_light_joint_mvnx_2D_all_test_8", tighter_lb_light_joint_mvnx_2D))   # OK
+# trainings.append(("vae_dmp_joint_mvnx_2D_all", vae_dmp_joint_mvnx_2D))   # Pending
+# trainings.append(("vae_dmp_joint_mvnx_2D_all_test_8", vae_dmp_joint_mvnx_2D))   # OK
+# trainings.append(("tighter_lb_joint_mvnx_2D_L15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # OK
+# trainings.append(("tighter_lb_joint_mvnx_2D_L30_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L30_separated))   # OK
+# trainings.append(("tighter_lb_joint_mvnx_2D_L15_P15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # Killed
+
+###################################
 
 
 restore = False
 train = True
 lrs = []
+mses = []
 for i, training in enumerate(trainings):
     restore_path = None
     if restore:
@@ -72,28 +117,34 @@ for i, training in enumerate(trainings):
         lr.config.DMP_PARAMS["prior_monte_carlo_sampling"] = 1
         lr.config.VTSFE_PARAMS["vae_architecture"]["L"] = 1
 
-    # winners = lr.grid_search_dmp_winners()
-    # print(winners)
-
     lr.config.TRAINING.update({
-        "batch_size": 6,
-        "nb_epochs": 60,
+        "batch_size": 7,
+        "nb_epochs": 10,
         "display_step": 1,
         "checkpoint_step": 10
     })
-    # if i == 0:
-    #     lr.config.TRAINING["nb_epochs"] = 9
-    # if i == 1:
-    #     lr.config.TRAINING["nb_epochs"] = 50
 
-    nb_training_samples = 6
-    data, remains = lr.data_driver.get_data_set(nb_training_samples, shuffle_samples=False)
+    training_indices = list(range(test_index))+list(range(test_index+1,10))
+    test_indices = []
+    for index in range(lr.data_driver.nb_samples_per_mov):
+        if index not in training_indices:
+            test_indices.append(index)
+    data, remains = lr.data_driver.get_data_set(training_indices, shuffle_samples=False)
     # lr.show_data(
     #     sample_indices=slice(nb_training_samples+1, None),
     #     only_hard_joints=True
     # )
 
+    # if i == 0:
+    #     resume = True
+    # else:
+    #     resume = False
+
     if train:
+        # mse = lr.leave_one_out(double_validation=False, resume=resume)
+        # print("MSE = "+str(mse))
+        # print(lr.get_leave_one_out_winner_full_path())
+
         lr.train(
             data,
             show_error=False,
@@ -106,38 +157,40 @@ for i, training in enumerate(trainings):
             "window_size": 15,
             "time_step": 5,
             "transform_with_all_vtsfe": False,
+            "average_reconstruction": False,
             "plot_3D": False,
-            "body_lines": True
+            "body_lines": True,
+            "dynamic_plot": False,
+            "show": True
         })
 
         lr.plot_error(training[0])
-        # lr.show_latent_space(
-            # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov)
-        # )
+        lr.show_latent_space(
+            sample_indices=test_indices
+        )
 
-        lr.config.DATA_VISUALIZATION["displayed_movs"] = ["kicking", "window_open", "lifting_box"]
-        if i == 2:
+        lr.config.DATA_VISUALIZATION["displayed_movs"] = ["kicking"]
+        if i == len(trainings)-1:
+            lr.plot_mse(
+                compare_to_other_models=True,
+                sample_indices=test_indices
+                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov)
+            )
             lr.show_reconstr_data(
                 compare_to_other_models=True,
-                sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                sample_indices=test_indices,
+                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                # sample_indices=range(nb_training_samples),
                 only_hard_joints=True
             )
         else:
             lr.init_x_reconstr()
 
         # print("------------- Test set :")
-        # lr.plot_variance_histogram(remains, 4)
+        # lr.plot_variance_histogram(remains)
+        # lr.plot_mse_per_mvt(remains)
 
         # lr.show_inferred_parameters()
 
-        # lr.grid_search_dmp(data)
-
-        # lr.show_reconstr_error_through_z_dims(
-        #     dim_indices=range(2, 8),
-        #     save_path=restore_path
-        # )
-
-        # lr.show_reconstr_error_through_training_set_dim(
-        # )
     lrs.append(lr)
     lr.destroy_vtsfe()

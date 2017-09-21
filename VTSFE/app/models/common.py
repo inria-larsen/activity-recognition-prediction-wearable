@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 
-from src.vae_standalone import VAE
-from src.models_dmp import DMP_NN
-from src.models_dmp_vae import VAE_DMP
+from vae_standalone import VAE
+from models_dmp import DMP_NN
+from models_dmp_vae import VAE_DMP
 
 
 class Common():
     """ Common configuration class """
 
     def __init__(self):
-        
+
         self.VTSFE_PARAMS = {}
         self.DMP_PARAMS = {}
         self.TRAINING = {}
@@ -38,7 +38,11 @@ class Common():
             },
             "use_whole_sequence_for_forcing_term": True,
             "model_continuity_error_coeff": self.continuity_penality,     # set to None if you don't want that model variable correction (system noise for DMP)
-            "model_monte_carlo_sampling": 30
+            "model_monte_carlo_sampling": 30,
+            "scaling_noise": True,
+            "use_dynamics_sigma": True,
+            "only_dynamics_loss_on_mean": False,
+            "forbidden_gradient_labels": ["gaussian_mixture", "system_noise_log_scale_sq"]
         })
 
         self.VTSFE_PARAMS.update({
@@ -72,5 +76,19 @@ class Common():
             "unit_gaussian_cost_for_z": True,
             "absolute_last_frame": self.DMP_PARAMS["use_whole_sequence_for_forcing_term"],
             "z_continuity_error_coeff": self.continuity_penality,     # set to None if you don't want that trajectory correction
-            "log_sigma_sq_values_limit": 20
+            "log_sigma_sq_values_limit": 20,
+            "separate_losses": False
+        })
+
+
+    def set_data_config(self, data_types, source):
+        if data_types[0] == "position" and len(data_types) == 1:
+            as_3D = True
+        else:
+            as_3D = False
+        self.DATA_PARAMS.update({
+            "data_source": source,
+            "data_types": data_types,
+            "as_3D": as_3D,
+            "unit_bounds": True
         })

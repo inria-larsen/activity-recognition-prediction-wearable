@@ -3,8 +3,8 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from .lib.useful_functions import *
-from .vae_standalone import VAE
+from lib.useful_functions import *
+from vae_standalone import VAE
 
 
 
@@ -44,7 +44,7 @@ class VAE_DMP(VAE):
 
         self.frame_number = frame_number
 
-        super(VAE_DMP, self).__init__(hyperparams, input_tensor=input_tensor, target_tensor=target_tensor, #z_continuity_error_coeff=z_continuity_error_coeff,
+        super(VAE_DMP, self).__init__(hyperparams, input_tensor=input_tensor, target_tensor=target_tensor, z_continuity_error_coeff=z_continuity_error_coeff,
                             save_path=save_path, reuse_encoder_weights=reuse_encoder_weights, optimize=optimize,
                             reuse_decoder_weights=reuse_decoder_weights, binary=binary, base_scope_encoder=base_scope_encoder, base_scope_decoder=base_scope_decoder,
                             log_sigma_sq_values_limit=log_sigma_sq_values_limit)
@@ -540,7 +540,9 @@ class VAE_DMP(VAE):
         # with identity variance for the second dstribution
         # and eventually annealing schedule
 
-        n_z = tf.constant(self.vae_architecture["n_z"], dtype=tf.float32)
+        one = tf.constant(1, dtype=tf.float32)
+        half = tf.constant(0.5, dtype=tf.float32)
+        # n_z = tf.constant(self.vae_architecture["n_z"], dtype=tf.float32)
         latent_loss_addn = []
 
         if self.model.monte_carlo_recurrence:
@@ -552,16 +554,13 @@ class VAE_DMP(VAE):
 
         K_sq = tf.square(self.model.c_3)
         self.one_plus_t_minus_2_K_sq = tf.add(
-            tf.constant(
-                1,
-                dtype=tf.float32
-            ),
+            one,
             tf.scalar_mul(
+                K_sq,
                 tf.constant(
                     self.frame_number-2,
                     dtype=tf.float32
-                ),
-                K_sq
+                )
             )
         )
 
@@ -569,54 +568,57 @@ class VAE_DMP(VAE):
             for j in range(self.nb_recurrence_iter):
                 for k in range(self.nb_recurrence_iter):
                     latent_loss_addn.append(
-                        tf.subtract(
-                            tf.scalar_mul(
-                                c_ta,
-                                tf.add(
-                                    tf.scalar_mul(
-                                        n_z,
-                                        tf.log(self.one_plus_t_minus_2_K_sq)
-                                    ),
-                                    tf.divide(
-                                        tf.reduce_sum(
-                                            tf.add(
-                                                tf.square(
-                                                    self.sys_noise_unit_means[i,j,k]
-                                                ),
-                                                tf.exp(
-                                                    self.sys_noise_log_unit_sigma_sqs[i,j,k]
-                                                )
-                                            ),
-                                            1
-                                        ),
-                                        self.one_plus_t_minus_2_K_sq
-                                    )
-                                )
-                            ),
+                        tf.scalar_mul(
+                            half,
                             tf.add(
-                                n_z,
-                                tf.reduce_sum(
-                                    self.sys_noise_log_unit_sigma_sqs[i,j,k],
-                                    1
+                                # (c_ta-1)*ln(2*pi)
+                                tf.scalar_mul(
+                                    tf.log(2*np.pi),
+                                    tf.subtract(
+                                        c_ta,
+                                        one
+                                    )
+                                ),
+                                tf.subtract(
+                                    # c_ta*(ln(1+K^2(t-2)) + [mean^2 + sigma^2]/(1+K^2(t-2)))
+                                    tf.scalar_mul(
+                                        c_ta,
+                                        tf.add(
+                                            tf.log(self.one_plus_t_minus_2_K_sq),
+                                            tf.divide(
+                                                tf.add(
+                                                    tf.square(
+                                                        self.sys_noise_unit_means[i,j,k]
+                                                    ),
+                                                    tf.exp(
+                                                        self.sys_noise_log_unit_sigma_sqs[i,j,k]
+                                                    )
+                                                ),
+                                                self.one_plus_t_minus_2_K_sq
+                                            )
+                                        )
+                                    ),
+                                    # 1 + ln(sigma^2)
+                                    tf.add(
+                                        one,
+                                        self.sys_noise_log_unit_sigma_sqs[i,j,k]
+                                    )
                                 )
                             )
                         )
                     )
 
-        a_schedule_log_2pi = tf.scalar_mul(
-            tf.constant(0.5*self.vae_architecture["n_z"]*np.log(2*np.pi), dtype=tf.float32),
-            tf.subtract(
-                c_ta,
-                tf.constant(1, dtype=tf.float32)
-            )
-        )
-        # latent_loss shape = [batch_size]
-        latent_loss = tf.add(
-            a_schedule_log_2pi,
-            tf.scalar_mul(
-                tf.constant(0.5/nb_samples, dtype=tf.float32),
-                tf.add_n(latent_loss_addn)
-            )
+        # a_schedule_log_2pi = tf.scalar_mul(
+        #     tf.constant(0.5*self.vae_architecture["n_z"]*np.log(2*np.pi), dtype=tf.float32),
+        #     tf.subtract(
+        #         c_ta,
+        #         tf.constant(1, dtype=tf.float32)
+        #     )
+        # )
+        # latent_loss shape = [batch_size, n_z]
+        latent_loss = tf.divide(
+            tf.add_n(latent_loss_addn),
+            tf.constant(nb_samples, dtype=tf.float32)
         )
         return latent_loss
 
@@ -648,25 +650,61 @@ class VAE_DMP(VAE):
                             self.model_params["model_monte_carlo_sampling"]*self.nb_recurrence_iter_goal*self.nb_recurrence_iter**2
                         )
                     )
-        self.reconstr_loss = tf.add_n(reconstr_losses)
-        self.latent_loss = self.create_latent_loss()
+        self.reconstr_loss_raw = tf.add_n(reconstr_losses)
+        self.model_loss_raw = tf.zeros([tf.shape(self.x)[0], self.vae_architecture["n_z"]])
+        self.latent_loss_raw = self.create_latent_loss()
 
         # annealing schedule to give f priority on system noise during training
         c_ta = self.vtsfe.annealing_schedule
-        self.reconstr_loss = tf.scalar_mul(c_ta, self.reconstr_loss)
+        self.reconstr_loss_raw = tf.scalar_mul(c_ta, self.reconstr_loss_raw)
+        self.continuity_loss_per_dim = tf.zeros(self.z.get_shape()[1])
+        self.update_costs_and_variances()
 
-        self.cost_add = tf.add(self.reconstr_loss, self.latent_loss)
 
-        if self.z_continuity_error_coeff != None:
+    def compute_global_cost(self):
+        self.reconstr_loss = tf.reduce_sum(
+            self.reconstr_loss_raw,
+            1
+        )
+        self.latent_loss = tf.reduce_sum(
+            self.latent_loss_raw,
+            1
+        )
+        self.model_loss = tf.reduce_sum(
+            self.model_loss_raw,
+            1
+        )
+        self.cost_add = tf.add_n([self.reconstr_loss, self.latent_loss, self.model_loss])
+        self.add_continuity_corrections()
+
+
+    def update_costs_and_variances(self):
+        super(VAE_DMP, self).update_costs_and_variances()
+
+        self.model_loss_per_dim = tf.reduce_mean(
+            self.model_loss_raw,
+            0
+        )
+        # batch averages and variances
+        self.model_loss_avg, self.model_loss_var = tf.nn.moments(self.model_loss, [0])
+
+
+    def add_continuity_corrections(self):
+        self.continuity_loss_per_dim = tf.zeros(self.z.get_shape()[1])
+        if self.z_continuity_error_coeff is not None:
             self.add_z_correction_cost()
             if self.vtsfe.use_z_derivative:
                 self.add_z_derivative_correction_cost()
 
-        if self.model_continuity_error_coeff != None:
+        if self.model_continuity_error_coeff is not None:
             self.add_sys_noise_correction_cost()
 
-        # batch average and variance
-        self.cost, self.variance = tf.nn.moments(self.cost_add, [0])
+        self.cost_add = tf.add(
+            self.cost_add,
+            tf.reduce_sum(
+                self.continuity_loss_per_dim
+            )
+        )
 
 
     def add_sys_noise_correction_cost(self):
@@ -677,14 +715,14 @@ class VAE_DMP(VAE):
                 self.var_target
             )
         )
-        self.reduced_var_correction = tf.scalar_mul(
+        self.var_correction = tf.scalar_mul(
             tf.constant(self.model_continuity_error_coeff, dtype=tf.float32),
-            tf.reduce_sum(
+            tf.reduce_mean(
                 self.var_correction,
-                1
+                0
             )
         )
-        self.cost_add = tf.add_n([
-            self.cost_add,
-            self.reduced_var_correction
-        ])
+        self.continuity_loss_per_dim = tf.add(
+            self.continuity_loss_per_dim,
+            self.var_correction
+        )

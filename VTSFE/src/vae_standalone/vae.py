@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from ..lib.useful_functions import glorot_init, interval_limiter
+from lib.useful_functions import glorot_init, interval_limiter
 
 
 
@@ -345,7 +345,7 @@ class VAE():
 
 
     def create_reconstruction_loss(self, x_reconstr_means, x_reconstr_log_sigma_sqs, nb_samples):
-        self.reconstr_losses = []
+        reconstr_losses = []
 
         if self.binary: # if data is binary
             for i in range(len(x_reconstr_means)):
@@ -353,7 +353,7 @@ class VAE():
                 # Adding 1e-10 to avoid evaluation of log(0.0)
                 reconstr_loss = tf.scalar_mul(-1, self.x_target * tf.log(1e-10 + x_reconstr_means[i])
                                     + (1-x_target) * tf.log(1e-10 + 1 - x_reconstr_means[i]))
-                self.reconstr_losses.append(reconstr_loss)
+                reconstr_losses.append(reconstr_loss)
         else:
             # Multivariate gaussian negative log-likelihood with diagonal covariance matrix
             # Note that when x_reconstr_sigma < 1/sqrt(2 * pi) # 0.4, the log could compensate other errors
@@ -362,45 +362,53 @@ class VAE():
             # and removing a degree of freedom that could be used by the network to alleviate the reconstruction error otherwise
 
             if self.vae_architecture["use_reconstr_sigma"]:
-                n_input_log_2pi = tf.scalar_mul(
-                    tf.constant(self.vae_architecture["n_input"], dtype=tf.float32),
-                    tf.log(2. * np.pi)
-                )
-                mul_and_avg = tf.constant(0.5 / nb_samples, dtype=tf.float32)
+                log_2pi = tf.log(2. * np.pi)
+                half = tf.constant(0.5, dtype=tf.float32)
 
                 for i in range(len(x_reconstr_means)):
-                    self.reconstr_loss_divider = tf.exp(x_reconstr_log_sigma_sqs[i], name="reconstr_loss_divider")
-                    self.reconstr_loss_sq_sub = tf.square(tf.subtract(self.x_target, x_reconstr_means[i]), name="reconstr_loss_sq_sub")
-                    self.reconstr_loss_division = tf.divide(self.reconstr_loss_sq_sub, self.reconstr_loss_divider, name="reconstr_loss_division")
-                    # reconstr_losses shape = [batch_size]
-                    reconstr_loss = tf.add(
-                        tf.reduce_sum(self.reconstr_loss_division, 1),
+                    reconstr_loss_divider = tf.exp(x_reconstr_log_sigma_sqs[i], name="reconstr_loss_divider")
+                    reconstr_loss_sq_sub = tf.square(tf.subtract(x_reconstr_means[i], self.x_target), name="reconstr_loss_sq_sub")
+                    reconstr_loss_division = tf.divide(reconstr_loss_sq_sub, reconstr_loss_divider, name="reconstr_loss_division")
+                    # reconstr_losses shape = [batch_size, n_input]
+                    reconstr_loss = tf.scalar_mul(
+                        half,
                         tf.add(
-                            tf.reduce_sum(x_reconstr_log_sigma_sqs[i], 1),
-                            n_input_log_2pi
+                            reconstr_loss_division,
+                            tf.add(
+                                x_reconstr_log_sigma_sqs[i],
+                                log_2pi
+                            )
                         )
                     )
-                    # reconstr_losses shape = [L, batch_size]
-                    self.reconstr_losses.append(reconstr_loss)
+                    # reconstr_losses shape = [L, batch_size, n_input]
+                    reconstr_losses.append(reconstr_loss)
             else:
-                mul_and_avg = tf.constant(np.pi / nb_samples, dtype=tf.float32)
+                pi = tf.constant(np.pi, dtype=tf.float32)
 
                 for i in range(len(x_reconstr_means)):
-                    self.reconstr_loss_sq_sub = tf.square(tf.subtract(self.x_target, x_reconstr_means[i]), name="reconstr_loss_sq_sub")
-                    # reconstr_losses shape = [batch_size]
-                    reconstr_loss = tf.reduce_sum(self.reconstr_loss_sq_sub, 1)
-                    # reconstr_losses shape = [L, batch_size]
-                    self.reconstr_losses.append(reconstr_loss)
+                    reconstr_loss = tf.scalar_mul(
+                        pi,
+                        tf.square(
+                            tf.subtract(
+                                x_reconstr_means[i],
+                                self.x_target
+                            ),
+                            name="reconstr_loss_sq_sub"
+                        )
+                    )
+                    # reconstr_losses shape = [L, batch_size, n_input]
+                    reconstr_losses.append(reconstr_loss)
 
         # average reconstruction loss on L samples
         reconstr_loss = tf.add_n(
-            self.reconstr_losses
+            reconstr_losses
         )
 
-        # reconstr_loss shape = [batch_size]
-        reconstr_loss = tf.scalar_mul(
-            mul_and_avg,
-            reconstr_loss
+        nb_s = tf.constant(nb_samples, dtype=tf.float32)
+        # reconstr_loss shape = [batch_size, n_input]
+        reconstr_loss = tf.divide(
+            reconstr_loss,
+            nb_s
         )
         return reconstr_loss
 
@@ -409,19 +417,21 @@ class VAE():
         # Kullback-Leibler divergence between two multivariate gaussians with diagonal covariance matrices
         # and identity variance for the second dstribution
 
-        n_z = tf.constant(self.vae_architecture["n_z"], dtype=tf.float32)
+        one = tf.constant(1, dtype=tf.float32)
+        half = tf.constant(0.5, dtype=tf.float32)
+        # n_z = tf.constant(self.vae_architecture["n_z"], dtype=tf.float32)
 
-        # latent_loss shape = [batch_size]
+        # latent_loss shape = [batch_size, n_z]
         latent_loss = tf.scalar_mul(
-            tf.constant(0.5, dtype=tf.float32),
+            half,
             tf.subtract(
                 tf.add(
-                    tf.reduce_sum(tf.square(self.z_mean), 1),
-                    tf.reduce_sum(tf.exp(self.z_log_sigma_sq), 1)
+                    tf.square(self.z_mean),
+                    tf.exp(self.z_log_sigma_sq)
                 ),
                 tf.add(
-                    tf.reduce_sum(self.z_log_sigma_sq, 1),
-                    n_z
+                    self.z_log_sigma_sq,
+                    one
                 )
             )
         )
@@ -443,23 +453,60 @@ class VAE():
         N.B.: The variational lower bound represented by these two previously defined losses must be maximized. But, as tensorflow
         minimizes the network cost function, we mutiply that lower bound by -1 and minimize it.
         """
-        self.reconstr_loss = self.create_reconstruction_loss(self.x_reconstr_means, self.x_reconstr_log_sigma_sqs, len(self.x_reconstr_means))
+        self.reconstr_loss_raw = self.create_reconstruction_loss(self.x_reconstr_means, self.x_reconstr_log_sigma_sqs, len(self.x_reconstr_means))
 
         if self.apply_latent_loss:
-            self.latent_loss = self.create_latent_loss()
+            self.latent_loss_raw = self.create_latent_loss()
         else:
-            self.latent_loss = tf.constant(0, dtype=tf.float32)
+            self.latent_loss_raw = tf.zeros([tf.shape(self.x)[0], self.vae_architecture["n_z"]])
 
+        self.continuity_loss_per_dim = tf.zeros(self.z.get_shape()[1])
+        self.update_costs_and_variances()
+
+
+    def compute_global_cost(self):
+        self.reconstr_loss = tf.reduce_sum(
+            self.reconstr_loss_raw,
+            1
+        )
+        self.latent_loss = tf.reduce_sum(
+            self.latent_loss_raw,
+            1
+        )
         self.cost_add = tf.add(self.reconstr_loss, self.latent_loss)
+        self.add_continuity_corrections()
 
+
+    def update_costs_and_variances(self):
+        self.compute_global_cost()
+
+        self.reconstr_loss_per_dim = tf.reduce_mean(
+            self.reconstr_loss_raw,
+            0
+        )
+        self.latent_loss_per_dim = tf.reduce_mean(
+            self.latent_loss_raw,
+            0
+        )
+        # batch averages and variances
+        self.reconstr_loss_avg, self.reconstr_loss_var = tf.nn.moments(self.reconstr_loss, [0])
+        self.latent_loss_avg, self.latent_loss_var = tf.nn.moments(self.latent_loss, [0])
+        self.continuity_loss_avg = tf.reduce_sum(self.continuity_loss_per_dim)
+        self.cost, self.variance = tf.nn.moments(self.cost_add, [0])
+
+
+    def add_continuity_corrections(self):
+        self.continuity_loss_per_dim = tf.zeros(self.z.get_shape()[1])
         if self.z_continuity_error_coeff != None:
             self.add_z_correction_cost()
             if self.estimate_z_derivative:
                 self.add_z_derivative_correction_cost()
-
-        # batch average and variance
-        self.cost, self.variance = tf.nn.moments(self.cost_add, [0])
-        # self.cost = tf.reduce_mean(self.cost_add)   # average over batch
+        self.cost_add = tf.add(
+            self.cost_add,
+            tf.reduce_sum(
+                self.continuity_loss_per_dim
+            )
+        )
 
 
     def add_z_correction_cost(self):
@@ -470,17 +517,17 @@ class VAE():
                 self.z_target
             )
         )
-        self.reduced_z_correction = tf.scalar_mul(
+        self.z_correction = tf.scalar_mul(
             tf.constant(self.z_continuity_error_coeff, dtype=tf.float32),
-            tf.reduce_sum(
+            tf.reduce_mean(
                 self.z_correction,
-                1
+                0
             )
         )
-        self.cost_add = tf.add_n([
-            self.cost_add,
-            self.reduced_z_correction
-        ])
+        self.continuity_loss_per_dim = tf.add(
+            self.continuity_loss_per_dim,
+            self.z_correction
+        )
 
 
     def add_z_derivative_correction_cost(self):
@@ -491,17 +538,17 @@ class VAE():
                 self.z_derivative_target
             )
         )
-        self.reduced_z_derivative_correction = tf.scalar_mul(
+        self.z_derivative_correction = tf.scalar_mul(
             tf.constant(self.z_continuity_error_coeff, dtype=tf.float32),
-            tf.reduce_sum(
+            tf.reduce_mean(
                 self.z_derivative_correction,
-                1
+                0
             )
         )
-        self.cost_add = tf.add_n([
-            self.cost_add,
-            self.reduced_z_derivative_correction
-        ])
+        self.continuity_loss_per_dim = tf.add(
+            self.continuity_loss_per_dim,
+            self.z_derivative_correction
+        )
 
 
     def create_loss_optimizer(self):
