@@ -63,10 +63,12 @@ trainings = []
 #######################################################################################################################################################
 # EXPERIMENTS   #######################################################################################################################################
 
-# leave-one-out ###################
-l_o_o = False
+# Whether you want to run a leave_one_out in training mode or not
+leave_one_out = False
+# Select the sample index in [0, 9] on which models will be tested (all other samples will be used for training)
+# Given our 7 movement types, this means: 9*7 = 63 training samples, 1*7 = 7 test samples
 test_index = 8
-if l_o_o:
+if leave_one_out:
     ti = ''
 else:
     ti = "_test_"+str(test_index)
@@ -95,6 +97,30 @@ trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+t
 
 ###################################
 
+DATA_VISUALIZATION = {
+    "nb_samples_per_mov": 1,
+    "window_size": 15,
+    "time_step": 5,
+    "transform_with_all_vtsfe": False,
+    "average_reconstruction": False,
+    "plot_3D": False,
+    "body_lines": True,
+    "dynamic_plot": False,
+    "show": True
+}
+
+# show input data space
+show_data = False
+# plot learning errors through epochs
+plot_error = True
+# show latent space
+show_latent_space = True
+# plot the global MSE and MSE for each movement type
+plot_mse = False
+# show reconstruction of input data space, compare it between models in trainings
+show_reconstr_data = True
+# movement types shown at data reconstruction
+reconstr_data_displayed_movs = ["kicking"]
 
 restore = False
 train = True
@@ -130,67 +156,63 @@ for i, training in enumerate(trainings):
         if index not in training_indices:
             test_indices.append(index)
     data, remains = lr.data_driver.get_data_set(training_indices, shuffle_samples=False)
-    # lr.show_data(
-    #     sample_indices=slice(nb_training_samples+1, None),
-    #     only_hard_joints=True
-    # )
 
-    # if i == 0:
-    #     resume = True
-    # else:
-    #     resume = False
+    if show_data:
+        lr.show_data(
+            sample_indices=slice(nb_training_samples+1, None),
+            only_hard_joints=True
+        )
+
+    if leave_one_out:
+        # Select the model index on which a leave_one_out was running to resume it
+        # if i == 0:
+        #     resume = True
+        # else:
+        #     resume = False
+        pass
 
     if train:
-        # mse = lr.leave_one_out(double_validation=False, resume=resume)
-        # print("MSE = "+str(mse))
-        # print(lr.get_leave_one_out_winner_full_path())
-
-        lr.train(
-            data,
-            show_error=False,
-            resume=restore,
-            save_path=training[0]
-        )
+        if leave_one_out:
+            # leave_one_out function call for selected models in trainings list
+            mse = lr.leave_one_out(double_validation=False, resume=resume)
+            print("MSE = "+str(mse))
+            print(lr.get_leave_one_out_winner_full_path())
+        else:
+            lr.train(
+                data,
+                show_error=False,
+                resume=restore,
+                save_path=training[0]
+            )
     else:
-        lr.config.DATA_VISUALIZATION.update({
-            "nb_samples_per_mov": 1,
-            "window_size": 15,
-            "time_step": 5,
-            "transform_with_all_vtsfe": False,
-            "average_reconstruction": False,
-            "plot_3D": False,
-            "body_lines": True,
-            "dynamic_plot": False,
-            "show": True
-        })
+        lr.config.DATA_VISUALIZATION.update(DATA_VISUALIZATION)
 
-        lr.plot_error(training[0])
-        lr.show_latent_space(
-            sample_indices=test_indices
-        )
+        if plot_error:
+            lr.plot_error(training[0])
 
-        lr.config.DATA_VISUALIZATION["displayed_movs"] = ["kicking"]
-        if i == len(trainings)-1:
-            lr.plot_mse(
-                compare_to_other_models=True,
+        if show_latent_space:
+            lr.show_latent_space(
                 sample_indices=test_indices
-                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov)
             )
-            lr.show_reconstr_data(
-                compare_to_other_models=True,
-                sample_indices=test_indices,
-                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
-                # sample_indices=range(nb_training_samples),
-                only_hard_joints=True
-            )
+
+        lr.config.DATA_VISUALIZATION["displayed_movs"] = reconstr_data_displayed_movs
+        if i == len(trainings)-1:
+            if plot_mse:
+                lr.plot_mse(
+                    compare_to_other_models=True,
+                    sample_indices=test_indices
+                    # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov)
+                )
+            if show_reconstr_data:
+                lr.show_reconstr_data(
+                    compare_to_other_models=True,
+                    sample_indices=test_indices,
+                    # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                    # sample_indices=range(nb_training_samples),
+                    only_hard_joints=True
+                )
         else:
             lr.init_x_reconstr()
-
-        # print("------------- Test set :")
-        # lr.plot_variance_histogram(remains)
-        # lr.plot_mse_per_mvt(remains)
-
-        # lr.show_inferred_parameters()
 
     lrs.append(lr)
     lr.destroy_vtsfe()
