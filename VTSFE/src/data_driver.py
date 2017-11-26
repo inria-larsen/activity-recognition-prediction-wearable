@@ -18,7 +18,7 @@ from klepto.archives import file_archive
 class Data_driver():
 
     DATA_PARAMS = {
-        "path": "./xsens_data/xml",
+        "path": "./data/7x10_actions/XSens/xml",
         "nb_frames": 70,
         "nb_samples_per_mov": 10,
         "mov_types": [
@@ -42,7 +42,7 @@ class Data_driver():
         "use_center_of_mass": True
     }
 
-    chen_db_path = '/home/mchavero/Experiments/Nutan_DB/mocap_dataset.mat'
+    chen_db_path = './data/5x1_actions/ChenDB/mocap_dataset.mat'
 
     hard_segments = [
         24, 25, 26,

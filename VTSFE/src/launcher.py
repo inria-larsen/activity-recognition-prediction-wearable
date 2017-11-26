@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from data_driver import Data_driver
-from vtsfe import VTSFE
+from .data_driver import Data_driver
+from .vtsfe import VTSFE
 
 
 class Launcher():

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 
-from vae_standalone import VAE
-from models_dmp import DMP_NN
-from models_dmp_vae import VAE_DMP
+from src.vae_standalone import VAE
+from src.models_dmp import DMP_NN
+from src.models_dmp_vae import VAE_DMP
 
 
 class Common():

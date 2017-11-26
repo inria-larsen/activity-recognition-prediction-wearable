@@ -6,8 +6,8 @@ import os.path
 import numpy as np
 import tensorflow as tf
 
-from lib.useful_functions import *
-from vtsfe_plots import VTSFE_Plots
+from src.lib.useful_functions import *
+from .vtsfe_plots import VTSFE_Plots
 
 
 # Variational Time Series Feature Extractor

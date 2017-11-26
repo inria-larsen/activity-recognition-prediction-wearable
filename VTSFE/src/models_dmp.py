@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
-from lib.useful_functions import *
+from src.lib.useful_functions import *
 
 
 class DMP_NN():

@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from lib.useful_functions import glorot_init, interval_limiter
+from src.lib.useful_functions import glorot_init, interval_limiter
 
 
 
