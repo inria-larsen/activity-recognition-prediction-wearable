@@ -10,6 +10,22 @@ class mvnx_tree():
 
 	prefix = '{http://www.xsens.com/mvn/mvnx}' # the prefix used in mvnx file
 
+	# Default list of features included in mvnx file
+	features_mvnx = [ 
+					'orientation',
+					'position',
+					'velocity',
+					'acceleration',
+					'angularVelocity',
+					'angularAcceleration',
+					'jointAngle',
+					'jointAngleXZY',
+					'centerOfMass',
+					'sensorOrientation',
+					'sensorAngularVelocity',
+					'sensorAcceleration'
+					]
+
 	def __init__(self, path):
 		"""
 		Constructor of the mvnx_tree.
@@ -33,7 +49,7 @@ class mvnx_tree():
 		except:
 			raise NameError('Tag ', tag, ' does not exist')
 
-	def get_timestamp(self):
+	def get_timestamp(self): # returns the absolute timestamps
 		frame_list = list(next(self.data.iterfind(self.prefix+'frames')))
 		timestamp = []
 		for frame in frame_list:
@@ -80,4 +96,32 @@ class mvnx_tree():
 			return joints[id].get('label')
 		except ValueError as ex:
 			return
+
+
+	def get_id_sensor(self, sensor_name):
+		sensors = self.get_list('sensors')
+		id = 0
+		while sensors[id].get('label')!=sensor_name:
+			id+=1
+		return id
+
+	def get_name_sensor(self, id):
+		try:
+			sensors = self.get_list('sensors')
+			if(id>=len(sensors) or id<0):
+				raise ValueError("Id out of bound")
+			return sensors[id].get('label')
+		except ValueError as ex:
+			return
+
+	def get_list_features(self):
+		return self.features_mvnx
+
+	def get_list_tags(self, tag):
+		list_segments_tree = self.get_list(tag)
+		list_segments = []
+		for segment in list_segments_tree:
+			list_segments.append(segment.get('label'))
+		return list_segments
+
 
