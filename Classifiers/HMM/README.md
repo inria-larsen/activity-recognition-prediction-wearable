@@ -6,7 +6,7 @@ The objective of this project is to adress the problem of recognizing the curren
 
 
 
-![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram.png "Architecture")
+![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture")
 
 
 
