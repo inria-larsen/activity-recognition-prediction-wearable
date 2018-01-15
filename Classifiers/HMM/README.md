@@ -4,9 +4,15 @@ The objective of this project is to adress the problem of recognizing the curren
 
 ## Architecture
 
+### Offline training
+
+![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram.png "Architecture offline")
+
 ### Online recognition
 
-![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture")
+
+![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture online")
+
 
 
 
