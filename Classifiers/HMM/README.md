@@ -4,19 +4,20 @@ The objective of this project is to adress the problem of recognizing the curren
 
 ## Architecture
 
-
+### Online recognition
 
 ![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture")
 
 
 
-## Hardware
+## Supported sensors
 
-* MVN link suit from Xsens
+* MVN link suit from Xsens (MVN studio 4.4 used)
 * e-glove from Emphasis Telematics SA
 
 ## Requirement
 
+* The software was tested on windows
 * python3.6
 * numpy: http://www.numpy.org/
 * hmmlearn : https://github.com/hmmlearn/hmmlearn
