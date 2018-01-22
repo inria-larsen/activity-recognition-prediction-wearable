@@ -7,7 +7,6 @@ import os
 import subprocess
 
 
-config_name = "config2.ini"
 # class DataProcessor(yarp.BottleCallback):
 #     def onRead(self, bot, *args, **kwargs):
 #         # print('Bottle [%s], args [%s], kwargs [%s]' % \)
@@ -52,7 +51,8 @@ config_name = "config2.ini"
 if __name__=="__main__":
 	try:
 		yarp.Network.init()
-	
+
+		config_file = sys.argv[1]
 
 		rf = yarp.ResourceFinder()
 		rf.setVerbose(True);
@@ -60,23 +60,22 @@ if __name__=="__main__":
 		rf.setDefaultConfigFile("config2.ini");
 		rf.configure(sys.argv)
 
+		
 
 		config = configparser.ConfigParser()
-		config.read(config_name)
+		config.read(config_file)
 		sections = config.sections()
-		section = sections[0]
-		name_port = config[section]['port']
-		name = '/processing' + str(name_port) + ':i'
 
-		print("test")
-		subprocess.Popen(["/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/yarp_module/rf_module.py", name])
-
+		for section in sections:
+			name_port = config[section]['port']
+			name = '/processing' + str(name_port) + ':i'
+			subprocess.Popen(["/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/yarp_module/rf_module.py", name])
 		# while(1):
 		# 	try:
 		# 		yarp.Time.delay(0.01)
 
-		except KeyboardInterrupt:
-			break
+		# except KeyboardInterrupt:
+		# 	break
 
 	finally:
 
