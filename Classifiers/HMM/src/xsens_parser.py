@@ -37,7 +37,7 @@ class mvnx_tree():
 		except OSError as e:
 			raise(e)
 
-	def get_data(self, tag):
+	def get_data(self, tag): # return all the data corresponding to the tag in input
 		try:
 			frame_list = list(next(self.data.iterfind(self.prefix+'frames')))
 			data = []
@@ -66,6 +66,7 @@ class mvnx_tree():
 				timestamp.append(int(frame.get('ms')))
 		timestamp = np.asarray(timestamp)
 		return(timestamp.T/1000)
+
 
 	def get_list(self, tag):
 		return(list(next(self.data.iterfind(self.prefix+tag))))

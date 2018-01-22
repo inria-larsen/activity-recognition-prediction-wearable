@@ -23,6 +23,7 @@ def slidding_window(data_set, size_window):
 		for i in range(len(data_out)):
 			data_window[seq][i,:] = data_out[i]
 
+
 	return data_window
 
 

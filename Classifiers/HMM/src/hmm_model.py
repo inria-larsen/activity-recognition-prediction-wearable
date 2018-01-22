@@ -30,7 +30,7 @@ class ModelHMM():
 		self.start_prob = []
 
 
-	def train(self, data, real_labels, list_features, dim_features):
+	def train(self, data, real_labels, list_features, dim_features, index_sequences):
 		""" Train a supervised HMM classifier based on the data and labels in input
 
 		input:
@@ -51,6 +51,9 @@ class ModelHMM():
 		self.list_features = list_features
 		self.dim_features = dim_features
 		self.n_feature = sum(dim_features)
+		self.index_sequences = index_sequences
+
+
 
 		# Concatenate all the sequence in one and create a vector with the length of each sequence
 		obs = []
@@ -64,9 +67,11 @@ class ModelHMM():
 			lengths.append(len(data[i]))
 			labels = np.concatenate([labels, real_labels[i]])
 
+
 		# Get the list and number of states
 		self.list_states, labels = np.unique(labels, return_inverse=True)
 		self.n_states = len(self.list_states)
+
 
 		self.model = hmm.GaussianHMM(n_components=self.n_states, covariance_type="full")
 
@@ -89,12 +94,11 @@ class ModelHMM():
 
 		# Update the parameters of the model
 		self.model.startprob_ = init_prob
-		self.model.transmat_ = trans_prob
+		self.model.transmat_ = trans_prob.T
 		self.model.means_ = Mu
 		self.model.covars_ = covars
 
 		return
-
 
 	def predict_states(self, obs):
 		""" Return for a sequence of observation a sequence of predicted labels

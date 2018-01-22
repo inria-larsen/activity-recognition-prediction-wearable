@@ -20,13 +20,20 @@ class DataBase():
 	eglove_folder = "/eglove/"
 	videos_folder = "/video/"
 
-	def __init__(self, path):
+	def __init__(self, path, n_seq = -1):
+		"""
+		Constructor of the dataset.
+		Parameters;
+		path: the path where is located the different folders
+		n_seq (optional): the number of sequence to add in the dataset
+		"""
 		self.path_data = path
 		self.mvnx_tree = []
 		self.mocap_data = [[]]
 		self.ref_data = [[]]
 		self.list_features = [[], []]
 		self.list_states = []
+		self.n_seq = n_seq
 
 
 	def load_mvnx_data(self):
@@ -36,12 +43,15 @@ class DataBase():
 		"""
 		path = self.path_data + self.mvnx_folder
 		list_files = os.listdir(path)
-		self.n_seq = len(list_files)
+		list_files.sort()
 
+		if(self.n_seq == -1):
+			self.n_seq = len(list_files)
 
 		# check all the files in the mvnx folder
 		for file, i in zip(list_files, range(self.n_seq)):
 			self.mvnx_tree.append(mvnx_tree(path + file))
+			T = self.mvnx_tree[i].get_timestamp()
 			self.mocap_data[i].append(self.mvnx_tree[i].get_timestamp())
 			if(i < self.n_seq - 1):
 				self.mocap_data.append([])
@@ -67,6 +77,7 @@ class DataBase():
 		"""
 		path = self.path_data + self.labels_folder
 		list_files = os.listdir(path)
+		list_files.sort()
 
 		time_start = [[]]
 
@@ -287,6 +298,8 @@ class DataBase():
 		for i in range(self.n_seq):
 			flag = 0
 			time = timestamps[i]
+
+			
 
 			end = self.ref_data[i][0][2]
 			labels = self.ref_data[i][0][0]
