@@ -61,7 +61,6 @@ if __name__=="__main__":
 		rf.configure(sys.argv)
 
 		
-
 		config = configparser.ConfigParser()
 		config.read(config_file)
 		sections = config.sections()
@@ -69,13 +68,14 @@ if __name__=="__main__":
 		for section in sections:
 			name_port = config[section]['port']
 			name = '/processing' + str(name_port) + ':i'
-			subprocess.Popen(["/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/yarp_module/rf_module.py", name])
-		# while(1):
-		# 	try:
-		# 		yarp.Time.delay(0.01)
+			subprocess.Popen(["./rf_module.py", name])
 
-		# except KeyboardInterrupt:
-		# 	break
+		while(True):
+		 	try:
+		 		yarp.Time.delay(0.01)
+
+		 	except KeyboardInterrupt:
+		 		break
 
 	finally:
 

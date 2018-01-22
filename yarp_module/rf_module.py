@@ -18,12 +18,12 @@ class RFModule(yarp.RFModule):
 		moduleName = rf.check("name", yarp.Value(self.name_port)).asString()
 		self.setName(moduleName)
 		print(moduleName)
-
 		return True 
 
 	def close(self):
-		print("Closing ports")
+		print("Closing ports %s" %self.name_port)
 		self.port.close()
+		return True
 
 	def interruptModule(self):
 		self.port.interrupt()
@@ -33,7 +33,9 @@ class RFModule(yarp.RFModule):
 		return 0.001
 
 	def updateModule(self):
-		b_in = self.port.read()		
+		b_in = self.port.read()	
+		if(b_in is None):
+			return True
 		b_out = self.port.prepare()
 		b_out.clear()
 		b_out.append(b_in)
@@ -42,11 +44,14 @@ class RFModule(yarp.RFModule):
 
 if __name__=="__main__":
 	name = sys.argv[1]
-
-	rf = yarp.ResourceFinder()
-
 	mod = RFModule(name)
-	mod.configure(rf)
-	mod.runModule(rf)
+	try:
+		rf = yarp.ResourceFinder()
+
+		mod.configure(rf)
+		mod.runModule(rf)
+
+	finally:
+		mod.close()
 
 
