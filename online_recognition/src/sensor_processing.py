@@ -19,21 +19,35 @@ class SensorProcessingModule(yarp.RFModule):
 
 		size_buffer = int(rf.find('size_buffer').toString())
 
-		signals = rf.findGroup("Signals").tail().toString().replace('"', '').replace(')', '').replace('(', '')
-		port_information = signals.split(' ')
-		
-		nb_port = int(len(port_information)/3)
+		self.window_size = float(rf.find('slidding_window_size').toString())
+
+
+		signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
+		print(signals)
+		port_information = signals
+		print(port_information)
+
+		nb_port = int(len(signals))
 		nb_active_port = 0
 
-		for i in range(nb_port):
-			id_port = i*(nb_port-1)
-			if(int(port_information[id_port + 1])):
-				print(port_information[id_port+2], nb_active_port)
+		self.buffer = []
+
+		for signal in signals:
+			info_signal = rf.findGroup(signal)
+			is_enabled = int(info_signal.find('enable').toString())
+
+			if(is_enabled):
+				name_port = info_signal.find('name_port').toString()
 				self.list_port.append(yarp.BufferedPortBottle())
-				self.list_port[nb_active_port].open("/processing" + port_information[id_port + 2])
+				self.list_port[nb_active_port].open("/processing" + name_port)
 				self.cback.append(CallbackData(size_buffer))
 				self.list_port[nb_active_port].useCallback(self.cback[nb_active_port]) 
 				nb_active_port += 1
+				self.buffer.append([])
+
+
+		self.clock = yarp.Time.now()
+
 
 		return True
 
@@ -44,23 +58,35 @@ class SensorProcessingModule(yarp.RFModule):
 
 	def updateModule(self):
 		for port, i in zip(self.list_port, range(len(self.list_port))):
-			data = self.cback[i].get_data()
-			if(len(data)>0):
-				T, dim = np.shape(data)
-				b_out = port.prepare()
-				b_out.clear()
-				b_out.addInt(T)
-				b_out.addInt(dim)
-				for m in range(T):
-					for n in range(dim):
-						b_out.addDouble(data[m][n])
-				
-				port.write()
+				data = self.cback[i].get_data()
+				if(len(data)>0):
+					for j in range(len(data)):
+						self.buffer[i].append(data[i])
+
+		current_time = yarp.Time.now()
+
+		# Slidding Window
+		if((current_time - self.clock) >= self.window_size/2):
+			self.clock = current_time
+			for port, i in zip(self.list_port, range(len(self.list_port))):
+				if(len(self.buffer[i]) > 0):
+					length = int(len(self.buffer[i])/2)
+					output = np.mean(np.asarray(self.buffer[i]), axis = 0)
+					dimension = np.shape(output)[0]
+					b_out = port.prepare()
+					b_out.clear()
+					b_out.addInt(dimension)
+					for dim in range(dimension):
+						b_out.addDouble(output[dim])
+					port.write()
+
+
+					del self.buffer[i][0:length]
 
 		return True
 
 	def getPeriod(self):
-		return 0.01
+		return 0.001
 
 
 class CallbackData(yarp.BottleCallback):
@@ -89,7 +115,7 @@ if __name__=="__main__":
 
 	rf = yarp.ResourceFinder()
 	rf.setVerbose(True)
-	rf.setDefaultContext("myContext")
+	rf.setDefaultContext("online_recognition")
 	rf.setDefaultConfigFile("default.ini")
 	rf.configure(sys.argv)
 

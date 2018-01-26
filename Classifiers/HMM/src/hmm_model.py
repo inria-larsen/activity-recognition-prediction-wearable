@@ -1,6 +1,8 @@
 import numpy as np
 from hmmlearn import hmm
 import src.tools as tools
+import os
+from sklearn.externals import joblib
 
 class ModelHMM():
 	""" Hiden Markov Model classifier class
@@ -107,21 +109,26 @@ class ModelHMM():
 		return self.model.predict(obs)
 
 	def score_samples(self, obs):
-		""" Return for a sequence of observation the probability distribution on each state
-
+		""" 
+		Return for a sequence of observation the probability distribution on each state
 		"""
 		return self.model.score_samples(obs)[1]
 
 
-	def save_model(self):
+	def save_model(self, path, name_model):
+		print(path)
+		if(not(os.path.isdir(path))):
+			os.makedirs(path)
+
+		joblib.dump(self.model, path +'/' + name_model)
 		return
 
 
-	def load_model(self, config_file):
-		""" Load the parameters from the configuration file to set the parameters of the model
-
-
+	def load_model(self, model_file):
+		""" 
+		Load the parameters from the configuration file to set the parameters of the model
 		"""
+		self.model = joblib.load(model_file)
 		return
 
 

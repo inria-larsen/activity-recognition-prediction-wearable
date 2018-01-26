@@ -33,8 +33,6 @@ class RealTimePlotModule():
 		b_in = self.port.read()
 		data = b_in.toString().split(' ')
 
-		n_frame = int(data[0])
-		del data[0]
 		dimension = int(data[0])
 		del data[0]
 
@@ -49,10 +47,10 @@ class RealTimePlotModule():
 		for dim in range(dimension):
 			if(len(self.buffer) <= dim):
 				self.buffer.append([])
-			for frame in range(n_frame):
-				self.buffer[dim].append(value[frame*dimension + dim])
-				if(len(self.buffer[dim]) > self.size_window):
-					del self.buffer[dim][0]
+
+			self.buffer[dim].append(value[dim])
+			if(len(self.buffer[dim]) > self.size_window):
+				del self.buffer[dim][0]
 
 		for dim in range(dimension):
 			self.list_curve[dim].setData(self.buffer[dim])

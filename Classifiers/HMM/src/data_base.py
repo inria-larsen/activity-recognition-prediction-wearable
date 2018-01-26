@@ -37,9 +37,8 @@ class DataBase():
 
 
 	def load_mvnx_data(self):
-		""" Load the mocap mvnx files corresponding to xsens MoCap data
-
-
+		""" 
+		Load the mocap mvnx files corresponding to xsens MoCap data
 		"""
 		path = self.path_data + self.mvnx_folder
 		list_files = os.listdir(path)

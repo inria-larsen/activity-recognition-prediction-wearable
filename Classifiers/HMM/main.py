@@ -3,16 +3,26 @@ from src.data_base import DataBase
 import src.data_processing as pr
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import yarp
 
-
-path = '/home/amalaise/Documents/Xsens/pick_and_place/'
 
 if __name__ == '__main__':
 	# Prepare the data base
+	yarp.Network.init()
+	rf = yarp.ResourceFinder()
+	rf.setDefaultContext("online_recognition")
+	rf.setDefaultConfigFile("default.ini")
+	rf.configure(sys.argv)
+
+	path = rf.find('path_data_base').toString()
+	path_model = rf.find('path_model').toString()
+	name_model = rf.find('name_model').toString()
+
 	data_base = DataBase(path)
 	data_base.load_mvnx_data()
 	data = data_base.add_mvnx_data(['centerOfMass'])
-	data = data_base.add_features_by_segments('velocity', [ 'Head'])
+	# data = data_base.add_features_by_segments('velocity', [ 'Head'])
 	# data = data_base.add_features_by_joints('jointAngle', ['jL5S1'])
 	# data = data_base.add_features_by_sensors('sensorAcceleration', ['Pelvis'])
 	data_base.load_labels_ref()
@@ -20,8 +30,8 @@ if __name__ == '__main__':
 	print(data_base.get_list_features())
 
 	# Pre-processing
-	# list_features = ['centerOfMass']
-	list_features = ['centerOfMass', 'velocity_Head']
+	list_features = ['centerOfMass']
+	# list_features = ['centerOfMass', 'velocity_Head']
 	sub_data = pr.concatenate_data(data_base, list_features)
 	# sub_data = pr.concatenate_data(data_base, ['centerOfMass', 'position'])
 
@@ -43,9 +53,11 @@ if __name__ == '__main__':
 	index_sequences = range(n_seq)
 
 	model = ModelHMM()
-	model.train(data_com, real_labels, list_features, dim_features, index_sequences)
+	# model.train(data_com, real_labels, list_features, dim_features, index_sequences)
 
-	# model.save_model(path_save, 'model', 'pick_and_place')
+	# model.save_model(path_model, name_model)
+
+	model.load_model(path_model + '/' + name_model)
 
 	# A = model.get_trans_mat()
 	# print(A)
