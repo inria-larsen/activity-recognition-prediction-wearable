@@ -61,7 +61,7 @@ class SensorProcessingModule(yarp.RFModule):
 				data = self.cback[i].get_data()
 				if(len(data)>0):
 					for j in range(len(data)):
-						self.buffer[i].append(data[i])
+						self.buffer[i].append(data[j])
 
 		current_time = yarp.Time.now()
 

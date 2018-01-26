@@ -41,7 +41,6 @@ class RealTimePlotModule():
 				self.list_curve.append(self.plotData.plot(pen=(dim,dimension)))
 			self.flag_init = 1
 
-
 		value = list(map(float, data))
 
 		for dim in range(dimension):
