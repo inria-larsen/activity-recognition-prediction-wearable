@@ -1,7 +1,30 @@
-from src.xsens_parser import mvnx_tree
-from src.anvil_parser import anvil_tree
+from xsens_parser import mvnx_tree
+from anvil_parser import anvil_tree
 import numpy as np
 import os
+
+segment_features = [
+			'orientation',
+			'position',
+			'velocity',
+			'acceleration'
+					]
+
+
+joint_features = [
+			'jointAngle',
+			'jointAngleXZY',
+			'angularVelocity',
+			'angularAcceleration'
+					]
+
+sensor_features = [
+			'sensorOrientation',
+			'sensorAngularVelocity',
+			'sensorAcceleration'
+					]
+
+
 
 
 class DataBase():
@@ -61,8 +84,6 @@ class DataBase():
 		return path
 
 
-
-
 	def load_labels_ref(self):
 		""" Load the reference labels from Anvil file
 
@@ -112,13 +133,14 @@ class DataBase():
 		return
 
 
-	def add_mvnx_data(self, list_features):
+	def add_mvnx_data(self, list_features, sub_list):
 		""" Add to the dataset the data corresponding to the list of features in input
 
 		input:
 		list_features: list of string corresponding to the features in mvnx file
 		ouput: returns all the data per sequence in a list of array
 		"""
+
 		features_mvnx = self.mvnx_tree[0].get_list_features()
 				
 		for feature in list_features:
@@ -126,14 +148,77 @@ class DataBase():
 				continue
 
 			if(feature in features_mvnx): # Check if the feature exists in mvnx file
+				print(feature, sub_list)
+				if(feature == 'centerOfMass'):
+					for i in range(self.n_seq):
+						com = self.mvnx_tree[i].get_data(feature)
+						if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
+							self.mocap_data[i].append(com)
+							continue
+						if('z' in sub_list[0]):
+							self.mocap_data[i].append(com[:,2])
+						if('y' in sub_list[0]):
+							self.mocap_data[i].append(com[:,2])
+						if('x' in sub_list[0]):
+							self.mocap_data[i].append(com[:,2])
+						
+					if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
+						self.list_features[0].append(feature)
+						self.list_features[1].append(3)
+		
+					if('z' in sub_list[0]):		
+						self.list_features[0].append('COM_Z')
+						self.list_features[1].append(1)
+
+					if('y' in sub_list[0]):		
+						self.list_features[0].append('COM_Y')
+						self.list_features[1].append(1)
+
+					if('x' in sub_list[0]):		
+						self.list_features[0].append('COM_X')
+						self.list_features[1].append(1)
+
+					# if('z' in sub_list):
+
+				elif((sub_list[0] == 'all') or (sub_list[0] == '')):
+					for i in range(self.n_seq):
+						self.mocap_data[i].append(self.mvnx_tree[i].get_data(feature))
+
+					# Update the list of features with name and dimension
+					self.list_features[0].append(feature)
+					self.list_features[1].append(len(self.mvnx_tree[i].get_data(feature).T))
+
+				elif(feature in segment_features):
+					self.add_features_by_segments(feature, sub_list)
+
+				elif(feature in joint_features):
+					self.add_features_by_joints(feature, sub_list)
+
+				elif(feature in sensor_features):
+					self.add_features_by_sensors(feature, sub_list)
+
+			elif(feature == 'CoMVelocity'):
 				for i in range(self.n_seq):
-					self.mocap_data[i].append(self.mvnx_tree[i].get_data(feature))
+					com = self.mvnx_tree[i].get_data('centerOfMass')
+					com_vel = np.diff(com, axis=0)
+					com_vel = np.insert(com_vel, 0, 0, axis=0)
 
-				# Update the list of features with name and dimension
+					self.mocap_data[i].append(com_vel)
+
 				self.list_features[0].append(feature)
-				self.list_features[1].append(len(self.mvnx_tree[i].get_data(feature).T))
+				self.list_features[1].append(3)
 
-		return self.mocap_data
+
+
+
+
+
+
+
+		list_features = self.list_features[0][1:]
+		dim_features = self.list_features[1][1:]
+
+		return list_features, dim_features
 
 
 	def add_features_by_segments(self, feature, list_segments):
@@ -149,13 +234,6 @@ class DataBase():
 		Add all data in the mocap_data list and returns it
 		"""
 		segments_mvnx = self.mvnx_tree[0].get_list_tags('segments')
-		
-		segment_features = [
-						'orientation',
-						'position',
-						'velocity',
-						'acceleration'
-							]
 
 		if(feature in segment_features):
 			for segment in list_segments:
@@ -196,13 +274,6 @@ class DataBase():
 		"""
 		joints_mvnx = self.mvnx_tree[0].get_list_tags('joints')
 		
-		joint_features = [
-						'jointAngle',
-						'jointAngleXZY',
-						'angularVelocity',
-						'angularAcceleration'
-							]
-
 		if(feature in joint_features):
 			for joint in list_joints:
 				if((joint not in joints_mvnx) or # check if the joint name exist and not already in the features list
@@ -241,11 +312,7 @@ class DataBase():
 		"""
 		sensors_mvnx = self.mvnx_tree[0].get_list_tags('sensors')
 		
-		sensor_features = [
-						'sensorOrientation',
-						'sensorAngularVelocity',
-						'sensorAcceleration'
-							]
+
 
 		if(feature in sensor_features):
 			for sensor in list_sensors:

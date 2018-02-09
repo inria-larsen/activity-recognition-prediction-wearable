@@ -57,7 +57,7 @@ class RealTimePlotModule():
 		QtGui.QApplication.processEvents()
 		return
 
-	def close():
+	def close(self):
 		yarp.Network.disconnect(self.input_port, self.port.getName())
 		self.port.close()
 

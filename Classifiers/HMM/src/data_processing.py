@@ -1,5 +1,5 @@
 import numpy as np
-from src.data_base import DataBase
+from data_base import DataBase
 
 
 
@@ -34,10 +34,12 @@ def concatenate_data(data_set, list_features):
 		index = 0
 		for features in list_features:
 			data_in = data_set.get_data_by_features(features, seq)
+			if(len(np.shape(data_in)) == 1):
+				data_in = np.expand_dims(data_in, axis=1)
 			if(index == 0):	
 				data_out[seq] = data_in
 			else:
-				data_out[seq] = np.concatenate([data_out[seq], data_in], axis = 1)
+				data_out[seq] = np.concatenate((data_out[seq], data_in), axis = 1)
 			index += 1
 
 		if(seq < n_seq - 1):
@@ -58,3 +60,11 @@ def set_timestamps(timestamps, size_window):
 		if(seq < n_seq - 1):
 			time.append([])
 	return time
+
+
+def diff(self, data, frequence):
+	T, N = np.shape(data)
+	data_diff = np.zeros((T, N))
+	for t in range(1, T):
+		data_diff[t, :] = (data[t][:] - data[t-1][:])*frequence
+	return data_diff

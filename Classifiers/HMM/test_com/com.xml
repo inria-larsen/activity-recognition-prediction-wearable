@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="com" name_sequences="pick_and_place">
+    <features/>
+    <states>
+      <state index="0" label="carry"/>
+      <state index="1" label="pick"/>
+      <state index="2" label="place"/>
+      <state index="3" label="reach"/>
+      <state index="4" label="release"/>
+      <state index="5" label="wait"/>
+      <state index="6" label="walk"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>

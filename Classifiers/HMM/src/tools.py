@@ -33,6 +33,51 @@ def mean_and_cov(all_data, labels, n_states, n_feature):
 
 	return mu, sigma
 
+def quaternion_to_rotation(q, trans):
+	Rot = np.zeros((4, 4))
+
+	Rot[0,0] = 1 - 2*q[2]*q[2] - 2*q[3]*q[3]
+	Rot[0,1] = 2*q[1]*q[2] - 2*q[0]*q[3]
+	Rot[0,2] = 2*q[1]*q[2] - 2*q[0]*q[3]
+	Rot[0,3] = -trans[0]
+
+	Rot[1,0] = 2*q[1]*q[2] + 2*q[0]*q[3]
+	Rot[1,1] = 1 - 2*q[1]*q[1] - 2*q[3]*q[3]
+	Rot[1,2] = 2*q[2]*q[3] - 2*q[0]*q[1]
+	Rot[1,2] = -trans[1]
+
+	Rot[2,0] = 2*q[1]*q[3] - 2*q[0]*q[2]
+	Rot[2,1] = 2*q[2]*q[3] + 2*q[0]*q[1]
+	Rot[2,2] = 1 - 2*q[1]*q[1] - 2*q[2]*q[2]
+	Rot[2,3] = -trans[2]
+
+	Rot[2,3] = 0
+	Rot[2,3] = 0
+	Rot[2,3] = 0
+	Rot[2,3] = 1
+
+	return Rot
+
+def normalize_position(pose_data, quaternion):
+	origin = pose_data[0, 0:3]
+	origin_orientation = quaternion[0, 0:4]
+
+	position = np.zeros((np.shape(pose_data)))
+
+	for i in range(len(pose_data)):
+		for j in range(0, 23):
+			if(j == 0):
+				Rot_root = quaternion_to_rotation(origin_orientation, origin)
+			else:
+				Rot_root = quaternion_to_rotation(quaternion[i, j*4:j*4+4], pose_data[i, j*3:3])
+
+			# position[i, j : j+3] = Rot_root.dot(pose_data[i, j : j+3]) + origin
+			pose_in = np.append(pose_data[i, j : j+3], [0])
+			pose_out = Rot_root.dot(pose_in)
+			position[i, j : j+3] = pose_out[0:3]
+
+	return position
+
 
 
 # def generate_list_features(n_features, possible_features):
