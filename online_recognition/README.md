@@ -1,5 +1,8 @@
 # Online activity recognition
 
+
+![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture online")
+
 ## Xsens module: sensor_processing.py
 
 ### Yarp port:
