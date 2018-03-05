@@ -24,6 +24,8 @@ class RealTimePlotModule():
 
 		self.size_window = size_window
 
+		print(name_port)
+
 		yarp.Network.connect(name_port, self.port.getName())
 
 		self.flag_init = 0
@@ -34,14 +36,16 @@ class RealTimePlotModule():
 		data = b_in.toString().split(' ')
 
 		dimension = int(data[0])
-		del data[0]
 
+		del data[0]
 		if(self.flag_init == 0):
 			for dim in range(dimension):
 				self.list_curve.append(self.plotData.plot(pen=(dim,dimension)))
 			self.flag_init = 1
 
 		value = list(map(float, data))
+
+
 
 		for dim in range(dimension):
 			if(len(self.buffer) <= dim):

@@ -4,6 +4,8 @@ import matplotlib.animation as animation
 import os
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
+import cv2
+
 
 def draw_distribution(score, list_states, real_labels):
 	labels = list_states.tolist()
@@ -74,5 +76,42 @@ def draw_pos(ax, pos_data):
 		ax.plot([x_ini, x_fin],	[y_ini, y_fin], [z_ini, z_fin], 'm')
 
 	return ax
+
+
+def video_sequence(real_labels, predict_labels, video_input, video_output):
+		print(len(real_labels), len(predict_labels))
+		print(video_input)
+		# path = 'C:/Users/amalaise/Documents/These/Xsens/170515_ThyssenkruppData/thyssenkrupp/video_mp4/thyssenkrupp_seq' + str(index) + '.mp4'
+		cap = cv2.VideoCapture(video_input)
+
+		# Define the codec and create VideoWriter object
+		fourcc = cv2.VideoWriter_fourcc(*'XVID')
+		out = cv2.VideoWriter(video_output, fourcc, 24.0, (800,600))
+		# out = cv2.VideoWriter(path_destination + 'sequence_' + str(index) + '.avi',fourcc, 24.0, (800,600))
+
+		count = 0
+		flag = 0
+		while(cap.isOpened()):
+			ret, frame = cap.read()
+			if(ret and flag < len(real_labels)):
+				cv2.putText(frame,'Real state: ' + str(real_labels[flag])
+					, (10,25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+				cv2.putText(frame,'Predict state: ' + str(predict_labels[flag])
+					, (10,55), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+				cv2.imshow('frame', frame)
+				out.write(frame)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
+				count += 1
+				if(count >= 120/20):
+					flag += 1
+					count = 0
+			else:
+				break
+
+		cap.release()
+		out.release()
+		cv2.destroyAllWindows()
+		return
 
 

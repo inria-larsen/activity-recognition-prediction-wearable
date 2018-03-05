@@ -83,7 +83,7 @@ class ModelHMM():
 		# Get the list and number of states
 		self.list_states, labels = np.unique(labels, return_inverse=True)
 		self.n_states = len(self.list_states)
-		
+
 		self.model = hmm.GaussianHMM(n_components=self.n_states, covariance_type="full")
 
 		Y = labels.reshape(-1, 1) == np.arange(len(self.list_states))

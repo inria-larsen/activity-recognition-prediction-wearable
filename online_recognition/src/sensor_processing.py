@@ -4,6 +4,7 @@ import yarp
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.signal
 
 class SensorProcessingModule(yarp.RFModule):
 	def __init__(self):
@@ -18,8 +19,10 @@ class SensorProcessingModule(yarp.RFModule):
 		self.cback = []
 		self.diff_order_list = []
 		self.norm_list = []
+		self.normalize = []
 		self.list_name_ports = []
 		self.related_port = []
+		self.count = 0
 
 		size_buffer = int(rf.find('size_buffer').toString())
 
@@ -64,6 +67,18 @@ class SensorProcessingModule(yarp.RFModule):
 					else:
 						self.diff_order_list.append(int(order_diff))
 
+					is_norm = info_signal.find('norm').toString()
+					if(is_norm == '' or is_norm == '0'):
+						self.norm_list.append(0)
+					else:
+						self.norm_list.append(int(is_norm))
+
+					normalize = info_signal.find('normalize').toString()
+					if(normalize == '' or normalize == '0'):
+						self.normalize.append([0])
+					else:
+						self.normalize.append([int(normalize), 0])
+
 				else:
 					for item in list_items:
 						if(not(input_port_name in self.list_name_ports)):
@@ -87,12 +102,19 @@ class SensorProcessingModule(yarp.RFModule):
 						else:
 							self.norm_list.append(int(is_norm))
 
+						normalize = info_signal.find('normalize').toString()
+						if(normalize == '' or normalize == '0'):
+							self.normalize.append([0])
+						else:
+							self.normalize.append([int(normalize), 0])
+
 						self.output_port.append(yarp.BufferedPortBottle())
 						self.output_port[nb_output_port].open("/processing" + output_port_name + '/' + item + ':o')
 						related_items = info_signal.find("related_items").toString()
 						id_item = int(rf.findGroup(related_items).find(item).toString())
 						nb_output_port += 1
-						self.related_port.append([input_port_name, np.arange(id_item, id_item + 3)])
+						dimension = int(rf.findGroup(related_items).find('dimension').toString())
+						self.related_port.append([input_port_name, id_item, dimension])
 
 		self.clock = yarp.Time.now()
 
@@ -110,6 +132,7 @@ class SensorProcessingModule(yarp.RFModule):
 		
 		# Slidding Window
 		if((current_time - self.clock) >= self.window_size/2):
+			
 			self.clock = current_time
 
 			# Get the data from each input port corresponding to the window
@@ -128,19 +151,62 @@ class SensorProcessingModule(yarp.RFModule):
 
 							# Check which data send to the output port (segments/joints)
 							id_items = self.related_port[id_ouput][1]
+
 							if(id_items == 'all'):
-								id_items = [0, len(data_output[0])]
+								id_items = 0
+								dimension = len(data_output[0])
+							else:
+								dimension = self.related_port[id_ouput][2]
 
 							# Derive the signal to extract velocity or acceleration
 							if(self.diff_order_list[id_ouput] > 0):
 								out = np.diff(np.asarray(data_output), self.diff_order_list[id_ouput], axis=0)
 								for j in range(self.diff_order_list[id_ouput]):
 									out = np.insert(out, 0, 0, axis=0)
+
+								order = 6
+								fs = 240
+								nyq = 0.5 * fs
+								cutoff = 30
+								normal_cutoff = cutoff / nyq
+
+								b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
+								out = scipy.signal.lfilter(b, a, out, axis = 0)*fs
+
 							else:
 								out = np.asarray(data_output)
 
+
+
+
+							
+							if(self.norm_list[id_ouput]):
+								out = np.linalg.norm(out, axis = 1)
+								dimension = 1
+
 							# Compute the average signals on the sliding window
-							output = np.mean(np.asarray(out[:,id_items[0]:id_items[-1]+1]), axis = 0)
+							# output = np.mean(np.asarray(out[:,id_items[0]:id_items[-1]+1]), axis = 0)
+							if(len(np.shape(out)) == 1):
+								out = np.expand_dims(out, axis=1)
+
+							output = np.mean(np.asarray(out[:,id_items:id_items+dimension]), axis = 0)
+
+							if(self.normalize[id_ouput][0] == 1):
+								if(self.count == 0):
+									self.median_normalize = []
+
+								
+								self.count += 1
+								self.median_normalize.append(output[0])
+
+								if(self.count >=  1000):
+									del self.median_normalize[0]
+
+									
+								output = output - np.median(self.median_normalize)
+
+								
+
 
 							# Send data to the ouput port
 							dimension = np.shape(output)[0]
@@ -150,8 +216,6 @@ class SensorProcessingModule(yarp.RFModule):
 							for dim in range(dimension):
 								b_out.addDouble(output[dim])
 							out_port.write()
-
-							print(out_port.getName(), np.shape(output))
 						
 					del self.buffer[id_input][0:length]
 
@@ -160,8 +224,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 	def read_input_ports(self):
 		received_data = np.zeros(len(self.input_port))
-		for port, i in zip(self.input_port, range(len(self.input_port))):
 
+		for port, i in zip(self.input_port, range(len(self.input_port))):
 			data = self.cback[i].get_data()
 
 			if(len(data)>0):

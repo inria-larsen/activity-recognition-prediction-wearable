@@ -5,19 +5,13 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import scipy.signal
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../Classifiers/HMM/src/')))
 
 from hmm_model import ModelHMM
 
 import warnings
-
-def fxn():
-    warnings.warn("deprecated", DeprecationWarning)
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    fxn()
-
+warnings.filterwarnings("ignore")
 
 class ActivityRecognitionModule(yarp.RFModule):
 	def __init__(self):
@@ -40,6 +34,7 @@ class ActivityRecognitionModule(yarp.RFModule):
 		self.model = ModelHMM()
 		self.model.load_model(path_model + '/' + name_model)
 		self.list_states = self.model.get_list_states()
+		self.buffer_model = [[]]
 
 		print(self.list_states)
 
@@ -68,6 +63,7 @@ class ActivityRecognitionModule(yarp.RFModule):
 					self.list_port[nb_active_port].useCallback(self.cback[nb_active_port])
 					yarp.Network.connect("/processing" + input_port_name + ':o', self.list_port[nb_active_port].getName())
 					nb_active_port += 1
+					self.buffer_model.append([])
 
 				else:
 					for item in list_items:
@@ -75,11 +71,12 @@ class ActivityRecognitionModule(yarp.RFModule):
 						self.list_port[nb_active_port].open("/activity_recognition" + input_port_name + '/' + item + ':i')
 						self.cback.append(CallbackData(size_buffer))
 						self.list_port[nb_active_port].useCallback(self.cback[nb_active_port])
+						self.buffer_model.append([])
 						yarp.Network.connect("/processing" + input_port_name + '/' + item  + ':o', self.list_port[nb_active_port].getName())
 						nb_active_port += 1
 
 
-
+		self.flag_model = np.zeros(nb_active_port)
 		self.obs = []
 
 		return True
@@ -96,17 +93,30 @@ class ActivityRecognitionModule(yarp.RFModule):
 		for port, i in zip(self.list_port, range(len(self.list_port))):
 			data = self.cback[i].get_data()
 			if(len(data)>0):
-				received_data += 1
-				dimension = int(data[0])
-				del data[0]
+				self.buffer_model[i] = data
+				self.flag_model[i] = 1
 
+				dimension = len(data)
 				if(i == 0):
 					data_model = data
 				else:
 					data_model = np.concatenate((data_model, data))
 
-		if(received_data == len(self.list_port)):
+
+		if(np.sum(self.flag_model) == len(self.list_port)):
+			self.flag_model = np.zeros(len(self.list_port))
+
+			for i in range(len(self.list_port)):
+				if(i == 0):
+					data_model = self.buffer_model[i]
+				else:
+					data_model = np.concatenate((data_model, self.buffer_model[i]))
+
+
 			self.obs.append(data_model)
+
+			if(len(self.obs) > 500):
+				del self.obs[0]
 
 			if(len(self.obs) > 10):
 				state = self.model.predict_states(self.obs)
@@ -127,10 +137,16 @@ class ActivityRecognitionModule(yarp.RFModule):
 					b_prob.addDouble(prob)
 				self.probPort.write()
 
+		# else:
+			
+			
+
+				
+
 		return True
 
 	def getPeriod(self):
-		return 0.01
+		return 0.001
 
 
 class CallbackData(yarp.BottleCallback):
@@ -143,9 +159,9 @@ class CallbackData(yarp.BottleCallback):
 	def onRead(self, bot, *args, **kwargs):
 		data = bot.toString().split(' ')
 		value = list(map(float, data))
-		self.buffer = value
-		if(len(self.buffer) > self.size_buffer):
-			del self.buffer[0]
+		self.buffer = value[1:]
+		# if(len(self.buffer) > self.size_buffer):
+		# 	del self.buffer[0]
 		return value
 
 	def get_data(self):
