@@ -10,21 +10,31 @@ class anvil_tree():
 		Take in input the path where the file is located
 		"""
 		tree = etree.parse(path)
-		self.data = next(tree.iterfind('body'))
+		self.data = list(next(tree.iterfind('body')))
 
 
-	def get_data(self):
+	def get_data(self, name_track = '0'):
 		"""
 		Return the label, start time and end time of all actions in the sequence
 		"""
-		list_act = list(next(self.data.iterfind('track')))
+		# list_track = list(next(self.data.iterfind('body')))
+
+		if(name_track == '0'):
+			track = self.data[0]
+		else:
+			for tr in self.data:
+				if(tr.get('name') == name_track):
+					track = tr
+
 		self.start = []
 		self.end = []
 		self.label = []
-		for el in list_act:
-			self.start.append(float(el.get('start'))*1000)
-			self.end.append(float(el.get('end'))*1000)
+
+		for el in track.iter('el'):
+			self.start.append(float(el.get('start')))
+			self.end.append(float(el.get('end')))
 			self.label.append(next(el.iterfind('attribute')).text)
+
 		return self.label, self.start, self.end
 
 	def get_list_states(self):

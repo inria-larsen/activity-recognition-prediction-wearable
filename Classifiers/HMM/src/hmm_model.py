@@ -1,6 +1,19 @@
 import numpy as np
 from hmmlearn import hmm
-import src.tools as tools
+import tools as tools
+import os
+from sklearn.externals import joblib
+from lxml import etree as ET
+
+def relative_dir(abs_path):
+  return os.path.realpath(
+      os.path.join(os.path.dirname(abs_path),
+      '../../../online_recognition/src/'))
+
+def addpack(abs_path):
+  relative = relative_dir(abs_path)
+  if relative not in sys.path:
+    sys.path.append(relative)
 
 class ModelHMM():
 	""" Hiden Markov Model classifier class
@@ -54,7 +67,6 @@ class ModelHMM():
 		self.index_sequences = index_sequences
 
 
-
 		# Concatenate all the sequence in one and create a vector with the length of each sequence
 		obs = []
 		obs = data[0]
@@ -72,7 +84,6 @@ class ModelHMM():
 		self.list_states, labels = np.unique(labels, return_inverse=True)
 		self.n_states = len(self.list_states)
 
-
 		self.model = hmm.GaussianHMM(n_components=self.n_states, covariance_type="full")
 
 		Y = labels.reshape(-1, 1) == np.arange(len(self.list_states))
@@ -81,6 +92,7 @@ class ModelHMM():
 
 		# Compute the initial probabilities
 		init_prob = Y[start].sum(axis=0)/Y[start].sum()
+		# init_prob = np.ones(self.n_states)/self.n_states
 
 		# Compute the transition matrix probabilities
 		trans_prob = np.zeros((self.n_states, self.n_states)).astype(int)
@@ -107,21 +119,70 @@ class ModelHMM():
 		return self.model.predict(obs)
 
 	def score_samples(self, obs):
-		""" Return for a sequence of observation the probability distribution on each state
-
+		""" 
+		Return for a sequence of observation the probability distribution on each state
 		"""
 		return self.model.score_samples(obs)[1]
 
 
-	def save_model(self):
+	def save_model(self, path, name_model, name_sequences):
+		if(not(os.path.isdir(path))):
+			os.makedirs(path)
+
+		joblib.dump(self.model, path +'/' + name_model)
+
+		root = ET.Element('HMM-Model')
+		tree = ET.ElementTree(root)
+
+		model = ET.SubElement(root, 'model', name_model = name_model, name_sequences = name_sequences)
+
+
+		list_features = ET.SubElement(model, 'features')
+
+		sub_feature_list = []
+
+		# for f,d, index in zip(self.list_features, self.dim_features, range(len(self.list_features))):
+		# 	name_feature = f.split('_')
+		# 	if(len(name_feature) == 1):
+		# 		feature = ET.SubElement(list_features, 'feature', index=str(index), label=f, dimension=str(d))
+		# 	else:
+		# 		category = name_feature[0]
+		# 		if(category in sub_feature_list):
+		# 			sub_features = ET.SubElement(list_features, 'sub_feature', label=category)
+		# 			sub_feature_list.append(category)
+		# 		else:
+		# 			sub_features = ET.find(category)
+
+				# feature = ET.SubElement(sub_features, 'feature', index=str(index), label=name_feature[1], dimension=str(d))
+			
+		states = ET.SubElement(model, 'states')
+		for s, index in zip(self.list_states, range(self.n_states)):
+			state = ET.SubElement(states, 'state', index=str(index), label=s)
+
+		features = ET.SubElement(model, 'features')
+
+
+
+
+		name_file = path + '/' +  name_model + '.xml'
+		tree.write(name_file, pretty_print=True, xml_declaration=True,   encoding="utf-8")
 		return
 
 
-	def load_model(self, config_file):
-		""" Load the parameters from the configuration file to set the parameters of the model
-
-
+	def load_model(self, model_file):
+		""" 
+		Load the parameters from the configuration file to set the parameters of the model
 		"""
+		self.model = joblib.load(model_file)
+
+		tree = ET.parse(model_file + '.xml')
+		print(tree)
+		data = next(tree.iterfind('model'))
+		states = list(next(data.iterfind('states')))
+		self.list_states = []
+
+		for state in states:
+			self.list_states.append(state.get('label'))
 		return
 
 
@@ -139,13 +200,13 @@ class ModelHMM():
 		return self.dim_features
 
 	def get_trans_mat(self):
-		return trans_mat
+		return self.model.transmat_
 
 	def get_start_prob(self):
 		return start_prob
 
 	def get_emission_prob(self):
-		return emission_means, emission_covars
+		return self.model.means_, self.model.covars_
 
 	def get_model(self):
 		return self.model

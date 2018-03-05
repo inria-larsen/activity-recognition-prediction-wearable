@@ -1,7 +1,34 @@
-from src.xsens_parser import mvnx_tree
-from src.anvil_parser import anvil_tree
+from xsens_parser import mvnx_tree
+from anvil_parser import anvil_tree
+from eglove_parser import eglove_tree
 import numpy as np
 import os
+import scipy.signal
+import matplotlib.pyplot as plt
+from copy import deepcopy
+import csv
+
+segment_features = [
+			'orientation',
+			'position',
+			'velocity',
+			'acceleration'
+					]
+
+joint_features = [
+			'jointAngle',
+			'jointAngleXZY',
+			'angularVelocity',
+			'angularAcceleration'
+					]
+
+sensor_features = [
+			'sensorOrientation',
+			'sensorAngularVelocity',
+			'sensorAcceleration'
+					]
+
+
 
 
 class DataBase():
@@ -17,7 +44,7 @@ class DataBase():
 
 	labels_folder = "/labels/"
 	mvnx_folder = "/mvnx/"
-	eglove_folder = "/eglove/"
+	eglove_folder = "/glove/"
 	videos_folder = "/video/"
 
 	def __init__(self, path, n_seq = -1):
@@ -37,9 +64,8 @@ class DataBase():
 
 
 	def load_mvnx_data(self):
-		""" Load the mocap mvnx files corresponding to xsens MoCap data
-
-
+		""" 
+		Load the mocap mvnx files corresponding to xsens MoCap data
 		"""
 		path = self.path_data + self.mvnx_folder
 		list_files = os.listdir(path)
@@ -51,8 +77,8 @@ class DataBase():
 		# check all the files in the mvnx folder
 		for file, i in zip(list_files, range(self.n_seq)):
 			self.mvnx_tree.append(mvnx_tree(path + file))
-			T = self.mvnx_tree[i].get_timestamp()
-			self.mocap_data[i].append(self.mvnx_tree[i].get_timestamp())
+			self.mocap_data[i].append(self.mvnx_tree[i].get_timestamp_ms())
+
 			if(i < self.n_seq - 1):
 				self.mocap_data.append([])
 
@@ -62,9 +88,7 @@ class DataBase():
 		return path
 
 
-
-
-	def load_labels_ref(self):
+	def load_labels_ref(self, name_track = '0'):
 		""" Load the reference labels from Anvil file
 
 		This function updates the reference data and the list of states.
@@ -75,6 +99,8 @@ class DataBase():
 
 		list_states: sorted list of string containing the list of states
 		"""
+
+
 		path = self.path_data + self.labels_folder
 		list_files = os.listdir(path)
 		list_files.sort()
@@ -86,10 +112,10 @@ class DataBase():
 		for file, i in zip(list_files, range(self.n_seq)):
 			ref = anvil_tree(path + file)
 
-			labels, start, end = ref.get_data()
+			labels, start, end = ref.get_data(name_track)
 			# for in ref.get_data():
 			# 	self.ref_data[i]
-			self.ref_data[i].append(ref.get_data())
+			self.ref_data[i].append(ref.get_data(name_track))
 
 			for state in sorted(ref.get_list_states()):
 				if(state not in self.list_states):
@@ -112,14 +138,134 @@ class DataBase():
 				self.ref_data.append([])
 		return
 
+	def add_signals_to_dataBase(self, rf):
+		self.config_file = rf
 
-	def add_mvnx_data(self, list_features):
+		signals = self.config_file.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
+		nb_port = int(len(signals))
+		nb_active_port = 0
+
+		for signal in signals:
+			info_signal = self.config_file.findGroup(signal)
+			is_enabled = int(info_signal.find('enable').toString())
+
+			if(signal == 'eglove'):
+			 	# list_items = info_signal.findGroup('list').tail().toString().split(' ')
+			 	# self.add_data_glove(list_items)
+			 	continue
+
+			related_data = info_signal.find('related_data').toString()
+			if(related_data == ''):
+				related_data = signal
+
+			info_related_data = self.config_file.findGroup(related_data)
+			
+			if(is_enabled):
+				list_items = info_signal.findGroup('list').tail().toString().split(' ')
+				order_diff = info_signal.find('diff_order').toString()
+				is_norm = info_signal.find('norm').toString()
+				normalize = info_signal.find('normalize').toString()
+
+				if(order_diff == ''):
+					order_diff = 0
+				else:
+					order_diff = int(order_diff)
+
+				if(is_norm == ''):
+					is_norm = 0
+				else:
+					is_norm = int(is_norm)
+
+				if(normalize == ''):
+					normalize = 0
+				else:
+					normalize = int(normalize)
+
+				
+				features_mvnx = self.mvnx_tree[0].get_list_features()
+
+				for i in range(self.n_seq):
+					if(related_data in features_mvnx):
+						data = self.mvnx_tree[i].get_data(related_data)
+
+
+
+					if(normalize == 1):				
+						data_normalize = deepcopy(data)
+						data_init = deepcopy(data_normalize[0])
+						for t in range(len(data_normalize)):
+							data_normalize[t] = data_normalize[t] - data_init
+						data = data_normalize
+
+
+							
+					if(order_diff > 0):
+						data_diff = np.diff(np.asarray(data), order_diff, axis=0)
+						for j in range(order_diff):
+							data_diff = np.insert(data_diff, 0, 0, axis=0)
+
+						order = 6
+						fs = 240
+						nyq = 0.5 * fs
+						cutoff = 30
+						normal_cutoff = cutoff / nyq
+
+						b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
+						data = scipy.signal.lfilter(b, a, data_diff, axis = 0)*fs
+
+					
+
+					dimension = np.shape(data)[1]
+
+					if((list_items[0] == 'all') or (list_items[0] == '')):
+						if(is_norm):
+							data = np.linalg.norm(data, axis = 1)
+							dimension = 1
+
+						self.mocap_data[i].append(data)
+						
+						if(not(signal in self.list_features[0])):
+							# Update the list of features with name and dimension
+							self.list_features[0].append(signal)
+							self.list_features[1].append(dimension)
+
+					else:
+						related_items = info_related_data.find("related_items").toString()
+						nb_items = int(rf.findGroup(related_items).find('Total').toString())
+						dimension_reduce = int(dimension/nb_items)
+
+						for item in list_items:
+							id_item = int(rf.findGroup(related_items).find(item).toString())
+							id_item = id_item*dimension_reduce
+							data_reduce = data[:,id_item:id_item + dimension_reduce]
+							if(is_norm):
+								data_reduce = np.linalg.norm(data_reduce, axis = 1)
+								dimension_reduce = 1
+
+							self.mocap_data[i].append(data_reduce)
+
+							name_signal = signal + '_' + item
+
+							if(not(name_signal in self.list_features[0])):
+								# Update the list of features with name and dimension
+								self.list_features[0].append(name_signal)
+								self.list_features[1].append(dimension_reduce)
+
+
+		list_features = self.list_features[0][1:]
+		dim_features = self.list_features[1][1:]
+
+		return list_features, dim_features
+
+
+	def add_mvnx_data(self, list_features, sub_list):
 		""" Add to the dataset the data corresponding to the list of features in input
 
 		input:
 		list_features: list of string corresponding to the features in mvnx file
 		ouput: returns all the data per sequence in a list of array
 		"""
+
 		features_mvnx = self.mvnx_tree[0].get_list_features()
 				
 		for feature in list_features:
@@ -127,14 +273,76 @@ class DataBase():
 				continue
 
 			if(feature in features_mvnx): # Check if the feature exists in mvnx file
-				for i in range(self.n_seq):
-					self.mocap_data[i].append(self.mvnx_tree[i].get_data(feature))
+				if(feature == 'centerOfMass'):
+					for i in range(self.n_seq):
+						com = self.mvnx_tree[i].get_data(feature)
+						if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
+							self.mocap_data[i].append(com)
+							continue
+						if('z' in sub_list[0]):
+							self.mocap_data[i].append(com[:,0])
+						if('y' in sub_list[0]):
+							self.mocap_data[i].append(com[:,1])
+						if('x' in sub_list[0]):
+							self.mocap_data[i].append(com[:,2])
+						
+					# if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
+					# 	self.list_features[0].append(feature)
+					# 	self.list_features[1].append(3)
+		
+					# if('z' in sub_list[0]):		
+					# 	self.list_features[0].append('COM_Z')
+					# 	self.list_features[1].append(1)
 
-				# Update the list of features with name and dimension
-				self.list_features[0].append(feature)
-				self.list_features[1].append(len(self.mvnx_tree[i].get_data(feature).T))
+					# if('y' in sub_list[0]):		
+					# 	self.list_features[0].append('COM_Y')
+					# 	self.list_features[1].append(1)
 
-		return self.mocap_data
+					# if('x' in sub_list[0]):		
+					# 	self.list_features[0].append('COM_X')
+					# 	self.list_features[1].append(1)
+
+					# if('z' in sub_list):
+
+				elif((sub_list[0] == 'all') or (sub_list[0] == '')):
+					for i in range(self.n_seq):
+						self.mocap_data[i].append(self.mvnx_tree[i].get_data(feature))
+
+					# Update the list of features with name and dimension
+					self.list_features[0].append(feature)
+					self.list_features[1].append(len(self.mvnx_tree[i].get_data(feature).T))
+
+				elif(feature in segment_features):
+					self.add_features_by_segments(feature, sub_list)
+
+				elif(feature in joint_features):
+					self.add_features_by_joints(feature, sub_list)
+
+				elif(feature in sensor_features):
+					self.add_features_by_sensors(feature, sub_list)
+
+			# elif(feature == 'CoMVelocity'):
+			# 	for i in range(self.n_seq):
+			# 		com = self.mvnx_tree[i].get_data('centerOfMass')
+			# 		com_vel = np.diff(com, axis=0)
+			# 		com_vel = np.insert(com_vel, 0, 0, axis=0)
+
+			# 		self.mocap_data[i].append(com_vel)
+
+			# 	self.list_features[0].append(feature)
+			# 	self.list_features[1].append(3)
+
+
+
+
+
+
+
+
+		list_features = self.list_features[0][1:]
+		dim_features = self.list_features[1][1:]
+
+		return list_features, dim_features
 
 
 	def add_features_by_segments(self, feature, list_segments):
@@ -150,13 +358,6 @@ class DataBase():
 		Add all data in the mocap_data list and returns it
 		"""
 		segments_mvnx = self.mvnx_tree[0].get_list_tags('segments')
-		
-		segment_features = [
-						'orientation',
-						'position',
-						'velocity',
-						'acceleration'
-							]
 
 		if(feature in segment_features):
 			for segment in list_segments:
@@ -197,13 +398,6 @@ class DataBase():
 		"""
 		joints_mvnx = self.mvnx_tree[0].get_list_tags('joints')
 		
-		joint_features = [
-						'jointAngle',
-						'jointAngleXZY',
-						'angularVelocity',
-						'angularAcceleration'
-							]
-
 		if(feature in joint_features):
 			for joint in list_joints:
 				if((joint not in joints_mvnx) or # check if the joint name exist and not already in the features list
@@ -242,12 +436,6 @@ class DataBase():
 		"""
 		sensors_mvnx = self.mvnx_tree[0].get_list_tags('sensors')
 		
-		sensor_features = [
-						'sensorOrientation',
-						'sensorAngularVelocity',
-						'sensorAcceleration'
-							]
-
 		if(feature in sensor_features):
 			for sensor in list_sensors:
 				if((sensor not in sensors_mvnx) or # check if the sensor name exist and not already in the features list
@@ -295,11 +483,10 @@ class DataBase():
 		"""
 		self.real_labels = [[]]
 
-		for i in range(self.n_seq):
-			flag = 0
-			time = timestamps[i]
 
-			
+		for i in range(len(timestamps)):
+			flag = 0
+			time = (np.asarray(timestamps[i]) - timestamps[i][0])
 
 			end = self.ref_data[i][0][2]
 			labels = self.ref_data[i][0][0]
@@ -313,6 +500,7 @@ class DataBase():
 
 			if(i < self.n_seq -1):
 				self.real_labels.append([])
+
 		return self.real_labels
 
 
@@ -326,11 +514,85 @@ class DataBase():
 	def get_ref_data(self):
 		return self.ref_data
 
+	def get_ref_labels(self):
+		return self.real_labels
+
 	def get_nbr_sequence(self):
 		return self.n_seq
 
 	def get_list_states(self):
 		return self.list_states
+
+
+	def add_data_glove(self, list_signal):
+		path = self.path_data + self.eglove_folder
+		list_files = os.listdir(path)
+		list_files.sort()
+
+		self.glove_timestamps = [[]]
+		self.data_glove = [[]]
+
+		for file, i in zip(list_files, range(self.n_seq)):
+			with open(path + '/' + list_files[i], 'rt') as f:
+				reader = csv.reader(f, delimiter=' ')
+				for row in reader:
+					self.data_glove[i].append(list(map(float, row[0:4])))
+					self.glove_timestamps[i].append(float(row[7]))
+
+			if(i < self.n_seq - 1):
+				self.glove_timestamps.append([])
+				self.data_glove.append([])
+
+		return self.data_glove, self.glove_timestamps
+
+	def get_timestamps_glove(self):
+		return self.glove_timestamps
+
+	def get_data_glove(self):
+		return self.data_glove
+
+
+		# start = 0
+
+		# for i in range(len(glove_timestamp)):
+		# 	glove_timestamp[i] = float(glove_timestamp[i]) + 1
+		# 	# t_glove[i] = float(t_glove[i])
+
+		# for i in range(len(mocap_timestamp)):
+		# 	mocap_timestamp[i] = float(mocap_timestamp[i])
+
+		# start = 0
+		# while(float(glove_timestamp[start]) < float(mocap_timestamp[0])):
+		# 	start += 1
+
+		# end = start
+
+		# while(float(glove_timestamp[end]) <= float(mocap_timestamp[-1])):
+		# 	end += 1
+		# 	if(end == len(glove_timestamp)):
+		# 		end -= 1
+		# 		break
+
+		# data_forces = data[start:end]
+		# data_force = np.zeros((len(self.time), 1))
+
+		# count = 0
+		# flag = 0
+		# # print(len(self.time), len(data_forces))
+		# for i in range(len(self.time)-1):
+		# 	data_force[i] = data_forces[count]
+		# 	flag += 1
+		# 	# if(flag == np.ceil(len(self.time) / len(data_forces))):
+		# 	if(flag == 24):
+		# 		count += 1
+		# 		flag = 0
+		# 		if(count == len(data_forces)):
+		# 			break
+		# 		# print(count, i)
+
+		# self.all_data.append(data_force)
+		# self.list_features[0].append('contactForces')
+		# self.list_features[1].append(1)
 
 
 
