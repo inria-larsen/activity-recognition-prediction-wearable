@@ -1,7 +1,0 @@
-yarp connect /xsens/COM /processing/xsens/COM:i
-yarp connect /xsens/PosePositions /processing/xsens/PosePositions:i
-yarp connect /xsens/JointAngles /processing/xsens/JointAngles:i
-yarp connect /eglove/rawdata /processing/eglove/rawdata:i
-
-
-
