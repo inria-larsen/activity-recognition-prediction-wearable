@@ -55,7 +55,6 @@ class ActivityRecognitionModule(yarp.RFModule):
 				if(input_port_name == ''):
 					input_port_name = info_signal.find('input_port').toString()
 
-
 				if((list_items[0] == 'all') or (list_items[0] == '')):
 					self.list_port.append(yarp.BufferedPortBottle())
 					self.list_port[nb_active_port].open("/activity_recognition" + input_port_name + ':i')

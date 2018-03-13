@@ -20,6 +20,7 @@ class SensorProcessingModule(yarp.RFModule):
 		self.cback = CallbackData(size_buffer)
 		self.list_name_ports = []
 		self.related_port = []
+		self.norm_list = []
 
 		self.window_size = float(rf.find('slidding_window_size').toString())
 
@@ -52,6 +53,12 @@ class SensorProcessingModule(yarp.RFModule):
 				self.related_port.append([input_port_name, 'all'])
 				nb_output_port += 1
 
+				is_norm = info_signal.find('norm').toString()
+				if(is_norm == '' or is_norm == '0'):
+					self.norm_list.append(0)
+				else:
+					self.norm_list.append(int(is_norm))
+
 			else:
 				for item in list_items:
 					if(not(input_port_name in self.list_name_ports)):
@@ -67,6 +74,12 @@ class SensorProcessingModule(yarp.RFModule):
 						related_data = info_signal.find('related_data').toString()
 						info_related_data = rf.findGroup(related_data)
 						related_items = info_related_data.find("related_items").toString()
+
+					is_norm = info_signal.find('norm').toString()
+					if(is_norm == '' or is_norm == '0'):
+						self.norm_list.append(0)
+					else:
+						self.norm_list.append(int(is_norm))
 
 					id_item = int(rf.findGroup(related_items).find(item).toString())
 					nb_items = int(rf.findGroup(related_items).find('Total').toString())
@@ -111,14 +124,20 @@ class SensorProcessingModule(yarp.RFModule):
 # 				
 				out = np.asarray(data_output)
 
-
 				# Compute the average signals on the sliding window
-				output = np.mean(np.asarray(out[:,id_items]), axis = 0)
+				output = np.mean(np.asarray(out[:,id_items:id_items+nb_items]), axis = 0)
+
+				if(self.norm_list[id_ouput]):
+					output = np.expand_dims(output, axis=1)
+					output = np.linalg.norm(output, axis = 0)
+
+				print(output)
 
 				b_out = out_port.prepare()
 				b_out.clear()
-				b_out.addInt(1)
-				b_out.addDouble(output)
+				b_out.addInt(len(output))
+				for i in range(len(output)):
+					b_out.addDouble(output[i])
 				out_port.write()
 			
 			del self.buffer[0:length]
@@ -173,7 +192,7 @@ if __name__=="__main__":
 	rf = yarp.ResourceFinder()
 	rf.setVerbose(True)
 	rf.setDefaultContext("online_recognition")
-	rf.setDefaultConfigFile("default.ini")
+	rf.setDefaultConfigFile("eglove_only.ini")
 	rf.configure(sys.argv)
 
 	mod_sensor = SensorProcessingModule()

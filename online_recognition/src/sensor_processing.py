@@ -39,6 +39,9 @@ class SensorProcessingModule(yarp.RFModule):
 			info_signal = rf.findGroup(signal)
 			is_enabled = int(info_signal.find('enable').toString())
 
+			if(signal == ('eglove')):
+				continue
+
 			if(is_enabled):
 				list_items = info_signal.findGroup('list').tail().toString().split(' ')
 				input_port_name = info_signal.find('input_port').toString()
