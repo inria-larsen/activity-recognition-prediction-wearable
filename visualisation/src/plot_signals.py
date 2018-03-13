@@ -9,7 +9,12 @@ import numpy as np
 
 
 class RealTimePlotModule():
-	"""docstring for RealTimePlot"""
+	"""
+	This module plots a bar chart with the probability distribution on the states.
+	Usage
+	python plot_probabilities.py
+	Input port: /processing/NamePort:o
+	"""
 	def __init__(self, name_port, size_window):
 
 		self.input_port = name_port
@@ -45,8 +50,6 @@ class RealTimePlotModule():
 
 		value = list(map(float, data))
 
-
-
 		for dim in range(dimension):
 			if(len(self.buffer) <= dim):
 				self.buffer.append([])
@@ -72,7 +75,6 @@ if __name__=="__main__":
 	rf.configure(sys.argv)
 	
 	name_port = rf.find("name_port").toString()
-
 	size_window = rf.find("size_window").toString()
 
 	if(len(size_window) == 0):

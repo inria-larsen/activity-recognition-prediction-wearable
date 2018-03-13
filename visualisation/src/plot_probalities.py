@@ -7,16 +7,14 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
-"""
-This module plot a bar chart with the probability distribution on the states.
-Usage
-python plot_probabilities.py
-Input port: /activity_recognition/probabilities
-"""
-
 
 class RealTimeBarPlotModule():
-	"""docstring for RealTimePlot"""
+	"""
+	This module plots a bar chart with the probability distribution on the states.
+	Usage
+	python plot_probabilities.py
+	Input port: /activity_recognition/probabilities
+	"""
 	def __init__(self, rf):
 		path_model = rf.find('path_model').toString()
 
