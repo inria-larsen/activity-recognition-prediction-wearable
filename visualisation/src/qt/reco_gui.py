@@ -51,6 +51,17 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
         b_in = self.port_activity.read()
         data = b_in.toString().split(' ')
 
+        score = []
+
+        for i in range(1, len(data), 2):
+            score.append(float(data[i]))
+        
+        max_value = max(score)
+        id_max = score.index(max_value)
+        current_state = data[id_max*2]
+
+        self.current_activity_image.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + current_state + '.png'))
+        self.current_activity_image.setScaledContents( True )
         self.standing_strongly_bent.setValue(float(data[data.index('standing_strongly_bent_forward') + 1]) * 100)
         self.standing_bent_forward.setValue(float(data[data.index('standing_bent_forward') + 1]) * 100)
         self.walking_upright.setValue(float(data[data.index('walking_upright') + 1]) * 100)
@@ -63,6 +74,13 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
 
         b_in2 = self.port_contact.read()
         data = b_in2.toString().split(' ')
+
+        if(int(data[0])):
+            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objYes.png'))
+        else:
+            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
+        
+        self.object_in_hand.setScaledContents( True )
 
         self.object_yes.setValue(float(data[0]) * 100)
         self.object_no.setValue(100 - float(data[0]) * 100)
