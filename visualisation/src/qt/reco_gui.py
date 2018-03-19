@@ -102,18 +102,18 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
 
         # b_in2 = self.port_contact.read()
         # data = b_in2.toString().split(' ')
-        # state_object = self.cback.get_data()
+        state_object = self.cback.get_data()
 
-        # if(len(state_object) > 0):
-        #     print(state_object)
-        #     # state = data[1]
+        if(len(state_object) > 0):
+            print(state_object)
+            # state = data[1]
 
-        #     # if(data>=0.75):
-        #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + state_object +  '.png'))
-        #     # else:
-        #     #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
+            # if(data>=0.75):
+            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + state_object +  '.png'))
+            # else:
+            #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
             
-        #     self.object_in_hand.setScaledContents( True )
+            self.object_in_hand.setScaledContents( True )
 
         # self.object_yes.setValue(float(data[0]) * 100)
         # self.object_no.setValue(100 - float(data[0]) * 100)
