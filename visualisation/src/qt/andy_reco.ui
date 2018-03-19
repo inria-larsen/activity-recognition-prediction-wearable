@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1100</width>
-    <height>574</height>
+    <height>657</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,6 +27,99 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0" colspan="2">
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Kneeling / crouching</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="3" column="3">
+        <widget class="QProgressBar" name="kneeling_elbow">
+         <property name="value">
+          <number>24</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QProgressBar" name="kneeling_upright">
+         <property name="value">
+          <number>24</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_13">
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Kneeling upright</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap>../../app/figs/kneeling12.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Kneeling elbow&lt;/p&gt;&lt;p&gt;at/above shoulder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap>../../app/figs/kneeling13.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QProgressBar" name="kneeling_bent">
+         <property name="value">
+          <number>24</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap>../../app/figs/kneeling14.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Kneeling bent</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
     <item row="0" column="2">
      <widget class="QGroupBox" name="current_porture">
       <property name="title">
@@ -187,7 +280,7 @@
        <item row="4" column="1">
         <widget class="QLabel" name="label_12">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Standing overhead work&lt;/p&gt;&lt;p&gt;Hands above head&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Standing overhead work&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -217,97 +310,14 @@
       </widget>
      </widget>
     </item>
-    <item row="1" column="0" colspan="2">
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="InitButton">
+      <property name="text">
+       <string>Initialize Center of Mass</string>
       </property>
-      <property name="title">
-       <string>Kneeling / crouching</string>
+      <property name="autoDefault">
+       <bool>false</bool>
       </property>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="3">
-        <widget class="QProgressBar" name="kneeling_upright">
-         <property name="value">
-          <number>24</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="label_13">
-         <property name="minimumSize">
-          <size>
-           <width>150</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Kneeling upright</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_14">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="pixmap">
-          <pixmap>../../app/figs/kneeling12.png</pixmap>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_18">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Kneeling elbow&lt;/p&gt;&lt;p&gt;at/above shoulder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_15">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="pixmap">
-          <pixmap>../../app/figs/kneeling13.png</pixmap>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_16">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="pixmap">
-          <pixmap>../../app/figs/kneeling14.png</pixmap>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="label_17">
-         <property name="text">
-          <string>Kneeling bent</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QProgressBar" name="kneeling_bent">
-         <property name="value">
-          <number>24</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3">
-        <widget class="QProgressBar" name="kneeling_elbow">
-         <property name="value">
-          <number>24</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
    </layout>

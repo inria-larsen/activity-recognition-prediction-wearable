@@ -27,6 +27,12 @@ class SensorProcessingModule(yarp.RFModule):
 		self.count = 0
 		self.current_com = []
 		self.flag_timer = 0
+		self.init_com = []
+
+		self.port_init_com = yarp.BufferedPortBottle()
+		self.port_init_com.open('/processing/init_com:i')
+		self.cback_init = CallBackInitCom()
+		self.port_init_com.useCallback(self.cback_init)
 
 		size_buffer = int(rf.find('size_buffer').toString())
 
@@ -157,10 +163,14 @@ class SensorProcessingModule(yarp.RFModule):
 		received_data = self.read_input_ports()
 
 		current_time = yarp.Time.now()
+
+		
+
 		
 		# Slidding Window
 		if((current_time - self.clock) >= self.window_size):
-			
+			initalization = self.cback_init.get_data()
+
 			self.clock = current_time
 
 			# Get the data from each input port corresponding to the window
@@ -175,6 +185,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 					if(in_port.getName() == '/processing/xsens/COM:i'):
 						self.current_com = np.mean(np.asarray(data_output), axis = 0)
+						if(self.count == 0 or initalization == 1):
+							self.init_com = self.current_com
 
 					# Check all ouput port to send data
 					for out_port, id_ouput in zip(self.output_port, range(len(self.output_port))):
@@ -243,13 +255,11 @@ class SensorProcessingModule(yarp.RFModule):
 
 								if(self.count >=  1000):
 									del self.median_normalize[id_ouput][0]
-
-									
+						
 								# output = output - np.median(self.median_normalize)
-								output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
+								# output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
+								output = (output - np.median(self.init_com[id_items]))/np.median(self.init_com[id_items])
 
-								
-							
 
 							# Send data to the ouput port
 							dimension = np.shape(output)[0]
@@ -302,6 +312,26 @@ class CallbackData(yarp.BottleCallback):
 		data = self.buffer
 		self.buffer = []
 		return data
+
+
+class CallBackInitCom(yarp.BottleCallback):
+	def __init__(self):
+		yarp.BottleCallback.__init__(self)
+		self.port = yarp.Port()
+		self.flag_init = 0
+
+	def onRead(self, bot, *args, **kwargs):
+		data = bot.toString().split(' ')
+		self.flag_init = int(data[0])
+		return data
+
+	def get_data(self):
+		is_init = 0
+		if(self.flag_init == 1):
+			is_init = 1
+			self.flag_init = 0
+		return is_init
+
 
 
 if __name__=="__main__":

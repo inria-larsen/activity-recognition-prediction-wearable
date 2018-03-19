@@ -50,6 +50,12 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
         self.__timer.timeout.connect(self.update_probabilities)
         self.__timer.start(10)# every 10 ms
 
+        # Port for initialization of center of mass position
+        self.InitButton.clicked.connect(self.initialize_com)
+        self.port_init = yarp.BufferedPortBottle()
+        self.port_init.open('/reco_gui/init_com:o')
+        yarp.Network.connect('/reco_gui/init_com:o', '/processing/init_com:i')
+
         # Prepare yarp ports
         self.activity_input = '/activity_recognition/probabilities:o'
         self.port_activity = yarp.BufferedPortBottle()
@@ -96,21 +102,28 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
 
         # b_in2 = self.port_contact.read()
         # data = b_in2.toString().split(' ')
-        state_object = self.cback.get_data()
+        # state_object = self.cback.get_data()
 
-        if(len(state_object) > 0):
-            print(state_object)
-            # state = data[1]
+        # if(len(state_object) > 0):
+        #     print(state_object)
+        #     # state = data[1]
 
-            # if(data>=0.75):
-            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + state_object +  '.png'))
-            # else:
-            #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
+        #     # if(data>=0.75):
+        #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + state_object +  '.png'))
+        #     # else:
+        #     #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
             
-            self.object_in_hand.setScaledContents( True )
+        #     self.object_in_hand.setScaledContents( True )
 
         # self.object_yes.setValue(float(data[0]) * 100)
         # self.object_no.setValue(100 - float(data[0]) * 100)
+
+
+    def initialize_com(self):
+        b_out = self.port_init.prepare()
+        b_out.clear()
+        b_out.addInt(1)
+        self.port_init.write()
 
 
 def main():
