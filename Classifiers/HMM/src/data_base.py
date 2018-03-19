@@ -107,7 +107,10 @@ class DataBase():
 
 		time_start = [[]]
 
+
+		self.ref_data = [[]]
 		self.real_labels = [[]]
+		self.list_states = []
 		
 		for file, i in zip(list_files, range(self.n_seq)):
 			ref = anvil_tree(path + file)
@@ -116,7 +119,7 @@ class DataBase():
 			# for in ref.get_data():
 			# 	self.ref_data[i]
 			self.ref_data[i].append(ref.get_data(name_track))
-
+			
 			for state in sorted(ref.get_list_states()):
 				if(state not in self.list_states):
 					self.list_states.append(state)
@@ -136,6 +139,7 @@ class DataBase():
 			if(i < self.n_seq -1):
 				self.real_labels.append([])
 				self.ref_data.append([])
+
 		return
 
 	def add_signals_to_dataBase(self, rf):
@@ -158,6 +162,7 @@ class DataBase():
 			if(related_data == ''):
 				related_data = signal
 
+
 			info_related_data = self.config_file.findGroup(related_data)
 			
 			if(is_enabled):
@@ -165,6 +170,7 @@ class DataBase():
 				order_diff = info_signal.find('diff_order').toString()
 				is_norm = info_signal.find('norm').toString()
 				normalize = info_signal.find('normalize').toString()
+				dist_com = info_signal.find('dist_com').toString()
 
 				if(order_diff == ''):
 					order_diff = 0
@@ -181,6 +187,11 @@ class DataBase():
 				else:
 					normalize = int(normalize)
 
+				if(dist_com == ''):
+					dist_com = 0
+				else:
+					dist_com = int(dist_com)
+
 				
 				features_mvnx = self.mvnx_tree[0].get_list_features()
 
@@ -188,13 +199,14 @@ class DataBase():
 					if(related_data in features_mvnx):
 						data = self.mvnx_tree[i].get_data(related_data)
 
-
-
 					if(normalize == 1):				
 						data_normalize = deepcopy(data)
 						data_init = deepcopy(data_normalize[0])
 						for t in range(len(data_normalize)):
-							data_normalize[t] = data_normalize[t] - data_init
+							# data_normalize[t] = data_normalize[t] - data_init
+							data_normalize[t] = (data_normalize[t] - data_init)/data_init
+							# data_normalize[t] = data_normalize[t]/data_init
+
 						data = data_normalize
 
 
@@ -218,6 +230,8 @@ class DataBase():
 					dimension = np.shape(data)[1]
 
 					if((list_items[0] == 'all') or (list_items[0] == '')):
+						if(signal == 'CoMVelocityNorm'):
+							data = data[:,0:2]	
 						if(is_norm):
 							data = np.linalg.norm(data, axis = 1)
 							dimension = 1
@@ -231,16 +245,40 @@ class DataBase():
 
 					else:
 						related_items = info_related_data.find("related_items").toString()
-						nb_items = int(rf.findGroup(related_items).find('Total').toString())
-						dimension_reduce = int(dimension/nb_items)
 
 						for item in list_items:
-							id_item = int(rf.findGroup(related_items).find(item).toString())
-							id_item = id_item*dimension_reduce
-							data_reduce = data[:,id_item:id_item + dimension_reduce]
+							nb_items = int(rf.findGroup(related_items).find('Total').toString())
+							dimension_reduce = int(dimension/nb_items)
+
+							id_item = rf.findGroup(related_items).find(item).toString()
+							id_item = int(id_item)*dimension_reduce
+
+							if(item == 'jL5S1'):
+								data_reduce = data[:,id_item + 2]
+								data_reduce = np.expand_dims(data_reduce, axis=1)
+								dimension_reduce = 1
+							else:
+								data_reduce = data[:,id_item:id_item + dimension_reduce]
+
 							if(is_norm):
 								data_reduce = np.linalg.norm(data_reduce, axis = 1)
 								dimension_reduce = 1
+
+							if(dist_com):
+								data_com = self.mvnx_tree[i].get_data('centerOfMass')
+
+								data_dist = np.zeros((len(data_com)))
+
+								for t in range(len(data_com)):
+
+									data_dist[t] = np.sqrt(
+										# (data_reduce[t, 0] - data_com[t, 0]) * (data_reduce[t, 0] - data_com[t, 0]) +
+										# (data_reduce[t, 1] - data_com[t, 1]) * (data_reduce[t, 1] - data_com[t, 1]) +
+										(data_reduce[t, 2] - data_com[t, 2]) * (data_reduce[t, 2] - data_com[t, 2]))
+								
+								data_reduce = np.expand_dims(data_dist, axis=1)
+								dimension_reduce = 1
+
 
 							self.mocap_data[i].append(data_reduce)
 
@@ -483,10 +521,11 @@ class DataBase():
 		"""
 		self.real_labels = [[]]
 
-
 		for i in range(len(timestamps)):
 			flag = 0
 			time = (np.asarray(timestamps[i]) - timestamps[i][0])
+
+
 
 			end = self.ref_data[i][0][2]
 			labels = self.ref_data[i][0][0]
@@ -524,24 +563,52 @@ class DataBase():
 		return self.list_states
 
 
-	def add_data_glove(self, list_signal):
+	def add_data_glove(self, info_signal):
 		path = self.path_data + self.eglove_folder
 		list_files = os.listdir(path)
 		list_files.sort()
 
+		list_items = info_signal.findGroup('list').tail().toString().split(' ')
+
+		print(list_items)
+
 		self.glove_timestamps = [[]]
-		self.data_glove = [[]]
+		self.data_glove = []
+
+		is_norm = info_signal.find('norm').toString()
+		if(is_norm == ''):
+			is_norm = 0
+		else:
+			is_norm = int(is_norm)
 
 		for file, i in zip(list_files, range(self.n_seq)):
 			with open(path + '/' + list_files[i], 'rt') as f:
 				reader = csv.reader(f, delimiter=' ')
+
+				data_forces = []
+				data_angles = []
+
 				for row in reader:
-					self.data_glove[i].append(list(map(float, row[0:4])))
+					data_forces.append(list(map(float, row[0:4])))
+					data_angles.append(list(map(float, row[4:7])))
+
 					self.glove_timestamps[i].append(float(row[7]))
 
+
+				data_reduce = np.asarray(data_forces)
+
+				if(is_norm):				
+					data_reduce = np.linalg.norm(data_forces, axis = 1)
+					data_reduce = np.expand_dims(data_reduce, axis=1)
+
+				# data_angles = np.asarray(data_angles)
+
+				# data_reduce = np.concatenate((data_reduce, data_angles), axis = 1)
+
+				self.data_glove.append(data_reduce)
+				
 			if(i < self.n_seq - 1):
 				self.glove_timestamps.append([])
-				self.data_glove.append([])
 
 		return self.data_glove, self.glove_timestamps
 
@@ -550,6 +617,49 @@ class DataBase():
 
 	def get_data_glove(self):
 		return self.data_glove
+
+	def synchronize(self):
+		for seq in range(self.n_seq):
+			t_mocap = self.get_data_by_features('time', seq).tolist()
+			t_glove = self.get_timestamps_glove[seq]
+
+			mocap_data = data_win[0].tolist()
+			glove_data = data_glove[0].tolist()
+
+
+			t = 0
+			while(t_glove[t] < t_mocap[0]):
+				t += 1
+			t_start = t
+
+
+			while(t_mocap[t] < t_glove[-1]):
+				t += 1
+			t_end = t+1
+
+			del glove_data[0:t_start]
+			del t_glove[0:t_start]
+
+			del mocap_data[t_end:]
+			del t_mocap[t_end:]
+
+			print(t_mocap[0], t_glove[0])
+			print(t_mocap[-1], t_glove[-1])
+
+			data_force = np.zeros((len(t_mocap), np.shape(glove_data)[1]))
+
+			print(np.shape(data_force), np.shape(glove_data))
+
+
+			count = 0
+
+			for i in range(len(t_mocap)):
+				data_force[i] = glove_data[count]
+				if(t_glove[count] < t_mocap[i]):
+					count += 1
+					if(count == len(glove_data)):
+						break
+		return
 
 
 		# start = 0

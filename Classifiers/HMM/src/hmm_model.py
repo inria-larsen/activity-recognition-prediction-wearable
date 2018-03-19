@@ -43,7 +43,7 @@ class ModelHMM():
 		self.start_prob = []
 
 
-	def train(self, data, real_labels, list_features, dim_features, index_sequences):
+	def train(self, data, real_labels, list_features, dim_features):
 		""" Train a supervised HMM classifier based on the data and labels in input
 
 		input:
@@ -64,7 +64,6 @@ class ModelHMM():
 		self.list_features = list_features
 		self.dim_features = dim_features
 		self.n_feature = sum(dim_features)
-		self.index_sequences = index_sequences
 
 
 		# Concatenate all the sequence in one and create a vector with the length of each sequence
@@ -184,6 +183,25 @@ class ModelHMM():
 		for state in states:
 			self.list_states.append(state.get('label'))
 		return
+
+	def test_model(self, data_test):
+		"""
+		This function return a list of labels infered from the sequences of observation in input
+		"""
+		predict_labels = [[]]
+		proba = []
+
+		for data, i in zip(data_test, range(len(data_test))):
+			labels = self.predict_states(data)
+			proba.append(self.score_samples(data))
+
+			for j in range(len(labels)):
+				predict_labels[i].append(self.list_states[labels[j]])
+
+			if(len(predict_labels) < len(data_test)):
+				predict_labels.append([])
+
+		return predict_labels, proba
 
 
 

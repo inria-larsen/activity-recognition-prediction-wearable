@@ -131,8 +131,6 @@ class SensorProcessingModule(yarp.RFModule):
 					output = np.expand_dims(output, axis=1)
 					output = np.linalg.norm(output, axis = 0)
 
-				print(output)
-
 				b_out = out_port.prepare()
 				b_out.clear()
 				b_out.addInt(len(output))

@@ -28,23 +28,30 @@ def slidding_window2(data_set, size_window):
 
 def slidding_window(data_input, timestamps, size_window):
 	tic_time = timestamps[0]
-	win = size_window/2
 	buffer_data = []
 	data_out = []
 
 	timestamps_out = []
 
+	flag = 0
+
+
 	for frame in range(len(timestamps)):
-		if((timestamps[frame] - tic_time) >= size_window):
+
+		if((timestamps[frame] - tic_time) >= size_window/2):
 			data_out.append(np.mean(buffer_data, axis = 0))
 			length = int(len(buffer_data)/2)
 			timestamps_out.append(tic_time)
 			tic_time = timestamps[frame]
-			del buffer_data[0:length]
+			if(flag == 0):
+				flag = 1
+			else:
+				del buffer_data[0:length]
 		else:
 			buffer_data.append(np.asarray(data_input[frame]))
 
 	data_window = np.zeros(np.shape(data_out))
+
 	for i in range(len(data_out)):
 		data_window[i,:] = data_out[i]
 

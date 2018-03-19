@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import *
 import andy_reco
 import random
 
+import numpy as np
+
 import yarp
 
 ListActivities = {
@@ -21,6 +23,23 @@ ListActivities = {
     'kneeling_bent'
     'kneeling_elbow_at_above_shoulder'
 }
+
+class CallbackData(yarp.BottleCallback):
+    def __init__(self, size_buffer):
+        yarp.BottleCallback.__init__(self)
+        self.port = yarp.Port()
+        self.buffer = []
+        self.size_buffer = size_buffer
+
+    def onRead(self, bot, *args, **kwargs):
+        data = bot.toString().split(' ')
+        self.state = data[2]
+        return self.state
+
+    def get_data(self):
+        return self.state
+
+
 
 class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
     def __init__(self):
@@ -41,6 +60,8 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
         self.contact_input = '/DetectionContact'
         self.port_contact = yarp.BufferedPortBottle()
         self.port_contact.open('/gui/contact')
+        self.cback = CallbackData(1)
+        self.port_contact.useCallback(self.cback)
 
         yarp.Network.connect(self.contact_input, self.port_contact.getName())
 
@@ -66,24 +87,30 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
         self.standing_bent_forward.setValue(float(data[data.index('standing_bent_forward') + 1]) * 100)
         self.walking_upright.setValue(float(data[data.index('walking_upright') + 1]) * 100)
         self.standing_upright.setValue(float(data[data.index('standing_upright') + 1]) * 100)
-        self.standing_overhead_elbow.setValue(float(data[data.index('standing_overhead_work_elbow_at_above_shoulder') + 1]) * 100)
-        self.standing_overhead_hands.setValue(float(data[data.index('standing_overhead_work_hands_above_head') + 1]) * 100)
-        self.kneeling_upright.setValue(float(data[data.index('kneeling_upright') + 1]) * 100)
+        # self.standing_overhead_elbow.setValue(float(data[data.index('standing_overhead_work_elbow_at_above_shoulder') + 1]) * 100)
+        self.standing_overhead_hands.setValue(float(data[data.index('standing_overhead_work') + 1]) * 100)
+        # self.kneeling_upright.setValue(float(data[data.index('kneeling_upright') + 1]) * 100)
+        self.kneeling_upright.setValue(0)
         self.kneeling_bent.setValue(float(data[data.index('kneeling_bent') + 1]) * 100)
         self.kneeling_elbow.setValue(0)
 
-        b_in2 = self.port_contact.read()
-        data = b_in2.toString().split(' ')
+        # b_in2 = self.port_contact.read()
+        # data = b_in2.toString().split(' ')
+        state_object = self.cback.get_data()
 
-        if(int(data[0])):
-            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objYes.png'))
-        else:
-            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
-        
-        self.object_in_hand.setScaledContents( True )
+        if(len(state_object) > 0):
+            print(state_object)
+            # state = data[1]
 
-        self.object_yes.setValue(float(data[0]) * 100)
-        self.object_no.setValue(100 - float(data[0]) * 100)
+            # if(data>=0.75):
+            self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + state_object +  '.png'))
+            # else:
+            #     self.object_in_hand.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/objNo.png'))
+            
+            self.object_in_hand.setScaledContents( True )
+
+        # self.object_yes.setValue(float(data[0]) * 100)
+        # self.object_no.setValue(100 - float(data[0]) * 100)
 
 
 def main():

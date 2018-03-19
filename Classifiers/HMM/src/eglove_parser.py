@@ -28,10 +28,29 @@ class eglove_tree():
 			i += 1
 		return data
 
+
+	def get_all_data(self):
+		"""
+		Input: list of signal labels
+		Ouput: an np.array with the related data
+		"""
+		data = np.zeros((len(self.frames), len(self.signals)))
+		i = 0
+		for signal in self.signals:
+			label_signal = signal.get('label')
+			print(label_signal)
+			id_signal = self.get_id_signal(label_signal)
+			for frame in self.frames:
+				id_frame = frame.get('index')
+				data[int(id_frame), i] = next(frame.iterfind(label_signal)).text
+			i += 1
+		return data
+
+
 	def get_timestamp(self):
 		timestamp = []
 		for frame in self.frames:
-			timestamp.append(frame.get('ts'))
+			timestamp.append(float(frame.get('ts')) + 1.0)
 		return timestamp
 
 	def get_time(self):

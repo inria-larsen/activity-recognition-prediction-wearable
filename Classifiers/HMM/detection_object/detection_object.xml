@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="detection_object" name_sequences="load_handling">
+    <features/>
+    <states>
+      <state index="0" label="no_object"/>
+      <state index="1" label="object_in_hand"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>
