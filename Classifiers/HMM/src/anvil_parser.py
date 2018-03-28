@@ -3,6 +3,9 @@ import numpy as np
 
 
 class anvil_tree():
+	"""
+	This is a parser to get information from the Anvil files.
+	"""
 
 	def __init__(self, path):
 		"""
@@ -15,9 +18,9 @@ class anvil_tree():
 
 	def get_data(self, name_track = '0'):
 		"""
-		Return the label, start time and end time of all actions in the sequence
+		Ouput: Return the label, start time and end time of all actions in the sequence.
+		Input: name_track is a string corresponding to the track you want to get data from.
 		"""
-		# list_track = list(next(self.data.iterfind('body')))
 
 		if(name_track == '0'):
 			track = self.data[0]
