@@ -38,9 +38,9 @@ if __name__ == '__main__':
 	num_sequence = []
 	# list_participant = ['909']
 	testing = 1
-	save = 1
+	save = 0
 	ratio = [70, 30, 0]
-	nbr_cross_val = 20
+	nbr_cross_val = 1
 
 	# list_participant = ['0']
 
@@ -252,15 +252,15 @@ if __name__ == '__main__':
 				pred.append([])
 				g_truth.append([])
 
-			# plt.figure()
-			# plt.subplot(211)
-			# plt.plot(time_test[k], data_test[k])
-			# plt.subplot(212)
-			# plt.plot(time_test[k], pred[k], color = 'red')
-			# plt.plot(time_test[k], g_truth[k], color = 'green')
-			# y_axis = np.arange(0, len(list_states), 1)
-			# plt.yticks(y_axis, list_states)
-			# plt.title(list_participant[participant_label[id_test[k]]] + '_' + str(num_sequence[id_test[k]]))
+			plt.figure()
+			plt.subplot(211)
+			plt.plot(time_test[k], data_test[k])
+			plt.subplot(212)
+			plt.plot(time_test[k], pred[k], color = 'red')
+			plt.plot(time_test[k], g_truth[k], color = 'green')
+			y_axis = np.arange(0, len(list_states), 1)
+			plt.yticks(y_axis, list_states)
+			plt.title(list_participant[participant_label[id_test[k]]] + '_' + str(num_sequence[id_test[k]]))
 
 		time, ground_truth, prediction, id_sample_start, id_sample_end = tools.prepare_segment_analysis(time_test, predict_labels, labels_test)
 

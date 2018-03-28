@@ -113,8 +113,6 @@ class ActivityRecognitionModule(yarp.RFModule):
 
 
 			self.obs.append(data_model)
-			print(np.shape(self.obs))
-
 			if(len(self.obs) > 500):
 				del self.obs[0]
 

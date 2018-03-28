@@ -109,6 +109,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 		if(len(self.buffer) > 0):
 			length = int(len(self.buffer)/2)
+
+			N = len(self.buffer)
 			
 			data_output = self.buffer
 

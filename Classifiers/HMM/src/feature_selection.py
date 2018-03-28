@@ -36,6 +36,7 @@ if __name__ == '__main__':
 	testing = 1
 	save = 0
 	ratio = [70, 30, 0]
+	nbr_cross_val = 10
 
 	# list_participant = ['5521']
 
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 	best_features = []
 	dim_best = []
 
-	max_iter = 5
+	max_iter = 3
 
 	for iteration in range(max_iter):
 		print('\n#############################')
@@ -228,7 +229,7 @@ if __name__ == '__main__':
 				
 				F1_S = 0
 
-				for nbr_test in range(3):
+				for nbr_test in range(nbr_cross_val):
 					confusion_matrix = np.zeros((len(list_states), len(list_states)))
 
 					# data_ref, labels_ref, data_test, labels_test, data_val, labels_val, id_train, id_test, id_val = tools.split_data_base(data_win, real_labels, ratio)
@@ -254,12 +255,12 @@ if __name__ == '__main__':
 
 					predict_labels, proba = model.test_model(data_test)
 
-					for k in range(len(predict_labels)):
-						g_truth = []
-						pred = []
-						for t in range(len(predict_labels[k])):
-							g_truth.append(list_states.index(labels_test[k][t]))
-							pred.append(list_states.index(predict_labels[k][t]))
+					# for k in range(len(predict_labels)):
+					# 	g_truth = []
+					# 	pred = []
+					# 	for t in range(len(predict_labels[k])):
+					# 		g_truth.append(list_states.index(labels_test[k][t]))
+					# 		pred.append(list_states.index(predict_labels[k][t]))
 
 						# plt.figure()
 						# plt.plot(pred, color = 'red')
@@ -268,42 +269,41 @@ if __name__ == '__main__':
 						# plt.yticks(y_axis, list_states)
 						# plt.title(list_participant[participant_label[id_test[k]]] + '_' + str(num_sequence[id_test[k]]))
 
-					time, ground_truth, prediction = tools.prepare_segment_analysis(time_test, predict_labels, labels_test)
+					# time, ground_truth, prediction, id_start, id_end = tools.prepare_segment_analysis(time_test, predict_labels, labels_test)
 
-					TP = 0
-					total = 0
+					# TP = 0
+					# total = 0
 
-					for i in range(len(ground_truth)):
-						for t in range(len(ground_truth[i])):
-							if(prediction[i][t] == ground_truth[i][t]):
-								TP += 1
+					# 	for t in range(len(ground_truth[i])):
+					# 		if(prediction[i][t] == ground_truth[i][t]):
+					# 			TP += 1
 
-							elif(t < len(prediction[i])-1 and t > 0):
-								if((prediction[i][t-1] == ground_truth[i][t-1] and prediction[i][t+1] == ground_truth[i][t+1]) and
-									((prediction[i][t] == prediction[i][t-1] and ground_truth[i][t] == ground_truth[i][t+1]) or
-									(prediction[i][t] == prediction[i][t+1] and ground_truth[i][t] == ground_truth[i][t-1]))):
+					# 		elif(t < len(prediction[i])-1 and t > 0):
+					# 			if((prediction[i][t-1] == ground_truth[i][t-1] and prediction[i][t+1] == ground_truth[i][t+1]) and
+					# 				((prediction[i][t] == prediction[i][t-1] and ground_truth[i][t] == ground_truth[i][t+1]) or
+					# 				(prediction[i][t] == prediction[i][t+1] and ground_truth[i][t] == ground_truth[i][t-1]))):
 
 
-									if(time[i][t+1] - time[i][t] < 1.0):
-										TP += 1
-										prediction[i][t] = ground_truth[i][t]
-								# else:
-									# print('\n')
-									# print(t)
-									# print(prediction[i][t-1], prediction[i][t], prediction[i][t+1])
-									# print(ground_truth[i][t-1], ground_truth[i][t], ground_truth[i][t+1])
-									# print(time[i][t+1] - time[i][t])
+					# 				if(time[i][t+1] - time[i][t] < 1.0):
+					# 					TP += 1
+					# 					prediction[i][t] = ground_truth[i][t]
+					# 			# else:
+					# 				# print('\n')
+					# 				# print(t)
+					# 				# print(prediction[i][t-1], prediction[i][t], prediction[i][t+1])
+					# 				# print(ground_truth[i][t-1], ground_truth[i][t], ground_truth[i][t+1])
+					# 				# print(time[i][t+1] - time[i][t])
 
-							total += 1
-
-						conf_mat = tools.compute_confusion_matrix(prediction[i], ground_truth[i], list_states)
+					# 		total += 1
+					for i in range(len(predict_labels)):
+						conf_mat = tools.compute_confusion_matrix(predict_labels[i], labels_test[i], list_states)
 						confusion_matrix += conf_mat
 
 					prec_total, recall_total, F1_score = tools.compute_score(confusion_matrix)
 					acc = tools.get_accuracy(confusion_matrix)
 					# print(confusion_matrix)
 
-					F1_S += F1_score/3
+					F1_S += F1_score/nbr_cross_val
 
 
 

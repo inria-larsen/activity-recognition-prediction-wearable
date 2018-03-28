@@ -1,0 +1,433 @@
+best_features,score
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jL5S1']",0.9121119263242515
+"['CoMVelocityNorm', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.9094467654074601
+"['centerOfMass_z', 'jointAngle_jL5S1', 'velocity1_Pelvis']",0.9069130804317578
+"['centerOfMass_z', 'jointAngle_jLeftShoulder', 'velocity1_Pelvis']",0.9059063074359859
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jLeftShoulder']",0.9052713689508354
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.9005750819882418
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightShoulder']",0.8997622118918913
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightShoulder']",0.8990341833933669
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8987806865066721
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.898421725612763
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightShoulder']",0.8980345365482776
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'velocity1_Pelvis']",0.8980049322270713
+"['CoMVelocityNorm', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8979429147622189
+"['CoMVelocityNorm', 'centerOfMass_z', 'distCoM_LeftHand']",0.8967596052138975
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8944894289281623
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.8943086683158551
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.8930962742054922
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'velocity1_LeftHand']",0.8925293514192761
+"['CoMVelocityNorm', 'centerOfMass_z', 'distCoM_RightHand']",0.8920789763183516
+"['CoMVelocity_z', 'centerOfMass_z', 'jointAngle_jRightShoulder']",0.891347377281006
+"['CoMVelocityNorm', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8911055576965468
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.8910298718828066
+"['centerOfMass_z', 'jointAngle_jRightElbow', 'velocity1_Pelvis']",0.890992870344316
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightKnee']",0.8908364027864889
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.8901591287999073
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jLeftHip']",0.8900883706214641
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.8898537852171514
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8896074822749478
+"['jointAngle_jLeftHip', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8892060882422422
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.8888772498935913
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.888751913145215
+"['centerOfMass_z', 'jointAngle_jLeftElbow', 'velocity1_Pelvis']",0.8886524420139265
+"['centerOfMass_z', 'jointAngle_jRightKnee', 'velocity1_Pelvis']",0.888415735426587
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'velocity1_Pelvis']",0.8882476573100138
+"['centerOfMass_z', 'distCoM_LeftHand', 'velocity1_Pelvis']",0.8882286314264699
+"['CoMVelocityNorm', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.887423821615608
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8873651069795914
+"['centerOfMass_z', 'distCoM_RightHand', 'velocity1_Pelvis']",0.8870641557799515
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightElbow']",0.8868414836188125
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8867703638686882
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'velocity1_LeftFoot']",0.8865927443272889
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jRightHip']",0.8865923785269929
+"['CoMVelocityNorm', 'centerOfMass_z', 'distCoM_Pelvis']",0.8864242187788962
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.8862354294124508
+"['jointAngle_jLeftHip', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8860704192965051
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jLeftElbow']",0.8859757216260309
+"['CoMVelocity_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.885838032739421
+"['CoMVelocity_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8855604448883448
+"['jointAngle_jLeftHip', 'jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8854061881307945
+"['jointAngle_jLeftHip', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8853496492297898
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jLeftKnee']",0.8852170392385547
+"['CoMVelocityNorm', 'centerOfMass_z']",0.8850522060533363
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8850022654948201
+"['CoMVelocityNorm', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8847922072514913
+"['centerOfMass_z', 'distCoM_LeftFoot', 'velocity1_Pelvis']",0.8847838356227453
+"['jointAngle_jLeftHip', 'jointAngle_jLeftKnee', 'jointAngle_jLeftShoulder']",0.884745719810134
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.8844005213767904
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightKnee']",0.8843926526944786
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_Pelvis']",0.8842516572290428
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'velocity1_RightHand']",0.8841039189338723
+"['CoMVelocity_z', 'centerOfMass_z', 'jointAngle_jRightShoulder']",0.8837736122652171
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8836949491639575
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8836693751780609
+"['centerOfMass_z', 'jointAngle_jRightHip', 'velocity1_Pelvis']",0.8835070712634355
+"['distCoM_Pelvis', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8834025335927735
+"['centerOfMass_z', 'distCoM_Pelvis', 'velocity1_Pelvis']",0.8829559581304696
+"['centerOfMass_z', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8826712634327455
+"['CoMVelocityNorm', 'centerOfMass_z', 'distCoM_LeftFoot']",0.8826386678502461
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8826283255513855
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.8825800865987966
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_Pelvis']",0.8823742263449799
+"['jointAngle_jLeftHip', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8822499943296641
+"['centerOfMass_z', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8820971927462338
+"['CoMVelocity_z', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8820780948582168
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_Pelvis']",0.8817250111574981
+"['jointAngle_jL5S1', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8815893738613402
+"['jointAngle_jLeftHip', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8811776519940606
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'velocity1_RightFoot']",0.88096734724407
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.8808882390575477
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8807749628363044
+"['CoMVelocityNorm', 'centerOfMass_z', 'jointAngle_jLeftKnee']",0.8801691669396333
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.88011553907325
+"['centerOfMass_z', 'velocity1_Pelvis']",0.8800807305545153
+"['jointAngle_jLeftHip', 'jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8798611882651854
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8798220326490893
+"['centerOfMass_z', 'distCoM_RightFoot', 'velocity1_Pelvis']",0.8795577363083102
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8792900396664602
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.8789569698858939
+"['centerOfMass_z', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8789470726297521
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8786520990529905
+"['centerOfMass_z', 'velocity1_LeftFoot', 'velocity1_Pelvis']",0.8785087998412642
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.8783944218937595
+"['CoMVelocityNorm', 'CoMVelocity_z', 'centerOfMass_z']",0.8780972243785204
+"['CoMVelocity_z', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8778551537233542
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_Pelvis']",0.877602646973208
+"['centerOfMass_z', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8775569232158904
+"['CoMVelocityNorm', 'centerOfMass_z', 'distCoM_RightFoot']",0.8774735529416717
+"['jointAngle_jLeftKnee', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8773378468321809
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightKnee']",0.8770460080644509
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8770099001916715
+"['jointAngle_jRightHip', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8768315653052743
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.8765718679509931
+"['CoMVelocity_z', 'centerOfMass_z', 'velocity1_Pelvis']",0.876505520199676
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_LeftHand']",0.8763844385642519
+"['jointAngle_jL5S1', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.876348257381103
+"['distCoM_RightFoot', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8762989089788435
+"['distCoM_RightHand', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8758081359245887
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jLeftShoulder']",0.8756132251328653
+"['distCoM_Pelvis', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8755593520131444
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.875465527902712
+"['CoMVelocity_z', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.875261015615813
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8749252386265711
+"['jointAngle_jRightHip', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8748474708395357
+"['centerOfMass_z', 'jointAngle_jL5S1', 'jointAngle_jRightShoulder']",0.8747608396222606
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.8747482624858194
+"['distCoM_LeftHand', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8746537510655248
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.8746022813135956
+"['centerOfMass_z', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8743579158241701
+"['distCoM_LeftHand', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8742154680629521
+"['distCoM_LeftFoot', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8741890790237472
+"['distCoM_RightHand', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8740900772800777
+"['distCoM_Pelvis', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8739503328576644
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_LeftFoot']",0.8738804221084058
+"['jointAngle_jLeftHip', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.873796857423511
+"['centerOfMass_z', 'velocity1_LeftHand', 'velocity1_Pelvis']",0.8736950436255799
+"['distCoM_LeftFoot', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8734821263613269
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.8733060062095651
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8730742982250035
+"['centerOfMass_z', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8727031868213376
+"['distCoM_Pelvis', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.872320029912798
+"['centerOfMass_z', 'distCoM_LeftHand', 'jointAngle_jRightShoulder']",0.8722906898752549
+"['jointAngle_jL5S1', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.872236322407834
+"['jointAngle_jLeftKnee', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8720440276962917
+"['centerOfMass_z', 'jointAngle_jL5S1', 'jointAngle_jRightShoulder']",0.8719991481893508
+"['centerOfMass_z', 'jointAngle_jL5S1', 'jointAngle_jLeftKnee']",0.8719920102976666
+"['distCoM_RightFoot', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8719788175139236
+"['distCoM_RightHand', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8719638526844509
+"['jointAngle_jL5S1', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8716934154281776
+"['jointAngle_jL5S1', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8712589853446332
+"['distCoM_LeftFoot', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8710925860777902
+"['CoMVelocity_z', 'centerOfMass_z', 'jointAngle_jLeftKnee']",0.8707491675747369
+"['distCoM_RightFoot', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8702887392034903
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_RightHand']",0.8702525757069484
+"['centerOfMass_z', 'velocity1_Pelvis', 'velocity1_RightHand']",0.8702462545006527
+"['centerOfMass_z', 'velocity1_Pelvis', 'velocity1_RightFoot']",0.8697933745843337
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder', 'velocity1_RightHand']",0.8696435908587893
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightElbow']",0.8695703325477283
+"['centerOfMass_z', 'distCoM_RightHand', 'jointAngle_jRightShoulder']",0.8695002858321549
+"['distCoM_RightFoot', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8693816417035142
+"['centerOfMass_z', 'distCoM_RightHand', 'jointAngle_jRightShoulder']",0.8691306528567327
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.8683485631895395
+"['centerOfMass_z', 'jointAngle_jLeftElbow', 'jointAngle_jLeftKnee']",0.8683433354075253
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_RightFoot']",0.868309989182763
+"['distCoM_LeftHand', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8682040330086054
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_RightHand']",0.8681681273785127
+"['CoMVelocityNorm', 'centerOfMass_z', 'velocity1_RightFoot']",0.8679131973383308
+"['centerOfMass_z', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8676847135819798
+"['centerOfMass_z', 'distCoM_LeftHand', 'jointAngle_jRightShoulder']",0.8671871511972967
+"['centerOfMass_z', 'jointAngle_jRightElbow', 'jointAngle_jRightShoulder']",0.8668015829007896
+"['centerOfMass_z', 'distCoM_LeftHand', 'jointAngle_jLeftKnee']",0.8664723576711781
+"['distCoM_RightFoot', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8658241294772673
+"['centerOfMass_z', 'jointAngle_jLeftElbow', 'jointAngle_jRightShoulder']",0.8658041560173122
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8656872268943471
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_LeftHand']",0.8654310045960254
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8654140857647536
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8650898724522632
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8650797072994386
+"['centerOfMass_z', 'distCoM_RightHand', 'jointAngle_jLeftKnee']",0.8647695749469358
+"['distCoM_LeftFoot', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8645890757544704
+"['distCoM_LeftHand', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8645015961339868
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jLeftKnee']",0.8642863524799644
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8636675791318904
+"['centerOfMass_z', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8635467505795548
+"['distCoM_LeftHand', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8635392045537882
+"['jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8633095586196025
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8632837526487029
+"['distCoM_RightHand', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8632001581445518
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftHip', 'jointAngle_jRightShoulder']",0.8628486294678192
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightHip']",0.8628205557574607
+"['centerOfMass_z', 'jointAngle_jRightElbow', 'jointAngle_jRightShoulder']",0.8627534325253226
+"['jointAngle_jLeftHip', 'jointAngle_jRightElbow', 'jointAngle_jRightShoulder']",0.8619192008109395
+"['centerOfMass_z', 'jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.8617879146118338
+"['centerOfMass_z', 'jointAngle_jRightShoulder']",0.8615263309655257
+"['jointAngle_jLeftHip', 'jointAngle_jRightElbow', 'jointAngle_jRightShoulder']",0.8614833846728744
+"['centerOfMass_z', 'distCoM_LeftFoot', 'jointAngle_jRightShoulder']",0.8610942092029061
+"['jointAngle_jRightElbow', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.860968439894641
+"['centerOfMass_z', 'distCoM_LeftFoot', 'jointAngle_jRightShoulder']",0.8608574928133566
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8603621029702905
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'jointAngle_jRightHip']",0.8600727839278908
+"['distCoM_Pelvis', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8599882428292119
+"['jointAngle_jRightElbow', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.859976044688618
+"['centerOfMass_z', 'distCoM_RightFoot', 'jointAngle_jRightShoulder']",0.859121803806528
+"['centerOfMass_z', 'jointAngle_jLeftElbow', 'jointAngle_jRightShoulder']",0.859011804823433
+"['centerOfMass_z', 'distCoM_RightFoot', 'jointAngle_jRightShoulder']",0.8585058588585932
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8580210134066689
+"['centerOfMass_z', 'jointAngle_jLeftKnee']",0.8578783495381578
+"['distCoM_LeftFoot', 'jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.8576514518890064
+"['centerOfMass_z', 'jointAngle_jRightShoulder']",0.8574636670376453
+"['centerOfMass_z', 'velocity1_RightHand']",0.8572469785464636
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder', 'jointAngle_jRightElbow']",0.8571760490442868
+"['centerOfMass_z', 'jointAngle_jLeftKnee']",0.8570317551485528
+"['distCoM_RightHand', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8567641198268898
+"['CoMVelocity_z', 'centerOfMass_z']",0.8566414102376887
+"['centerOfMass_z', 'distCoM_Pelvis', 'jointAngle_jRightShoulder']",0.856583816912504
+"['jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8564969553986934
+"['centerOfMass_z', 'velocity1_LeftHand']",0.8564400318831258
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightHip']",0.8558461124803017
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightKnee']",0.8557598548155947
+"['centerOfMass_z', 'distCoM_Pelvis', 'jointAngle_jLeftKnee']",0.8556782404906836
+"['centerOfMass_z', 'distCoM_LeftFoot', 'jointAngle_jLeftKnee']",0.8546925981351363
+"['jointAngle_jLeftElbow', 'jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8546085276164881
+"['centerOfMass_z', 'jointAngle_jLeftKnee', 'velocity1_LeftFoot']",0.8540382203692071
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightHip']",0.8539863016808309
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightKnee']",0.8539707353414293
+"['centerOfMass_z', 'distCoM_Pelvis', 'jointAngle_jRightShoulder']",0.8536032283155003
+"['jointAngle_jLeftElbow', 'jointAngle_jRightHip', 'jointAngle_jRightShoulder']",0.8532558891219275
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder']",0.8512387128684418
+"['centerOfMass_z', 'jointAngle_jRightKnee']",0.8509649345443826
+"['centerOfMass_z', 'jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.8508849762879461
+"['jointAngle_jLeftHip', 'jointAngle_jLeftShoulder']",0.850736636379276
+"['centerOfMass_z', 'velocity1_LeftFoot']",0.8495476839313826
+"['jointAngle_jLeftKnee', 'jointAngle_jLeftShoulder']",0.848594930915108
+"['centerOfMass_z', 'jointAngle_jRightKnee']",0.8479527137506557
+"['centerOfMass_z', 'jointAngle_jLeftHip']",0.8455927405886103
+"['centerOfMass_z', 'jointAngle_jL5S1']",0.8451335928052954
+"['jointAngle_jLeftKnee', 'jointAngle_jLeftShoulder']",0.8434151690784529
+"['jointAngle_jRightKnee', 'jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.8431123043302078
+"['jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8415117687610374
+"['centerOfMass_z', 'distCoM_RightFoot', 'jointAngle_jLeftKnee']",0.8404796063149269
+"['CoMVelocityNorm', 'jointAngle_jLeftHip']",0.8395164288809033
+"['jointAngle_jLeftHip', 'jointAngle_jLeftKnee']",0.8350722976662205
+"['jointAngle_jLeftKnee', 'jointAngle_jRightShoulder']",0.8337602894860169
+"['centerOfMass_z', 'jointAngle_jLeftShoulder']",0.831440413548727
+"['centerOfMass_z', 'velocity1_RightFoot']",0.8307845764131209
+"['centerOfMass_z', 'jointAngle_jLeftHip']",0.8307340955724849
+"['centerOfMass_z', 'jointAngle_jRightHip']",0.8292916810423684
+"['centerOfMass_z', 'jointAngle_jLeftShoulder']",0.829287756142373
+"['centerOfMass_z', 'jointAngle_jRightHip']",0.8272877434210452
+"['distCoM_RightHand', 'jointAngle_jLeftHip']",0.8269640230505667
+"['jointAngle_jLeftHip', 'velocity1_Pelvis']",0.8258939929589644
+"['jointAngle_jL5S1', 'jointAngle_jRightShoulder']",0.823761900169193
+"['jointAngle_jL5S1', 'jointAngle_jLeftHip']",0.8222951439818658
+"['distCoM_Pelvis', 'jointAngle_jLeftHip']",0.8212230198987459
+"['centerOfMass_z', 'distCoM_LeftHand']",0.8186469078798946
+"['jointAngle_jLeftHip', 'jointAngle_jLeftKnee']",0.818616944657766
+"['centerOfMass_z', 'distCoM_LeftHand']",0.8178984833975822
+"['distCoM_RightFoot', 'jointAngle_jLeftShoulder']",0.8174350810831216
+"['distCoM_LeftHand', 'jointAngle_jLeftKnee']",0.8162350372890597
+"['distCoM_LeftHand', 'jointAngle_jLeftKnee']",0.8153504794172045
+"['distCoM_LeftFoot', 'jointAngle_jLeftShoulder']",0.8124275099449935
+"['distCoM_RightHand', 'jointAngle_jLeftKnee']",0.8115096709718286
+"['distCoM_RightHand', 'jointAngle_jLeftHip']",0.8113071310768062
+"['centerOfMass_z', 'jointAngle_jLeftElbow']",0.810886044051862
+"['jointAngle_jLeftHip', 'velocity1_RightHand']",0.8106267437650795
+"['distCoM_RightFoot', 'jointAngle_jRightShoulder']",0.8103203961199765
+"['distCoM_LeftHand', 'jointAngle_jLeftHip']",0.8102301191686697
+"['jointAngle_jLeftHip', 'velocity1_LeftHand']",0.8099136878619044
+"['CoMVelocityNorm', 'jointAngle_jLeftShoulder']",0.8098877517534601
+"['jointAngle_jLeftHip', 'jointAngle_jRightHip']",0.8098829742852042
+"['centerOfMass_z', 'jointAngle_jLeftElbow']",0.8098161532782049
+"['jointAngle_jLeftHip', 'jointAngle_jRightKnee']",0.8096601879856505
+"['centerOfMass_z', 'distCoM_Pelvis']",0.8086164440651002
+"['jointAngle_jLeftShoulder', 'velocity1_LeftHand']",0.8077301153271162
+['centerOfMass_z'],0.8070882085963309
+"['centerOfMass_z', 'distCoM_LeftFoot']",0.8067025488642884
+"['centerOfMass_z', 'distCoM_RightFoot']",0.8066591919209971
+"['distCoM_RightFoot', 'jointAngle_jLeftHip']",0.8066591715670604
+"['jointAngle_jL5S1', 'jointAngle_jLeftShoulder']",0.8064579546585073
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftHip']",0.8062864303851424
+"['jointAngle_jLeftHip', 'jointAngle_jRightHip']",0.8048410571498472
+"['distCoM_LeftHand', 'jointAngle_jLeftHip']",0.8047449785476274
+"['centerOfMass_z', 'distCoM_RightHand']",0.8039570915042983
+"['jointAngle_jLeftHip', 'jointAngle_jRightKnee']",0.8037328806081561
+"['centerOfMass_z', 'distCoM_RightHand']",0.8035758434089626
+"['distCoM_Pelvis', 'jointAngle_jRightHip']",0.8019157472935343
+"['CoMVelocityNorm', 'jointAngle_jRightHip']",0.801842423534176
+"['distCoM_RightHand', 'jointAngle_jLeftKnee']",0.8011219653026853
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftHip']",0.8003304667171177
+"['distCoM_LeftFoot', 'jointAngle_jLeftHip']",0.7992320630890515
+"['jointAngle_jRightHip', 'velocity1_Pelvis']",0.7979554055652438
+"['distCoM_RightHand', 'jointAngle_jRightHip']",0.7966542613019716
+"['jointAngle_jLeftShoulder', 'velocity1_Pelvis']",0.7959637653270726
+"['distCoM_LeftHand', 'jointAngle_jRightHip']",0.7958805024760075
+"['distCoM_LeftHand', 'jointAngle_jRightShoulder']",0.7950307730445703
+"['distCoM_LeftFoot', 'jointAngle_jRightShoulder']",0.7947601739692529
+"['distCoM_RightHand', 'jointAngle_jRightShoulder']",0.7938272604802463
+"['centerOfMass_z', 'jointAngle_jRightElbow']",0.7933133562293118
+"['jointAngle_jLeftShoulder', 'velocity1_RightHand']",0.7929635426135588
+"['distCoM_RightHand', 'jointAngle_jRightHip']",0.7922068381434852
+"['jointAngle_jRightHip', 'jointAngle_jRightKnee']",0.7914300142105442
+"['jointAngle_jRightHip', 'jointAngle_jRightKnee']",0.7899643896501537
+"['jointAngle_jRightShoulder', 'velocity1_LeftHand']",0.789919293480564
+"['distCoM_RightHand', 'jointAngle_jRightShoulder']",0.7897916497195305
+"['distCoM_LeftHand', 'jointAngle_jRightShoulder']",0.7895854104369898
+"['jointAngle_jLeftKnee', 'jointAngle_jRightHip']",0.789171869249873
+"['CoMVelocityNorm', 'jointAngle_jRightShoulder']",0.7880200991766895
+"['jointAngle_jLeftShoulder', 'velocity1_LeftFoot']",0.7867707835373983
+"['CoMVelocity_z', 'jointAngle_jLeftHip']",0.786448122783225
+"['jointAngle_jRightHip', 'velocity1_RightHand']",0.7863535726638499
+"['jointAngle_jLeftKnee', 'jointAngle_jRightHip']",0.7863098705214021
+"['jointAngle_jLeftHip', 'velocity1_LeftFoot']",0.7857732651444533
+"['jointAngle_jLeftHip', 'jointAngle_jRightElbow']",0.7857333633893397
+"['distCoM_RightHand', 'jointAngle_jLeftShoulder']",0.7844814322065974
+"['jointAngle_jLeftElbow', 'jointAngle_jRightHip']",0.784378368174635
+"['distCoM_LeftHand', 'jointAngle_jRightKnee']",0.7827415849159604
+"['jointAngle_jRightHip', 'velocity1_LeftHand']",0.7826324105307148
+"['distCoM_LeftHand', 'jointAngle_jRightKnee']",0.7820466695772557
+"['distCoM_RightHand', 'jointAngle_jRightKnee']",0.7819874856259618
+"['distCoM_LeftHand', 'jointAngle_jRightHip']",0.7812578355141836
+"['jointAngle_jRightShoulder', 'velocity1_Pelvis']",0.7799538725406411
+"['distCoM_LeftHand', 'jointAngle_jLeftShoulder']",0.7782625664238728
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftKnee']",0.7779106132091927
+"['CoMVelocity_z', 'jointAngle_jLeftShoulder']",0.7777807515100215
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftKnee']",0.7774146102494957
+"['distCoM_RightHand', 'jointAngle_jLeftShoulder']",0.7756853345059943
+"['jointAngle_jLeftHip', 'velocity1_RightFoot']",0.7753385388262074
+"['jointAngle_jLeftKnee', 'jointAngle_jRightElbow']",0.7748531067460444
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftShoulder']",0.7747152131520131
+"['jointAngle_jLeftElbow', 'jointAngle_jRightHip']",0.7741166356797704
+"['distCoM_RightHand', 'jointAngle_jRightKnee']",0.7738252136540608
+"['jointAngle_jRightElbow', 'jointAngle_jRightHip']",0.7734766465655271
+"['jointAngle_jLeftElbow', 'jointAngle_jRightShoulder']",0.7724653603191409
+"['distCoM_LeftHand', 'jointAngle_jLeftShoulder']",0.7719386499348615
+"['jointAngle_jLeftElbow', 'jointAngle_jRightShoulder']",0.7709379358439872
+"['jointAngle_jLeftKnee', 'jointAngle_jRightKnee']",0.7677233540682514
+"['jointAngle_jLeftElbow', 'jointAngle_jLeftShoulder']",0.767656228146078
+"['jointAngle_jL5S1', 'jointAngle_jLeftKnee']",0.7669790910447079
+"['jointAngle_jRightElbow', 'jointAngle_jRightShoulder']",0.7664872557913796
+"['jointAngle_jLeftShoulder', 'velocity1_RightFoot']",0.7653163132569588
+"['jointAngle_jRightHip', 'velocity1_LeftFoot']",0.7651637711338679
+"['distCoM_Pelvis', 'jointAngle_jLeftKnee']",0.7649884449899091
+"['jointAngle_jRightShoulder', 'velocity1_LeftFoot']",0.7575581797389767
+"['distCoM_LeftFoot', 'distCoM_LeftHand']",0.757547045168689
+"['distCoM_Pelvis', 'jointAngle_jLeftShoulder']",0.7566753020318607
+"['CoMVelocity_z', 'jointAngle_jRightShoulder']",0.7552675858346637
+"['jointAngle_jRightElbow', 'jointAngle_jRightKnee']",0.7538698398246867
+"['jointAngle_jRightShoulder', 'velocity1_RightHand']",0.7515421692834439
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightElbow']",0.7511808324551571
+"['distCoM_LeftHand', 'distCoM_RightFoot']",0.7500322785703007
+"['distCoM_RightFoot', 'distCoM_RightHand']",0.7497382035071268
+"['distCoM_LeftFoot', 'distCoM_RightHand']",0.7486362198489701
+"['distCoM_RightFoot', 'jointAngle_jRightHip']",0.7485754851013785
+['jointAngle_jLeftHip'],0.7457172098289181
+"['jointAngle_jLeftKnee', 'jointAngle_jRightKnee']",0.7454145863033145
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.7427000960886176
+['jointAngle_jRightHip'],0.7403096241357351
+"['jointAngle_jL5S1', 'jointAngle_jLeftElbow']",0.7387907085914663
+"['jointAngle_jLeftElbow', 'jointAngle_jRightKnee']",0.7385170539396931
+"['distCoM_Pelvis', 'jointAngle_jRightKnee']",0.7381417397239424
+"['distCoM_Pelvis', 'jointAngle_jRightShoulder']",0.7374908242025613
+"['jointAngle_jRightHip', 'velocity1_RightFoot']",0.7354141152846354
+"['distCoM_LeftFoot', 'jointAngle_jRightHip']",0.7349126983751262
+"['jointAngle_jLeftShoulder', 'jointAngle_jRightShoulder']",0.7347978940396158
+"['jointAngle_jL5S1', 'jointAngle_jRightHip']",0.7292895607835562
+"['jointAngle_jLeftElbow', 'jointAngle_jRightKnee']",0.727424191399322
+"['distCoM_LeftFoot', 'jointAngle_jLeftKnee']",0.7257634654326776
+"['jointAngle_jRightShoulder', 'velocity1_RightFoot']",0.7253828139470698
+"['distCoM_RightFoot', 'jointAngle_jLeftKnee']",0.7243969459118511
+"['distCoM_LeftFoot', 'jointAngle_jLeftElbow']",0.7188437899573775
+"['CoMVelocity_z', 'jointAngle_jRightHip']",0.7148197731709902
+"['jointAngle_jRightKnee', 'velocity1_Pelvis']",0.7110406307598927
+"['distCoM_RightFoot', 'jointAngle_jLeftElbow']",0.7107037788965861
+"['jointAngle_jL5S1', 'jointAngle_jRightKnee']",0.7104851824992956
+"['distCoM_LeftHand', 'distCoM_Pelvis']",0.7103372518215825
+"['CoMVelocityNorm', 'distCoM_RightHand']",0.7075978622290491
+['jointAngle_jRightShoulder'],0.7047194895863957
+"['CoMVelocityNorm', 'distCoM_LeftHand']",0.7044405002211385
+"['CoMVelocity_z', 'jointAngle_jLeftKnee']",0.7039969145219027
+"['distCoM_LeftHand', 'velocity1_LeftHand']",0.7038498219946501
+"['distCoM_LeftHand', 'velocity1_Pelvis']",0.7027194960181807
+['jointAngle_jLeftShoulder'],0.7026335422254415
+"['CoMVelocityNorm', 'jointAngle_jLeftKnee']",0.6997674158853888
+"['distCoM_Pelvis', 'jointAngle_jLeftElbow']",0.6997049644604255
+"['jointAngle_jLeftKnee', 'velocity1_RightHand']",0.6981804470523031
+"['distCoM_LeftHand', 'velocity1_LeftFoot']",0.6978623074547735
+"['CoMVelocityNorm', 'jointAngle_jRightKnee']",0.6957705080545908
+"['jointAngle_jRightKnee', 'velocity1_RightHand']",0.69459781354891
+"['jointAngle_jLeftKnee', 'velocity1_Pelvis']",0.6905455837697358
+"['distCoM_Pelvis', 'distCoM_RightHand']",0.6883482402858301
+"['distCoM_LeftHand', 'jointAngle_jL5S1']",0.6876323863431152
+"['distCoM_RightHand', 'velocity1_Pelvis']",0.6829819949438121
+"['distCoM_LeftHand', 'jointAngle_jLeftElbow']",0.6794981372207449
+"['distCoM_LeftHand', 'velocity1_RightHand']",0.6783530774140138
+"['CoMVelocityNorm', 'jointAngle_jLeftElbow']",0.6761090978432458
+"['jointAngle_jLeftKnee', 'velocity1_LeftHand']",0.675809853851478
+"['distCoM_RightHand', 'jointAngle_jLeftElbow']",0.6756500681952293
+"['distCoM_LeftFoot', 'jointAngle_jRightKnee']",0.6730470462777903
+"['CoMVelocity_z', 'distCoM_LeftHand']",0.6701827345164121
+"['jointAngle_jRightKnee', 'velocity1_LeftHand']",0.6680100799352353
+"['distCoM_RightHand', 'velocity1_LeftHand']",0.6645566864383843
+"['jointAngle_jLeftKnee', 'velocity1_LeftFoot']",0.6621006700129787
+"['distCoM_LeftHand', 'velocity1_RightFoot']",0.6602813463451647
+"['distCoM_RightHand', 'jointAngle_jL5S1']",0.6581266755774033
+"['distCoM_RightHand', 'velocity1_RightHand']",0.6573511087853189
+"['jointAngle_jLeftKnee', 'velocity1_RightFoot']",0.6568410108905612
+"['distCoM_LeftHand', 'distCoM_RightHand']",0.6558470882967111
+"['distCoM_LeftHand', 'jointAngle_jLeftElbow']",0.6550515109021967
+"['distCoM_RightHand', 'jointAngle_jLeftElbow']",0.6546414146623986
+"['jointAngle_jRightKnee', 'velocity1_LeftFoot']",0.6539307647085004
+"['distCoM_LeftHand', 'jointAngle_jRightElbow']",0.6538515834208388
+"['distCoM_RightHand', 'jointAngle_jRightElbow']",0.6483798414663952
+"['distCoM_RightHand', 'velocity1_LeftFoot']",0.6444553416510419
+"['CoMVelocity_z', 'distCoM_RightHand']",0.6413369167172072
+"['jointAngle_jLeftElbow', 'velocity1_LeftFoot']",0.6380833396291761
+['jointAngle_jLeftKnee'],0.6378286993672696
+"['distCoM_RightFoot', 'jointAngle_jRightKnee']",0.6363762813224572
+"['jointAngle_jLeftElbow', 'velocity1_RightFoot']",0.6344822645428436
+"['CoMVelocity_z', 'jointAngle_jRightKnee']",0.6344725127004094
+"['distCoM_LeftHand', 'distCoM_RightHand']",0.6319430657888476
+"['jointAngle_jLeftElbow', 'velocity1_LeftHand']",0.6294138186095033
+"['jointAngle_jRightKnee', 'velocity1_RightFoot']",0.6238560000810265
+"['jointAngle_jLeftElbow', 'velocity1_Pelvis']",0.6237369180531702
+"['distCoM_RightHand', 'velocity1_RightFoot']",0.6231000405544316
+"['jointAngle_jLeftElbow', 'velocity1_RightHand']",0.6188766250830477
+['jointAngle_jRightKnee'],0.6151550989748084
+"['jointAngle_jLeftElbow', 'jointAngle_jRightElbow']",0.6083389971259455
+['distCoM_LeftHand'],0.5855597862727683
+"['CoMVelocity_z', 'jointAngle_jLeftElbow']",0.5851388398437734
+['jointAngle_jLeftElbow'],0.5448904280687864
+['distCoM_RightHand'],0.5397596098306318
+['jointAngle_jRightElbow'],0.533627895712949
+['jointAngle_jL5S1'],0.47000984941133606
+['velocity1_LeftHand'],0.41920819932220627
+['distCoM_Pelvis'],0.40455379200776526
+['CoMVelocityNorm'],0.386124671824607
+['velocity1_RightHand'],0.38078131168549056
+['distCoM_LeftFoot'],0.372866534114148
+['distCoM_RightFoot'],0.3685671133791483
+['velocity1_Pelvis'],0.3442213834758779
+['CoMVelocity_z'],0.3256527147453253
+['velocity1_RightFoot'],0.3075238240441935
+['velocity1_LeftFoot'],0.30105274499969414
