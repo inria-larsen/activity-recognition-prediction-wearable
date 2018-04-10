@@ -10,7 +10,7 @@ from .vae_standalone import VAE
 
 # Variational Autoencoder with Dynamic Movement Primitives as transition model
 class VAE_DMP(VAE):
-
+    #reprend les memes attributs / methodes que VAE
     MODEL_PARAMS = {
     }
 
@@ -51,6 +51,8 @@ class VAE_DMP(VAE):
 
 
     def create_network(self):
+
+        #tenseur constant 0.5
         half = tf.constant(0.5, dtype=tf.float32)
         n_z = self.vae_architecture["n_z"]
         batch_size = tf.shape(self.x)[0]
@@ -228,6 +230,7 @@ class VAE_DMP(VAE):
                             z_samples_l3.append(z_samples_l4)
                             # to allow direct retrieving of z derivative
                             # self.z_derivative = tf.reduce_mean(self.z_derivative_samples, 0)
+                            pdb.set_trace()
                             x_reconstr_means_l4, x_reconstr_log_sigma_sqs_l4 = self.decoder_network(
                                 z_samples_l4,
                                 self.network_weights["weights_decoder"],
@@ -310,6 +313,10 @@ class VAE_DMP(VAE):
         # x_reconstr shape = [batch_size, n_output]
         self.x_reconstr = self.x_reconstr_means[0,0,0,0]
 
+
+    #def decodeur_from_zs_orii(self, zs):
+        #xreconstr = decodeur_from_zs_ori(zs)
+        #return xreconstr
 
     def make_transition_without_attractor(
         self,

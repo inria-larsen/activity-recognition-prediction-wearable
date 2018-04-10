@@ -12,6 +12,8 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
 import c3d
+import pdb
+
 from klepto.archives import file_archive
 
 
@@ -377,7 +379,7 @@ class Data_driver():
                 # frames of one sample
                 # frames shape = [nb_frames, n_input]
                 frames = root.findall("./mvnx:subject/mvnx:frames/mvnx:frame[@type='normal']", ns)
-                nb_frames = len(frames)
+                nb_frames = len(frames) #real number of data
 
                 if nb_frames < self.nb_frames:
                     print(filepath+" : mvnx file has "+nb_frames+" frames, which is less than "+self.nb_frames+" frames. File ignored.")

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-
+import pdb
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt

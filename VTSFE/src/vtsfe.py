@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import os.path
+import pdb
 
 import numpy as np
 import tensorflow as tf
@@ -28,7 +29,6 @@ class VTSFE():
         },
         "delta": 1.
     }
-
 
     def __init__(
         self,
@@ -116,7 +116,7 @@ class VTSFE():
         self.session = tf.Session()
 
         # create a summary writer, add the 'graph' to the event file.
-        # self.writer = tf.summary.FileWriter("./log_dir", self.session.graph)
+        self.writer = tf.summary.FileWriter("./log_dir", self.session.graph)
 
         # init session to restore or randomly initialize all variables in network
         self.init_session()
@@ -147,6 +147,7 @@ class VTSFE():
         print("\nVTSFE NETWORK ---- INITIATE ORIGINAL STANDARD VAE :")
 
         if self.absolute_last_frame:
+            #ori : ??
             # if we want an absolute last frame reference, then you have to create an additional std VAE for an absolute first frame reference
             edge_vae_data_tensor = self.x_sequence
         else:
@@ -154,6 +155,7 @@ class VTSFE():
             edge_vae_data_tensor = self.x
 
         if self.std_vae_sequence_encoders or self.initial_std_vae_only_sequence_encoder:
+            #ori : ??
             # in the case of goal vae, use the same decoder as other VAEs to build the same latent space
             # but encode information differently from them since you want to encode information to reconstruct the last frame contained in input sequence,
             # instead of encoding the first frame from that sequence like the other std VAEs do
@@ -230,6 +232,7 @@ class VTSFE():
 
         base_scope_encoder="origin_vae"
         reuse_encoder_weights = True
+        #crée toutes les VAEs
         for i in range(self.sub_sequences_size):
             if i in self.std_vae_indices:
                 print("---------- "+str(i))
@@ -284,7 +287,7 @@ class VTSFE():
                         base_scope_encoder = "vae"
                     if i == 1:
                         reuse_encoder_weights = True
-            else:
+            else:  # ????
                 self.vae_subsequence.append(None)
 
         if self.use_z_derivative:
@@ -294,9 +297,10 @@ class VTSFE():
 
         transition_initiated = False
         for i in range(self.sub_sequences_size):
-            if i not in self.std_vae_indices:
+            if i not in self.std_vae_indices: #complete les none d'avant?
                 print("---------- "+str(i))
 
+                #revient à : le premier ne reutilise pas les poids de l'encodeur
                 if transition_initiated:
                     reuse_encoder_weights = True
                 else:
@@ -628,10 +632,21 @@ class VTSFE():
                 break
 
         # get origin VAE encoder variables
+#[<tf.Variable 'origin_vae.encoder/h1:0' shape=(66, 200) dtype=float32_ref>,
+# <tf.Variable 'origin_vae.encoder/out_log_sigma_weights:0' shape=(200, 2) dtype=float32_ref>,
+# <tf.Variable 'origin_vae.encoder/out_mean_weights:0' shape=(200, 2) dtype=float32_ref>
         self.origin_vae_encoder_variables = get_sorted_values_from_dict(origin_vae_variables["weights_encoder"], [])
+#<tf.Variable 'origin_vae.encoder/b1:0' shape=(200,) dtype=float32_ref>, 
+#<tf.Variable 'origin_vae.encoder/out_log_sigma_biases:0' shape=(2,) dtype=float32_ref>,
+# <tf.Variable 'origin_vae.encoder/out_mean_biases:0' shape=(2,) dtype=float32_ref>]
         self.origin_vae_encoder_variables = get_sorted_values_from_dict(origin_vae_variables["biases_encoder"], self.origin_vae_encoder_variables)
 
         # get origin VAE decoder variables
+#[<tf.Variable 'vae.decoder/h1:0' shape=(2, 200) dtype=float32_ref>, 
+#<tf.Variable 'vae.decoder/out_mean_weights:0' shape=(200, 66) dtype=float32_ref>, 
+#<tf.Variable 'vae.decoder/b1:0' shape=(200,) dtype=float32_ref>, 
+#<tf.Variable 'vae.decoder/out_mean_biases:0' shape=(66,) dtype=float32_ref>]
+
         self.origin_vae_decoder_variables = get_sorted_values_from_dict(origin_vae_variables["weights_decoder"], [])
         self.origin_vae_decoder_variables = get_sorted_values_from_dict(origin_vae_variables["biases_decoder"], self.origin_vae_decoder_variables)
 
@@ -641,9 +656,13 @@ class VTSFE():
             self.goal_vae_encoder_variables = get_sorted_values_from_dict(goal_vae_variables["biases_encoder"], self.goal_vae_encoder_variables)
 
         # get all remaining variables in network
+#[<tf.Variable 'dmp.gaussian_mixture_weights/h00:0' shape=(66, 10) dtype=float32_ref>,
+#...
+#<tf.Variable 'dmp.gaussian_mixture_weights/h69:0' shape=(66, 10) dtype=float32_ref>, 
+#<tf.Variable 'dmp.gaussian_mixture_weights/w_out:0' shape=(700, 100) dtype=float32_ref>]
         for dic in model_variables.values():
             self.network_variables = get_sorted_values_from_dict(dic, self.network_variables)
-
+#<tf.Variable 'vae_dmp.encoder/b1:0' shape=(200,) dtype=float32_ref> ...
         for dic in model_vae_variables.values():
             self.network_variables = get_sorted_values_from_dict(dic, self.network_variables)
 
@@ -861,7 +880,7 @@ class VTSFE():
         input_dicts=[],
         recursive_call=False,
         nb_sub_sequences=None
-    ):
+    ): #"""Permet de récupérer les variables latentes"""
         def fill_frames(subsequence, nb_params, sub_sequence_index):
             """ Fills the missing frames with nan (due to subsequence splitting)
             """
@@ -882,7 +901,7 @@ class VTSFE():
             # subsequence_filled shape = [nb_params*nb_frames, shape(val)]
             subsequence_filled = np.concatenate([pre, subsequence, post], 0)
             return subsequence_filled
-
+        
         transposed_Xs = np.transpose(Xs, axes=[1, 0, 2])
         values_filled_subs = []
 
@@ -897,6 +916,7 @@ class VTSFE():
             previous_dic = {}
             batch_size = len(Xs)
             zero = np.full((batch_size), 0, dtype=np.float32)
+            #nz = dim of the latent space
             zero_z = np.full((batch_size, self.vae_architecture["n_z"]), 0, dtype=np.float32)
             zero_z_dim = np.full((self.vae_architecture["n_z"]), 0, dtype=np.float32)
 
@@ -959,7 +979,11 @@ class VTSFE():
                     f_dict.update(input_dicts[s])
 
                 f_dict.update(previous_dic)
+                #variables :16 : tensor transpose (?,2) ; MUl (?,2) ; transpose (?,2) ; Mul (?,2) ;  [...]
                 # values shape = [nb_values, shape(val)]
+                print("avant run session (pq 2 70 16?)")
+
+                #values.shape = [2.70.16]
                 values = list(self.session.run(variables, feed_dict=f_dict))
                 v = np.array(values)
                 shape_val = v.shape[1:]
@@ -1084,7 +1108,7 @@ class VTSFE():
 
             for i in range(self.nb_frames):
                 f_dict = {
-                    self.annealing_schedule: annealing_schedule,
+                    self.annealing_schedule: annealing_schedule, # utilisé pour la prédiction : plus on connait d'epoch plus on est sur de la suite
                     # x_sequence shape = [nb_frames, batch_size, n_input]
                     self.x_sequence: transposed_Xs
                 }
@@ -1105,7 +1129,45 @@ class VTSFE():
             # values_filled_subs shape = [1, nb_frames, shape(val)]
             values_filled_subs.append(values)
 
+        #retourne 70*70*2 = espace latent
         return values_filled_subs
+
+
+    def get_values_from_latent_space_ori(
+        self,
+        variables,
+        zs,
+        transform_with_all_vtsfe=True,
+        annealing_schedule=1.,
+        fill=True,
+        missing_value_indices=[],
+        ignored_values=[[], []],
+        nb_variables_per_frame=1.,
+        recursive_call=False,
+        nb_sub_sequences=None
+    ): #"""Permet de récupérer les variables latentes"""
+
+        # If you want to retrieve your variables from only one standard VAE
+        values = []
+
+        for i in range(self.nb_frames):
+            f_dict = {
+                self.annealing_schedule: annealing_schedule, # utilisé pour la prédiction : plus on connait d'epoch plus on est sur de la suite
+            }
+            f_dict[self.vae_subsequence[0].z[i]] = zs[i]
+            pdb.set_trace()
+
+            val = self.session.run(variables, feed_dict=f_dict)
+            pdb.set_trace()
+
+            # values shape = [nb_frames, shape(val)]
+            values.append(val)
+        # values_filled_subs shape = [1, nb_frames, shape(val)]
+        values_filled_subs.append(values)
+
+        return values_filled_subs
+
+
 
 
     def partial_fit(self, Xs, annealing_schedule):
@@ -1343,9 +1405,11 @@ class VTSFE():
         else:
             # If you want to retrieve your variables from only one standard VAE
             p = self.vae_subsequence[0].z
-
+        #print(Xs.shape) #(70, 70, 66)
+        #print(p)  #Tensor("Add_92:0", shape=(?, 2), dtype=float32)
+        
         values = self.get_values(p, Xs, transform_with_all_vtsfe=transform_with_all_vtsfe)
-
+        #values = 1*70*70*2
         return values
 
 
@@ -1374,7 +1438,29 @@ class VTSFE():
         """Reconstruct data"""
 
         p = ()
+        if transform_with_all_vtsfe:
+            # If you want to retrieve your variables from the whole network
+            for i, vae in enumerate(self.vae_subsequence):
+                p += (vae.x_reconstr,)
+        else:
+            # If you want to retrieve your variables from only one standard VAE
+            p = self.vae_subsequence[0].x_reconstr
+        #Xs : (70, 70, 66)  
+ 
+        #p[0]Tensor("strided_slice_211:0", shape=(66,), dtype=float32)
+        # p[1]Tensor("strided_slice_212:0", shape=(66,), dtype=float32)
+        print(p) #Tensor("Identity_3:0", shape=(?, 66), dtype=float32)
+        #values = 1.70.70.66
 
+        values = self.get_values(p, Xs, transform_with_all_vtsfe=transform_with_all_vtsfe, fill=fill)
+
+
+        return values
+
+    def reconstruct_fromLS(self, zs, transform_with_all_vtsfe=True, fill=True):
+        """Reconstruct data from zs"""
+  
+        p = ()
         if transform_with_all_vtsfe:
             # If you want to retrieve your variables from the whole network
             for i, vae in enumerate(self.vae_subsequence):
@@ -1383,8 +1469,9 @@ class VTSFE():
             # If you want to retrieve your variables from only one standard VAE
             p = self.vae_subsequence[0].x_reconstr
 
-        values = self.get_values(p, Xs, transform_with_all_vtsfe=transform_with_all_vtsfe, fill=fill)
+        values = self.get_values_from_latent_space_ori(p, zs, transform_with_all_vtsfe=transform_with_all_vtsfe, fill=fill)
 
+   
         return values
 
 
@@ -1681,10 +1768,15 @@ class VTSFE():
 
 
     def show_data(self, params):
-        self.vtsfe_plots.show_data(**params)
+        #self.vtsfe_plots.show_data(**params)
+        self.vtsfe_plots.show_data_ori2(**params)
 
+    def show_data_ori(self,x_mean, params):
+        #self.vtsfe_plots.show_data(**params)
+        self.vtsfe_plots.show_data_ori(x_mean, **params)
 
     def plot_mse(self, params):
+
         self.vtsfe_plots.plot_mse(**params)
 
 
@@ -1693,4 +1785,7 @@ class VTSFE():
 
 
     def show_latent_space(self, data_driver, latent_data, sample_indices, title, displayed_movs=[], nb_samples_per_mov=1, show_frames=False):
-        self.vtsfe_plots.show_latent_space(data_driver, latent_data, sample_indices, title, displayed_movs=displayed_movs, nb_samples_per_mov=nb_samples_per_mov, show_frames=show_frames)
+        if (len(latent_data)==1):
+            self.vtsfe_plots.show_latent_space(data_driver, latent_data, sample_indices, title, displayed_movs=displayed_movs, nb_samples_per_mov=nb_samples_per_mov, show_frames=show_frames)
+        else:
+            self.vtsfe_plots.show_latent_space_ori(data_driver, latent_data, sample_indices, title, show_frames=show_frames)

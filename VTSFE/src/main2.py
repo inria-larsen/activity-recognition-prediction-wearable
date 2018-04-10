@@ -2,11 +2,11 @@
 import numpy as np
 import pdb
 import os
-import yarp
+#import yarp
 import sys
-#from launcher import Launcher
-from src.launcher import Launcher
-from src.connector import Connector
+import os
+from launcher import Launcher
+#from src.launcher import Launcher
 
 # config files
 ## joints
@@ -63,6 +63,7 @@ from app.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_
 # from app.tighter_lb_light_position_mvnx_5D import tighter_lb_light_position_mvnx_5D
 # from app.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
 
+
 trainings = []
 
 #######################################################################################################################################################
@@ -85,6 +86,7 @@ else:
 
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D_separated_encoder_variables", vae_dmp_no_z_derivative_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D", vae_dmp_no_z_derivative_joint_mvnx_2D))  # OK
+
 #trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_5D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_5D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_7D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_7D_separated))  # OK
@@ -115,6 +117,7 @@ DATA_VISUALIZATION = {
     "show": True
 }
 
+
 # show input data space
 show_data = False
 # plot learning errors through epochs
@@ -127,13 +130,11 @@ show_latent_space = True
 show_reconstr_data = False
 # movement types shown at data reconstruction
 reconstr_data_displayed_movs = ["kicking"]
-commWithMatlab = False
+
 restore = True
 train = False
 lrs = []
 mses = []
-
-
 for i, training in enumerate(trainings):
     ### c'est quoi restore path? ###
     restore_path = None
@@ -195,21 +196,6 @@ for i, training in enumerate(trainings):
         if plot_error:
             lr.plot_error(training[0])
 
-
-        if commWithMatlab:
-            connex = Connector()
-            print("wait for data")
-            connex.addMessage("ask_data")            
-            zs = connex.readFloat()   
-            connex.addMessage("ok")
-            connex.closeConnector()
-            print("retrieve infered latent space.")
-            print("zs calculé :"+ str(len(zs)))
-            #lr.show_latent_space(sample_indices=[8])
-            lr.show_latent_space_recovered(zs, sample_indices=[8])
-            #dataRetrieve = reconstruct_fromLS(zs)
-            #dataRetrieve = lr.retrieve_data_from_latent_space_ori(zs)
-
         if show_latent_space:
             zs = []
             lisst = []
@@ -217,26 +203,11 @@ for i, training in enumerate(trainings):
             for inx in range(10):
                 lisst.append(inx)
 
+            #lr.show_data_ori(sample_indices=[8])
             zs.append(lr.show_latent_space(sample_indices=lisst))
-           # dataRetrieve = lr.retrieve_data_from_latent_space_ori(zs)
-            #lr.show_latent_space(sample_indices=[8])
-            vall = lr.show_reconstr_data(sample_indices=[8])
-            vall = vall[0][0][0]
-
-            #Test pour verifier si on peut recuperer xrecovered depuis zs et le ploter
-            test = zs[0][0][0]
-
-            for i in range(70):
-                test[i][0] += 0.3
-                test[i][1] -= 0.3
-            x_reconstr_from_ls = lr.retrieve_data_from_latent_space_ori(test)
-            #TODO
-
-            #for i in range(70): 
-             #   aa = x_mean - vall
-            lr.show_reconstr_data_ori(x_reconstr_from_ls, x_log_sigma_sqs,type_indices={'bent_fw'}, sample_indices=[8])
-            
-            ##Si l'on veut sauvegarder les données de l'espace latent
+            lr.show_latent_space(sample_indices=[8])
+            lr.show_reconstr_data_from_zs(zs, sample_indices=[8])
+            lr.show_reconstr_data(sample_indices=[8])
             #for testn in range(7):
                 #try:
                     #os.mkdir("./testt/test_"+str(testn))
@@ -270,15 +241,12 @@ for i, training in enumerate(trainings):
                     only_hard_joints=True
                 )
               
-#                lr.show_reconstr_data_ori(sample_indices=[8])
+                lr.show_reconstr_data_ori(sample_indices=[8])
 
- #               lr.show_reconstr_data(
-  #                  compare_to_other_models=True, 
-   #                 sample_indices=None, 
-    #                only_hard_joints=True, 
-     #               average_reconstruction=True)
+                lr.show_reconstr_data(compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True)
                 
         else:
             lr.init_x_reconstr()
+
     lrs.append(lr)
     lr.destroy_vtsfe()

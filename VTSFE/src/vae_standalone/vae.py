@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import pdb
 
 from src.lib.useful_functions import glorot_init, interval_limiter
 
@@ -108,6 +109,9 @@ class VAE():
             self.network_weights["weights_encoder"],
             self.network_weights["biases_encoder"]
         )
+        
+        #pdb.set_trace()   
+        #print(encoder[0])
         self.z_mean = encoder[0]
         self.z_log_sigma_sq = encoder[1]
 
@@ -139,11 +143,11 @@ class VAE():
                     )
                 )
             )
-
         # to allow direct retrieving of z
         self.z = self.z_mean
-
+        print("z in vae_create_netwk : " +str(self.z_mean) )
         # x_reconstr_means, x_reconstr_log_sigma_sqs shape = [L, batch_size, n_output]
+
         self.x_reconstr_means, self.x_reconstr_log_sigma_sqs = self.decoder_network(
             self.z_samples,
             self.network_weights["weights_decoder"],
@@ -152,6 +156,23 @@ class VAE():
         # to allow direct retrieving of reconstructed input x
         # x_reconstr shape = [batch_size, n_output]
         self.x_reconstr = self.x_reconstr_means[0]
+
+
+    #def decodeur_from_zs_ori(self,zs):
+        
+        #"""Fonction a tester permettant normalement de decoder de l'espace latent a l'espace reel"""
+
+        ## x_reconstr_means, x_reconstr_log_sigma_sqs shape = [L, batch_size, n_output]
+        #x_reconstr_means, x_reconstr_log_sigma_sqs = self.decoder_network(
+            #zs,
+            #self.network_weights["weights_decoder"],
+            #self.network_weights["biases_decoder"]
+        #)
+        ## to allow direct retrieving of reconstructed input x
+        ## x_reconstr shape = [batch_size, n_output]
+        #x_reconstr = x_reconstr_means[0]
+        #return  x_reconstr
+
 
 
     def initialize_2hlayers(self, base_scope, scope_name, reuse_weights, all_weights, n_hidden_1, n_hidden_2, n_in, n_out, estimate_z_derivative=False, use_sigma=True):
@@ -287,19 +308,17 @@ class VAE():
         # maps points in latent space onto a Bernoulli distribution in data space.
         # The transformation is parametrized and can be learned.
 
+        #pdb.set_trace()
+
+
+       # print("dans decoder "+ str(z_samples))
+
+
         x_reconstr_means = []
         x_reconstr_log_sigma_sqs = []
         # creates L decoder networks to reconstruct L samples of p(x|z)
         for z in z_samples:
-            layer_1 = self.activation_function(
-                tf.add(
-                    tf.matmul(
-                        z,
-                        weights['h1']
-                    ),
-                    biases['b1']
-                )
-            )
+            layer_1 = self.activation_function(tf.add(tf.matmul(z, weights['h1']), biases['b1'] ))
 
             if 'h2' in weights:
                 hidden_layer = self.activation_function(
