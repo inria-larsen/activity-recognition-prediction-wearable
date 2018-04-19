@@ -49,7 +49,7 @@ class Launcher():
         self.config.VTSFE_PARAMS["nb_frames"] = self.data_driver.nb_frames
 
 
-    def show_data(self, sample_indices=None, only_hard_joints=True):
+    def show_data(self, sample_indices=None, only_hard_joints=True, data_inf=[], xreconstr=[]):
         self.init_vtsfe()
 
         if sample_indices is None:
@@ -58,13 +58,14 @@ class Launcher():
             s_indices = sample_indices
 
         x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
-        self.config.DATA_VISUALIZATION["reconstr_datasets"] = []
+        self.config.DATA_VISUALIZATION["reconstr_datasets"] = xreconstr
         self.config.DATA_VISUALIZATION["reconstr_datasets_names"] = []
         self.config.DATA_VISUALIZATION["x_samples"] = x_samples
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
         self.vtsfe.show_data(
-            self.config.DATA_VISUALIZATION
+            self.config.DATA_VISUALIZATION,
+            data_inf = data_inf
         )
 
     def show_data_ori(self, sample_indices=None):
@@ -152,7 +153,6 @@ class Launcher():
             s_indices = sample_indices
         # se = self.se[:,:6,:,:]
         se = self.se
-        #pdb.set_trace()
         se_dataset = [se]
         se_names = [self.save_path]
         if compare_to_other_models:
@@ -251,7 +251,6 @@ class Launcher():
                     x_reconstr = np.reshape(self.vtsfe.from_subsequences_to_sequence(x_samples, x_reconstr), [1, self.vtsfe.nb_frames, -1, self.vtsfe.vae_architecture["n_input"]])
                 self.x_reconstr = x_reconstr
             # se shape = [nb_samples, nb_frames, n_input]
-            
             se = self.get_reconstruction_squarred_error(x_samples, x_reconstr, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
             # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
             self.x_reconstr = np.transpose(self.x_reconstr, [0, 2, 1, 3])
@@ -424,8 +423,6 @@ class Launcher():
     def leave_one_out(self, double_validation=False, resume=False):
         nb_samples_per_mov = self.data_driver.nb_samples_per_mov
         data = self.data_driver.data
-        
-        
         def extract_set(data, i, nb_blocks_in_set):
         #separe donnees data_set, data_remains
             index_i = i
@@ -451,7 +448,6 @@ class Launcher():
             return data_set, data_remains
 
         winners = []
-        
         #pour chaque mouvement test
         for test_index in range(nb_samples_per_mov):
 
@@ -492,7 +488,6 @@ class Launcher():
                         resume=False,
                         save_path=ticket
                     )
-                    
                     self.init_x_reconstr()
                     # se shape = [nb_mov_types, nb_samples_per_mov, nb_frames, n_input]
                     se = self.se[:, eval_index]
@@ -656,16 +651,13 @@ class Launcher():
             self.plot_error(e)
 
 
-
-
-
-                        
     def retrieve_data_from_latent_space_ori(self,zs):
         self.init_vtsfe()
         x_reconstr_from_ls = self.vtsfe.reconstruct_fromLS(zs)
         return x_reconstr_from_ls
 
-    def show_latent_space(self, sample_indices=None, data=None):
+
+    def show_latent_space(self, zs_inf=[], sample_indices=None, data=None, titleFrame=None):
         self.init_vtsfe()
         if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
@@ -678,40 +670,38 @@ class Launcher():
         
         #retourne xs = 2 :
         zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
-
         #print( "dans fonction " + str(len(zs)))
-        self.vtsfe.show_latent_space(self.data_driver, zs,s_indices,"z",nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False)
+        self.vtsfe.show_latent_space(self.data_driver, zs,  s_indices,"z", zs_inf, nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False, titleFrame=titleFrame)
 
         if self.config.VTSFE_PARAMS["use_z_derivative"]:
             z_derivatives = self.vtsfe.transform_derivative(x_samples)
-            self.vtsfe.show_latent_space(self.data_driver, z_derivatives, s_indices,"z derivative", nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False  )
+            self.vtsfe.show_latent_space(self.data_driver, z_derivatives, s_indices,"z derivative",  zs_inf, nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False, titleFrame=titleFrame )
          
         return zs   
             
 
-    def show_latent_space_recovered(self, zs, sample_indices=None, data=None):
-        self.init_vtsfe()
-        if sample_indices is None:
-            s_indices = range(self.data_driver.nb_samples_per_mov)
-        else:
-            s_indices = sample_indices
-        if data is None:
-            x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
-        else:
-            x_samples = data
+    #def show_latent_space_recovered(self, zs_inf, sample_indices=None, data=None):
+        #self.init_vtsfe()
+        #if sample_indices is None:
+            #s_indices = range(self.data_driver.nb_samples_per_mov)
+        #else:
+            #s_indices = sample_indices
+        #if data is None:
+            #x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+        #else:
+            #x_samples = data
         
-        #retourne xs = 2 :
+        #zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
 
-        self.vtsfe.show_latent_space(self.data_driver, zs,s_indices,"z",nb_samples_per_mov=1, displayed_movs=self.data_driver.mov_types[0], show_frames=False)
+        ##retourne xs = 2 :
 
-     
-        return zs   
-            
+        #self.vtsfe.show_latent_space(self.data_driver, zs, s_indices,"z",  zs_inf, nb_samples_per_mov=1, displayed_movs=self.data_driver.mov_types[0], show_frames=False)
 
 
 
 
-    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True):
+
+    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[]):
         self.init_vtsfe()
         if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
@@ -738,6 +728,12 @@ class Launcher():
         self.config.DATA_VISUALIZATION["x_samples"] = x_samples #(70,70,66)
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices #8
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
+        self.config.DATA_VISUALIZATION["data_inf"] = data_inf
+
+       # self.config.DATA_VISUALIZATION["dynamic_plot"] = True#add ori
+       # self.config.DATA_VISUALIZATION["displayed_movs"] =['bent_fw']#add ori
+       # self.config.DATA_VISUALIZATION["plot_3D"] =True#add ori
+       # self.config.DATA_VISUALIZATION["body_lines"] =False#add ori
         self.vtsfe.show_data(
             self.config.DATA_VISUALIZATION
         )
@@ -770,7 +766,7 @@ class Launcher():
         ##)
         
         
-    def show_reconstr_data_ori(self,x_mean, x_log_sigma_sqs, type_indices=None, sample_indices=None, only_hard_joints=True, average_reconstruction=True):
+    def show_reconstr_data_ori(self,x_mean,  type_indices=None, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[]):
 
 
         self.init_vtsfe()
@@ -796,9 +792,11 @@ class Launcher():
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices #8
         self.config.DATA_VISUALIZATION["displayed_movs"] = type_indices #0
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
+        self.config.DATA_VISUALIZATION["data_inf"] = data_inf
+
 
         self.vtsfe.show_data_ori(
-            x_samples,
+            x_mean,
             self.config.DATA_VISUALIZATION
         )
  

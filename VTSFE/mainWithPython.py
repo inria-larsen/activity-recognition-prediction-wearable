@@ -59,7 +59,7 @@ from app.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_
 # from app.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
 # from app.tighter_lb_joint_mvnx_7D_L30 import tighter_lb_joint_mvnx_7D_L30
 
-# from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
+from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
 # from app.tighter_lb_light_position_mvnx_5D import tighter_lb_light_position_mvnx_5D
 # from app.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
 
@@ -69,7 +69,6 @@ trainings = []
 # EXPERIMENTS   #######################################################################################################################################
 
 # Whether you want to run a leave_one_out in training mode or not
-### TO DO WHAT? ###
 leave_one_out = False
 # Select the sample index in [0, 9] on which models will be tested (all other samples will be used for training)
 # Given our 7 movement types, this means: 9*7 = 63 training samples, 1*7 = 7 test samples
@@ -88,8 +87,9 @@ else:
 #trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_5D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_5D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_7D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_7D_separated))  # OK
+trainings.append(("tighter_lb_light_position_mvnx_2D"+ti, tighter_lb_light_position_mvnx_2D))
 
-trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
+#trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
 # trainings.append(("tighter_lb_light_joint_mvnx_5D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_5D_separated))   # OK
 # trainings.append(("tighter_lb_light_joint_mvnx_7D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_7D_separated))   # OK
 
@@ -99,7 +99,6 @@ trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+t
 # trainings.append(("tighter_lb_joint_mvnx_2D_L15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # OK
 # trainings.append(("tighter_lb_joint_mvnx_2D_L30_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L30_separated))   # OK
 # trainings.append(("tighter_lb_joint_mvnx_2D_L15_P15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # Killed
-
 
 ###################################
 ### POurquoi tu ne visualise qu'un mouvement ? C'est pas censé etre une distribution ?###
@@ -119,23 +118,22 @@ DATA_VISUALIZATION = {
 show_data = False
 # plot learning errors through epochs
 plot_error = False
-plot_mse = False
 # show latent space
-show_latent_space = True
+show_latent_space = False
 # plot the global MSE and MSE for each movement type
+plot_mse = False
 # show reconstruction of input data space, compare it between models in trainings
 show_reconstr_data = False
+record_latent_space = False
+unitary_tests = False
 # movement types shown at data reconstruction
 reconstr_data_displayed_movs = ["kicking"]
-commWithMatlab = False
+commWithMatlab = True
 restore = True
 train = False
 lrs = []
 mses = []
-
-
 for i, training in enumerate(trainings):
-    ### c'est quoi restore path? ###
     restore_path = None
     if restore:
         restore_path = training[0]
@@ -154,7 +152,7 @@ for i, training in enumerate(trainings):
         "checkpoint_step": 10
     })
 
-    training_indices = list(range(test_index))+list(range(test_index+1,10)) #contien tout saut le test
+    training_indices = list(range(test_index))+list(range(test_index+1,10)) #contient tout saut le test
     test_indices = []
     for index in range(lr.data_driver.nb_samples_per_mov):
         if index not in training_indices:
@@ -163,8 +161,12 @@ for i, training in enumerate(trainings):
     nb_training_samples = len(training_indices)
 
     if show_data:
-        lr.show_data_ori(
-            sample_indices=slice(nb_training_samples+1, None))
+        #lr.show_data_ori(
+        #   sample_indices=slice(nb_training_samples+1, None))
+        lr.show_data(
+            sample_indices=[8],#slice(nb_training_samples+1, None),
+            only_hard_joints=True
+        )
 
     if leave_one_out:
         # Select the model index on which a leave_one_out was running to resume it
@@ -179,7 +181,6 @@ for i, training in enumerate(trainings):
             # leave_one_out function call for selected models in trainings list
             mse = lr.leave_one_out(double_validation=False, resume=resume)
             #pdb.set_trace()
-
             print("MSE = "+str(mse))
             print(lr.get_leave_one_out_winner_full_path())
         else:
@@ -197,56 +198,112 @@ for i, training in enumerate(trainings):
 
 
         if commWithMatlab:
-            connex = Connector()
-            print("wait for data")
-            connex.addMessage("ask_data")            
-            zs = connex.readFloat()   
-            connex.addMessage("ok")
-            connex.closeConnector()
-            print("retrieve infered latent space.")
-            print("zs calculé :"+ str(len(zs)))
-            #lr.show_latent_space(sample_indices=[8])
-            lr.show_latent_space_recovered(zs, sample_indices=[8])
-            #dataRetrieve = reconstruct_fromLS(zs)
-            #dataRetrieve = lr.retrieve_data_from_latent_space_ori(zs)
+
+            
+            connex = Connector() #YARP connexion with matlab
+            list_zs = []
+            for i in range(7):
+                #print("ask_data")
+                connex.addMessage("ask_data")            
+                #print("read float")
+                zs = connex.readFloat() #read latent space that comes from Matlab
+                list_zs.append(zs) 
+              #  print("say ok")
+               # connex.addMessage("ok")
+                #print("retrieve infered latent space.")
+            print("close matlab connexion")
+            connex.closeConnector() #YARP disconnexion
+
+            lisst = []
+            x_reconstr_from_ls = np.zeros([7,70,69])
+            for inx in range(10): # to represent the whole latent space trajectory for all the data set
+                lisst.append(inx)
+
+            for i in range(7):
+                lr.show_latent_space(list_zs[i], sample_indices=lisst, titleFrame = 'Latent_space_infered for' + str(i))
+                x_reconstr_from_ls[i] = lr.retrieve_data_from_latent_space_ori(list_zs[i])
+                #lr.show_reconstr_data_ori(x_reconstr_from_ls[i], type_indices={'bent_fw'}, sample_indices=lisst)
+                #dataRetrieve = lr.retrieve_data_from_latent_space_ori(zs)
+
+               # lr.show_data(
+                    #sample_indices=[8],
+                   # only_hard_joints=True,
+                  #  data_inf=x_reconstr_from_ls, 
+                 #   xreconstr=[]
+                #)
+            lr.show_reconstr_data(
+                compare_to_other_models=True,
+                sample_indices=[8],
+                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                # sample_indices=range(nb_training_samples),
+                only_hard_joints=True,
+                data_inf=x_reconstr_from_ls,
+            )
+
+
+        if unitary_tests:
+            """Test if the program can retrieve the laten space, plot it correctly, reconstruct one latent space correctly and plot it correctly"""
+            lisst = []
+            for inx in range(10):
+                lisst.append(inx)
+            
+            zs = np.array(lr.show_latent_space(sample_indices=lisst))
+            #for inx in range(7):
+            test = zs[0, :, 0, :] #test sample_indice = 0 bent_fw
+            lr.show_latent_space(test, sample_indices=lisst)
+
+            #Test pour verifier si on peut recuperer xrecovered depuis zs et le ploter
+            x_reconstr_from_ls = lr.retrieve_data_from_latent_space_ori(test)
+            lr.show_reconstr_data_ori(x_reconstr_from_ls, type_indices={'bent_fw'}, sample_indices=[8])
+
+            lr.show_reconstr_data(
+                    compare_to_other_models=True,
+                    sample_indices=test_indices,
+                    # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                    # sample_indices=range(nb_training_samples),
+                    only_hard_joints=True,
+                    data_inf=x_reconstr_from_ls,
+            )
+
+
+            #test Unitaire : avec latent space pas correct (pour verif reconstr utlise bien le latent space test)
+            for i in range(70):
+                test[i,0] += 3
+                test[i,1] -= 3
+            lr.show_latent_space(test, sample_indices=lisst)
+            x_reconstr_from_ls = lr.retrieve_data_from_latent_space_ori(test)
+            lr.show_reconstr_data_ori(x_reconstr_from_ls, type_indices={'bent_fw'}, sample_indices=[8])
+
+            lr.show_reconstr_data(
+                    compare_to_other_models=True,
+                    sample_indices=test_indices,
+                    # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                    # sample_indices=range(nb_training_samples),
+                    only_hard_joints=True,
+                    data_inf=x_reconstr_from_ls,
+            )
+
 
         if show_latent_space:
-            zs = []
             lisst = []
-
             for inx in range(10):
                 lisst.append(inx)
 
-            zs.append(lr.show_latent_space(sample_indices=lisst))
-           # dataRetrieve = lr.retrieve_data_from_latent_space_ori(zs)
-            #lr.show_latent_space(sample_indices=[8])
-            vall = lr.show_reconstr_data(sample_indices=[8])
-            vall = vall[0][0][0]
+            zs = np.array(lr.show_latent_space(sample_indices=lisst))
 
-            #Test pour verifier si on peut recuperer xrecovered depuis zs et le ploter
-            test = zs[0][0][0]
-
-            for i in range(70):
-                test[i][0] += 0.3
-                test[i][1] -= 0.3
-            x_reconstr_from_ls = lr.retrieve_data_from_latent_space_ori(test)
-            #TODO
-
-            #for i in range(70): 
-             #   aa = x_mean - vall
-            lr.show_reconstr_data_ori(x_reconstr_from_ls, x_log_sigma_sqs,type_indices={'bent_fw'}, sample_indices=[8])
-            
-            ##Si l'on veut sauvegarder les données de l'espace latent
-            #for testn in range(7):
-                #try:
-                    #os.mkdir("./testt/test_"+str(testn))
-                #except OSError:
-                    #pass
-                #for innx in range(10):
-                    #f = open("./testt/test_"+str(testn)+"/record"+str(innx)+".txt", "w+")
-                    #for vb in range(0,70):
-                        #f.write(str(zs[0][0][10*(testn-1)+innx][vb][0])+"\t"+str(zs[0][0][10*(testn-1)+innx][vb][1])+"\n")
-                    #f.close()
+            #Si l'on veut sauvegarder les données de l'espace latent
+            if record_latent_space:
+                for testn in range(7):
+                    try:
+                        os.mkdir("./testt/position_"+str(testn))
+                    except OSError:
+                        pass
+                    for innx in range(10):
+                        f = open("./testt/position_"+str(testn)+"/record"+str(innx)+".txt", "w+")
+                        for vb in range(0,70):
+                            #f.write(str(zs[0][0][10*(testn-1)+innx][vb][0])+"\t"+str(zs[0][0][10*(testn-1)+innx][vb][1])+"\n")
+                            f.write(str(zs[0,vb,10*(testn)+innx,0])+"\t"+str(zs[0,vb,10*(testn)+innx,1])+"\n")
+                        f.close()
                     
 
         lr.config.DATA_VISUALIZATION["displayed_movs"] = reconstr_data_displayed_movs
@@ -259,8 +316,6 @@ for i, training in enumerate(trainings):
                     sample_indices=test_indices
                     # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov)
                 )
-
-            
             if show_reconstr_data:
                 lr.show_reconstr_data(
                     compare_to_other_models=True,
@@ -269,14 +324,14 @@ for i, training in enumerate(trainings):
                     # sample_indices=range(nb_training_samples),
                     only_hard_joints=True
                 )
-              
+
 #                lr.show_reconstr_data_ori(sample_indices=[8])
 
- #               lr.show_reconstr_data(
-  #                  compare_to_other_models=True, 
-   #                 sample_indices=None, 
-    #                only_hard_joints=True, 
-     #               average_reconstruction=True)
+                lr.show_reconstr_data(
+                    compare_to_other_models=True, 
+                    sample_indices=None, 
+                    only_hard_joints=True, 
+                   average_reconstruction=True)
                 
         else:
             lr.init_x_reconstr()

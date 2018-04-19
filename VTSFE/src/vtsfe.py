@@ -880,7 +880,7 @@ class VTSFE():
         input_dicts=[],
         recursive_call=False,
         nb_sub_sequences=None
-    ): #"""Permet de récupérer les variables latentes"""
+    ): #"""Permet de récupérer les variables variables a partir de XS"""
         def fill_frames(subsequence, nb_params, sub_sequence_index):
             """ Fills the missing frames with nan (due to subsequence splitting)
             """
@@ -981,7 +981,6 @@ class VTSFE():
                 f_dict.update(previous_dic)
                 #variables :16 : tensor transpose (?,2) ; MUl (?,2) ; transpose (?,2) ; Mul (?,2) ;  [...]
                 # values shape = [nb_values, shape(val)]
-                print("avant run session (pq 2 70 16?)")
 
                 #values.shape = [2.70.16]
                 values = list(self.session.run(variables, feed_dict=f_dict))
@@ -1137,7 +1136,7 @@ class VTSFE():
         self,
         variables,
         zs,
-        transform_with_all_vtsfe=True,
+        transform_with_all_vtsfe=False,
         annealing_schedule=1.,
         fill=True,
         missing_value_indices=[],
@@ -1145,27 +1144,20 @@ class VTSFE():
         nb_variables_per_frame=1.,
         recursive_call=False,
         nb_sub_sequences=None
-    ): #"""Permet de récupérer les variables latentes"""
+    ):
 
         # If you want to retrieve your variables from only one standard VAE
         values = []
 
-        for i in range(self.nb_frames):
-            f_dict = {
-                self.annealing_schedule: annealing_schedule, # utilisé pour la prédiction : plus on connait d'epoch plus on est sur de la suite
-            }
-            f_dict[self.vae_subsequence[0].z[i]] = zs[i]
-            pdb.set_trace()
+        #for i in range(self.nb_frames):
+        f_dict = {
+            self.annealing_schedule: annealing_schedule # utilisé pour la prédiction : plus on connait d'epoch plus on est sur de la suite
+        }
+        f_dict[self.vae_subsequence[0].z] = zs
+        
+        val = self.session.run(variables, feed_dict=f_dict)
 
-            val = self.session.run(variables, feed_dict=f_dict)
-            pdb.set_trace()
-
-            # values shape = [nb_frames, shape(val)]
-            values.append(val)
-        # values_filled_subs shape = [1, nb_frames, shape(val)]
-        values_filled_subs.append(values)
-
-        return values_filled_subs
+        return val
 
 
 
@@ -1457,7 +1449,7 @@ class VTSFE():
 
         return values
 
-    def reconstruct_fromLS(self, zs, transform_with_all_vtsfe=True, fill=True):
+    def reconstruct_fromLS(self, zs, transform_with_all_vtsfe=False, fill=True):
         """Reconstruct data from zs"""
   
         p = ()
@@ -1469,7 +1461,7 @@ class VTSFE():
             # If you want to retrieve your variables from only one standard VAE
             p = self.vae_subsequence[0].x_reconstr
 
-        values = self.get_values_from_latent_space_ori(p, zs, transform_with_all_vtsfe=transform_with_all_vtsfe, fill=fill)
+        values = self.get_values_from_latent_space_ori(p, zs, transform_with_all_vtsfe=False, fill=fill)
 
    
         return values
@@ -1768,8 +1760,8 @@ class VTSFE():
 
 
     def show_data(self, params):
-        #self.vtsfe_plots.show_data(**params)
-        self.vtsfe_plots.show_data_ori2(**params)
+        self.vtsfe_plots.show_data(**params)
+        #self.vtsfe_plots.show_data_ori2(**params)
 
     def show_data_ori(self,x_mean, params):
         #self.vtsfe_plots.show_data(**params)
@@ -1784,8 +1776,8 @@ class VTSFE():
         self.vtsfe_plots.plot_error(*errors)
 
 
-    def show_latent_space(self, data_driver, latent_data, sample_indices, title, displayed_movs=[], nb_samples_per_mov=1, show_frames=False):
-        if (len(latent_data)==1):
-            self.vtsfe_plots.show_latent_space(data_driver, latent_data, sample_indices, title, displayed_movs=displayed_movs, nb_samples_per_mov=nb_samples_per_mov, show_frames=show_frames)
-        else:
-            self.vtsfe_plots.show_latent_space_ori(data_driver, latent_data, sample_indices, title, show_frames=show_frames)
+    def show_latent_space(self, data_driver, latent_data,  sample_indices, title, zs_inf=[], displayed_movs=[], nb_samples_per_mov=1, show_frames=False, titleFrame=None):
+      #  if (len(latent_data)==1):
+        self.vtsfe_plots.show_latent_space(data_driver, latent_data, sample_indices, title,zs_inf, displayed_movs=displayed_movs, nb_samples_per_mov=nb_samples_per_mov, show_frames=show_frames, titleFrame=titleFrame)
+        #else:
+            #self.vtsfe_plots.show_latent_space_ori(data_driver, latent_data, zs_inf, sample_indices, title, show_frames=show_frames)

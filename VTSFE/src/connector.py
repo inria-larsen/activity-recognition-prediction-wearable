@@ -2,6 +2,7 @@
 
 import pdb
 import yarp
+import numpy as np
 
 #### pour tester : 
 #connex = Connector()
@@ -56,12 +57,10 @@ class Connector():
             self.message.addDouble(dataFloat[i])
         self.pw.write()
 
-    def readFloat(self):
+    def readFloat(self, nbData = [70,2]):
         """Lis un ensemble de flottant et les renvoit dans une liste"""
-        data = ()
-        for i in range(2): #todo faire en sorte que selon nombre de dimension    
+        data = np.zeros(nbData)
+        for i in range(nbData[0]-1):
             b_in = self.pr.read()
-            val = b_in.toString().split(' ')
-            data += (val,)
-
+            data[i,:] = b_in.toString().split(' ')
         return data
