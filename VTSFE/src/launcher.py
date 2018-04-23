@@ -9,6 +9,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from .data_driver import Data_driver
 from .vtsfe import VTSFE
+from .my_statistics import My_statistics
+
 
 
 class Launcher():
@@ -75,7 +77,7 @@ class Launcher():
         else:
             s_indices = sample_indices
         x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
-        pdb.set_trace()
+        
 
         self.config.DATA_VISUALIZATION["reconstr_datasets"] = []
         self.config.DATA_VISUALIZATION["reconstr_datasets_names"] = []
@@ -697,11 +699,36 @@ class Launcher():
 
         #self.vtsfe.show_latent_space(self.data_driver, zs, s_indices,"z",  zs_inf, nb_samples_per_mov=1, displayed_movs=self.data_driver.mov_types[0], show_frames=False)
 
+    def compute_stats(self,compare_to_other_models=False, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[], nb_samples_per_mov=1):
+        self.init_vtsfe()
+        if sample_indices is None:
+            s_indices = range(self.data_driver.nb_samples_per_mov)
+        else:
+            s_indices = sample_indices
+        x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+        # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
+        self.init_x_reconstr() #se = 7*10*70*66
+        x_reconstr = [self.x_reconstr] #[(1, 70, 70, 66)] --> 10 testsx7actions, 70 frames, ...
+        x_reconstr_names = [self.save_path] #['tighter_lb_light_joint_mvnx_2D_separated_encoder_variables_test_8']
+        if compare_to_other_models:
+            for lr in self.lrs:
+                if lr.x_reconstr is not None:
+                    x_reconstr.append(lr.x_reconstr)
+                    x_reconstr_names.append(lr.save_path)
+        x_reconstr = np.array(x_reconstr) #(1, 1, 70, 70, 66)
+                                         #nb_tests_reconstr,         #nbTypeMvt xnbTestParMov, nbFrame, dimInput
+                                         #1  #1   #7*10 # 70 #66
+        x_reconstr = x_reconstr.reshape([len(x_reconstr_names), -1, len(self.data_driver.mov_types)*self.data_driver.nb_samples_per_mov, self.vtsfe.nb_frames, self.data_driver.input_dim])
+                                    #data_driver, reconstr_datasets, reconstr_datasets_names, sample_indices,x_samples, nb_samples_per_mov=1, transform_with_all_vtsfe=True, data_inf=[]
+        #dist_real_reconstr, dist_real_inf, dist_reconstr_inf = self.vtsfe.compute_stats(self.data_driver, x_reconstr, x_reconstr_names, s_indices, x_samples, nb_samples_per_mov=10, transform_with_all_vtsfe=False, data_inf=data_inf)
+        my_statistics = self.vtsfe.compute_stats(self.data_driver, x_reconstr, x_reconstr_names, s_indices, x_samples, nb_samples_per_mov=10, transform_with_all_vtsfe=False, data_inf=data_inf)
+        #return dist_real_reconstr, dist_real_inf, dist_reconstr_inf
+        return my_statistics
 
 
 
 
-    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[]):
+    def show_reconstr_data(self, compare_to_other_models=True, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[], nb_samples_per_mov=1):
         self.init_vtsfe()
         if sample_indices is None:
             s_indices = range(self.data_driver.nb_samples_per_mov)
@@ -729,6 +756,9 @@ class Launcher():
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices #8
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
         self.config.DATA_VISUALIZATION["data_inf"] = data_inf
+        self.config.DATA_VISUALIZATION["nb_samples_per_mov"] = nb_samples_per_mov
+        self.config.DATA_VISUALIZATION["only_hard_joints"] = False #add ori
+        self.config.DATA_VISUALIZATION["plot_3D"] = True #add ori
 
        # self.config.DATA_VISUALIZATION["dynamic_plot"] = True#add ori
        # self.config.DATA_VISUALIZATION["displayed_movs"] =['bent_fw']#add ori
@@ -766,39 +796,39 @@ class Launcher():
         ##)
         
         
-    def show_reconstr_data_ori(self,x_mean,  type_indices=None, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[]):
+    #def show_reconstr_data_ori(self,x_mean,  type_indices=None, sample_indices=None, only_hard_joints=True, average_reconstruction=True, data_inf=[]):
 
 
-        self.init_vtsfe()
+        #self.init_vtsfe()
 
-        if sample_indices is None:
-            s_indices = range(self.data_driver.nb_samples_per_mov)
-        else:
-            s_indices = sample_indices
-        x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+        #if sample_indices is None:
+            #s_indices = range(self.data_driver.nb_samples_per_mov)
+        #else:
+            #s_indices = sample_indices
+        #x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
        
-        # x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
-        self.init_x_reconstr() #se = 7*10*70*66
-        x_reconstr = [self.x_reconstr] #[(1, 70, 70, 66)] --> 10 testsx7actions, 70 frames, ...
-        x_reconstr_names = [self.save_path] #['tighter_lb_light_joint_mvnx_2D_separated_encoder_variables_test_8']
-        x_reconstr = np.array(x_reconstr) #(1, 1, 70, 70, 66)
-                                         #nb_tests_reconstr,         #nbTypeMvt xnbTestParMov, nbFrame, dimInput
-                                         #1  #1   #7*10 # 70 #66
-        x_reconstr = x_reconstr.reshape([len(x_reconstr_names), -1, len(self.data_driver.mov_types)*self.data_driver.nb_samples_per_mov, self.vtsfe.nb_frames, self.data_driver.input_dim])
+        ## x_reconstr shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
+        #self.init_x_reconstr() #se = 7*10*70*66
+        #x_reconstr = [self.x_reconstr] #[(1, 70, 70, 66)] --> 10 testsx7actions, 70 frames, ...
+        #x_reconstr_names = [self.save_path] #['tighter_lb_light_joint_mvnx_2D_separated_encoder_variables_test_8']
+        #x_reconstr = np.array(x_reconstr) #(1, 1, 70, 70, 66)
+                                         ##nb_tests_reconstr,         #nbTypeMvt xnbTestParMov, nbFrame, dimInput
+                                         ##1  #1   #7*10 # 70 #66
+        #x_reconstr = x_reconstr.reshape([len(x_reconstr_names), -1, len(self.data_driver.mov_types)*self.data_driver.nb_samples_per_mov, self.vtsfe.nb_frames, self.data_driver.input_dim])
 
-        self.config.DATA_VISUALIZATION["reconstr_datasets"] = x_reconstr #(1, 1, 70, 70, 66)
-        self.config.DATA_VISUALIZATION["reconstr_datasets_names"] = x_reconstr_names #['tighter_lb_light_joint_mvnx_2D_separated_encoder_variables_test_8']
-        self.config.DATA_VISUALIZATION["x_samples"] = x_samples #(70,70,66)
-        self.config.DATA_VISUALIZATION["sample_indices"] = s_indices #8
-        self.config.DATA_VISUALIZATION["displayed_movs"] = type_indices #0
-        self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
-        self.config.DATA_VISUALIZATION["data_inf"] = data_inf
+        #self.config.DATA_VISUALIZATION["reconstr_datasets"] = x_reconstr #(1, 1, 70, 70, 66)
+        #self.config.DATA_VISUALIZATION["reconstr_datasets_names"] = x_reconstr_names #['tighter_lb_light_joint_mvnx_2D_separated_encoder_variables_test_8']
+        #self.config.DATA_VISUALIZATION["x_samples"] = x_samples #(70,70,66)
+        #self.config.DATA_VISUALIZATION["sample_indices"] = s_indices #8
+        #self.config.DATA_VISUALIZATION["displayed_movs"] = type_indices #0
+        #self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
+        #self.config.DATA_VISUALIZATION["data_inf"] = data_inf
 
 
-        self.vtsfe.show_data_ori(
-            x_mean,
-            self.config.DATA_VISUALIZATION
-        )
+        #self.vtsfe.show_data_ori(
+            #x_mean,
+            #self.config.DATA_VISUALIZATION
+        #)
  
 
     def show_inferred_parameters(self, data=None):

@@ -556,22 +556,11 @@ class VTSFE_Plots():
             plt.show()
             plt.pause(.001)
 
-
-    def compute_stats(self, data_driver, reconstr_datasets, reconstr_datasets_names, sample_indices, x_samples, plot_variance=False, nb_samples_per_mov=1, show=True, displayed_movs=None, dynamic_plot=False, plot_3D=False, window_size=10, time_step=5, body_lines=True, only_hard_joints=True, transform_with_all_vtsfe=True, average_reconstruction=True, data_inf=[]):
-        """
-            Compute stat of data
-        """
-        #todo
-
-
     def show_data(self, data_driver, reconstr_datasets, reconstr_datasets_names, sample_indices, x_samples, plot_variance=False, nb_samples_per_mov=1, show=True, displayed_movs=None, dynamic_plot=False, plot_3D=False, window_size=10, time_step=5, body_lines=True, only_hard_joints=True, transform_with_all_vtsfe=True, average_reconstruction=True, data_inf=[]):
         """
             Data space representation.
             You can optionally plot reconstructed data as well at the same time.
         """
-	#TODO: add into called parameters
-        plot_3D=True
-        only_hard_joints=False
         
         labels = data_driver.data_labels
 
@@ -580,7 +569,7 @@ class VTSFE_Plots():
             display_per_mov = len(sample_indices)
         else:
             display_per_mov = nb_samples_per_mov
-
+        print(str(display_per_mov))
         if transform_with_all_vtsfe:
             nb_sub_sequences = self.vtsfe.nb_sub_sequences
         else:
@@ -602,13 +591,16 @@ class VTSFE_Plots():
             data = data.reshape([len(data_driver.mov_types)*data_driver.nb_samples_per_mov, self.vtsfe.nb_frames, -1, 3]) #70.70.22.3
             
             #TODO: Add variables to defin the shape of data_inf
-            #pdb.set_trace()            
+
             if(data_inf != []): 
-                data_inf_tmp = np.zeros([70,70,23,3])
-                data_inf = data_inf.reshape(7,70,23,3)
-                for i in np.arange(7):
-                    data_inf_tmp[i*10+8] = data_inf[i]
-                data_inf = data_inf_tmp
+                tmp_shape = data_inf.shape
+                data_inf = data_inf.reshape(tmp_shape[0],tmp_shape[1],23,3)
+
+                if(tmp_shape[0]== 7):
+                    data_inf_tmp = np.zeros([70,70,23,3])
+                    for i in np.arange(7):
+                        data_inf_tmp[i*10+8] = data_inf[i]
+                    data_inf = data_inf_tmp
                     
             data_reconstr = []
             for j,reco in enumerate(reconstr_datasets): #1.1.70.70.66
@@ -988,7 +980,7 @@ class VTSFE_Plots():
         if len(reconstr_datasets) > 0:
             nb_colors *= len(reconstr_datasets)
         colors = cm.rainbow(np.linspace(0, 1, nb_colors))
-        for j,reco in enumerate(reconstr_datasets):
+        for j, reco in enumerate(reconstr_datasets):
             # reco shape = [nb_sub_sequences, nb_samples, nb_frames, n_input]
             print("\n-------- "+reconstr_datasets_names[j])
             print("Dynamics (Sum of variances through time) = "+str(np.sum(np.var(reco, axis=2))))

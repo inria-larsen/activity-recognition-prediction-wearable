@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from src.lib.useful_functions import *
 from .vtsfe_plots import VTSFE_Plots
+from .my_statistics import My_statistics
 
 
 # Variational Time Series Feature Extractor
@@ -39,7 +40,6 @@ class VTSFE():
     ):
 
         self.__dict__.update(self.VTSFE_PARAMS, **vtsfe_params)
-
         self.save_path = save_path
         self.restore = restore
         self.training_mode = training_mode
@@ -1758,6 +1758,34 @@ class VTSFE():
                 vae_latent_errors, vae_latent_variances
             )
 
+
+
+    def compute_stats(self, data_driver, reconstr_datasets, reconstr_datasets_names, sample_indices,x_samples, nb_samples_per_mov=1, transform_with_all_vtsfe=False, data_inf=[]):
+        # don't display more movements than there are
+        if nb_samples_per_mov > len(sample_indices):
+            display_per_mov = len(sample_indices)
+        else:
+            display_per_mov = nb_samples_per_mov
+        print(str(display_per_mov))
+        if transform_with_all_vtsfe:
+            nb_sub_sequences = self.nb_sub_sequences
+        else:
+            nb_sub_sequences = 1
+
+        data = np.copy(x_samples) #70.70.66
+
+        data_reconstr = []
+        for j,reco in enumerate(reconstr_datasets): #1.1.70.70.66
+            data_reconstr.append(reco.reshape([nb_sub_sequences, len(data_driver.mov_types)*data_driver.nb_samples_per_mov, self.nb_frames, -1, 3]))
+        segment_count = len(data[0, 0])#22
+
+        data_reconstr2 = reconstr_datasets[0][0]
+
+        my_statistics = My_statistics(data, data_inf, data_reconstr2, [10,70,70,69]) #TODO rendre 5/10 en variable
+        my_statistics.get_distance();
+
+        return  my_statistics
+         
 
     def show_data(self, params):
         self.vtsfe_plots.show_data(**params)

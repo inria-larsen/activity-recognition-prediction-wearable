@@ -57,10 +57,16 @@ class Connector():
             self.message.addDouble(dataFloat[i])
         self.pw.write()
 
-    def readFloat(self, nbData = [70,2]):
+    def readFloat(self, nbData = [70,2], flag_debug =False):
         """Lis un ensemble de flottant et les renvoit dans une liste"""
         data = np.zeros(nbData)
-        for i in range(nbData[0]-1):
+        if(len(data[0]) ==1):
             b_in = self.pr.read()
-            data[i,:] = b_in.toString().split(' ')
+            data = b_in.toString().split(' ')
+            for i in range(len(data)):
+                data[i]  = float(data[i])
+        else:
+            for i in range(nbData[0]):
+                b_in = self.pr.read()
+                data[i,:] = b_in.toString().split(' ')
         return data

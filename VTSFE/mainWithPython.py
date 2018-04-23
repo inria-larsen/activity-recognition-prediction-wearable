@@ -4,9 +4,12 @@ import pdb
 import os
 import yarp
 import sys
+import pickle
 #from launcher import Launcher
 from src.launcher import Launcher
 from src.connector import Connector
+from src.my_statistics import My_statistics
+
 
 # config files
 ## joints
@@ -126,9 +129,10 @@ plot_mse = False
 show_reconstr_data = False
 record_latent_space = False
 unitary_tests = False
+launch_stats= True
 # movement types shown at data reconstruction
 reconstr_data_displayed_movs = ["kicking"]
-commWithMatlab = True
+commWithMatlab = False
 restore = True
 train = False
 lrs = []
@@ -203,15 +207,9 @@ for i, training in enumerate(trainings):
             connex = Connector() #YARP connexion with matlab
             list_zs = []
             for i in range(7):
-                #print("ask_data")
                 connex.addMessage("ask_data")            
-                #print("read float")
                 zs = connex.readFloat() #read latent space that comes from Matlab
                 list_zs.append(zs) 
-              #  print("say ok")
-               # connex.addMessage("ok")
-                #print("retrieve infered latent space.")
-            print("close matlab connexion")
             connex.closeConnector() #YARP disconnexion
 
             lisst = []
@@ -240,6 +238,49 @@ for i, training in enumerate(trainings):
                 data_inf=x_reconstr_from_ls,
             )
 
+        if launch_stats:
+            nbStat = 10
+            connex = Connector() #YARP connexion with matlab
+            global_list = np.zeros([nbStat,70,70,2])
+            list_error = np.zeros([nbStat,70])
+            #dist_real_reconstr = np.zeros([5,2]) 
+            #dist_real_inf = np.zeros([5,2])
+            #dist_reconstr_inf = np.zeros([5,2])
+
+            for nbPercent in range(nbStat):
+                list_zs = []
+                for i in range(70):  
+                    connex.addMessage("ask_data")            
+                    zs = connex.readFloat() #read latent space that comes from Matlab
+                    list_zs.append(zs) 
+                print('ask_error_list')
+                connex.addMessage("ask_error_list")
+                list_error[nbPercent,:] = connex.readFloat(nbData = [70,1],flag_debug =True);
+                global_list[nbPercent] = list_zs
+            print("close matlab connexion")
+            connex.closeConnector() #YARP disconnexion
+
+            x_reconstr_from_ls = np.zeros([nbStat,70,70,69])
+            for nbPercent in range(nbStat):
+                sample_indices = []
+
+                for i in range(70):
+                    x_reconstr_from_ls[nbPercent,i] = lr.retrieve_data_from_latent_space_ori(global_list[nbPercent,i])
+
+                    if(list_error[nbPercent,i]==0):
+                        sample_indices.append(i+1)
+            
+            my_statistics = lr.compute_stats(compare_to_other_models=True, nb_samples_per_mov=10, sample_indices=sample_indices, only_hard_joints=True, data_inf=x_reconstr_from_ls)
+            
+            with open('myLongStats', 'wb') as fichier:
+                mon_pickler= pickle.Pickler(fichier)
+                mon_pickler.dump(my_statistics)
+            #dist_real_reconstr[nbPercent,:], dist_real_inf[nbPercent,:], dist_reconstr_inf[nbPercent,:] = lr.compute_stats(compare_to_other_models=True, nb_samples_per_mov=10, sample_indices=sample_indices, only_hard_joints=True, data_inf=x_reconstr_from_ls[nbPercent])
+            #lr.show_reconstr_data(compare_to_other_models=True, nb_samples_per_mov=3, only_hard_joints=True, data_inf=x_reconstr_from_ls)#sample_indices=[8],
+                # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
+                # sample_indices=range(nb_training_samples),
+
+             
 
         if unitary_tests:
             """Test if the program can retrieve the laten space, plot it correctly, reconstruct one latent space correctly and plot it correctly"""
