@@ -230,7 +230,7 @@ class VAE_DMP(VAE):
                             z_samples_l3.append(z_samples_l4)
                             # to allow direct retrieving of z derivative
                             # self.z_derivative = tf.reduce_mean(self.z_derivative_samples, 0)
-                            pdb.set_trace()
+                            #pdb.set_trace()
                             x_reconstr_means_l4, x_reconstr_log_sigma_sqs_l4 = self.decoder_network(
                                 z_samples_l4,
                                 self.network_weights["weights_decoder"],

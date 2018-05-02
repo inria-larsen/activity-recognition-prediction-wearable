@@ -672,7 +672,7 @@ class Launcher():
         
         #retourne xs = 2 :
         zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
-        #print( "dans fonction " + str(len(zs)))
+        print( "dans fonction " + str(len(zs)))
         self.vtsfe.show_latent_space(self.data_driver, zs,  s_indices,"z", zs_inf, nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False, titleFrame=titleFrame)
 
         if self.config.VTSFE_PARAMS["use_z_derivative"]:
@@ -680,7 +680,23 @@ class Launcher():
             self.vtsfe.show_latent_space(self.data_driver, z_derivatives, s_indices,"z derivative",  zs_inf, nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False, titleFrame=titleFrame )
          
         return zs   
-            
+    
+    def compute_latent_space(self, zs_inf=[], sample_indices=None, data=None, titleFrame=None):
+        self.init_vtsfe()
+        if sample_indices is None:
+            s_indices = range(self.data_driver.nb_samples_per_mov)
+        else:
+            s_indices = sample_indices
+        if data is None:
+            x_samples = self.data_driver.get_whole_data_set(shuffle_dataset=False)
+        else:
+            x_samples = data
+        
+        #retourne xs = 2 :
+        zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
+        print( "dans fonction " + str(len(zs)))
+         
+        return zs   
 
     #def show_latent_space_recovered(self, zs_inf, sample_indices=None, data=None):
         #self.init_vtsfe()

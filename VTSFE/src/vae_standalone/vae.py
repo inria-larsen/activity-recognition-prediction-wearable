@@ -145,7 +145,6 @@ class VAE():
             )
         # to allow direct retrieving of z
         self.z = self.z_mean
-        print("z in vae_create_netwk : " +str(self.z_mean) )
         # x_reconstr_means, x_reconstr_log_sigma_sqs shape = [L, batch_size, n_output]
 
         self.x_reconstr_means, self.x_reconstr_log_sigma_sqs = self.decoder_network(
@@ -576,7 +575,7 @@ class VAE():
             adam_id = str(np.random.rand())
             with tf.variable_scope(adam_id):
                 self.optimizer = tf.train.AdamOptimizer(name="Adam", learning_rate=self.learning_rate).minimize(self.cost)
-                print(self.optimizer.name)
+                #print(self.optimizer.name)
 
 
     def partial_fit(self, X, sess):

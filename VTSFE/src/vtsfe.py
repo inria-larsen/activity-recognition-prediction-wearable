@@ -712,9 +712,9 @@ class VTSFE():
 
                 grads = np.array(gradients)[:, 0]
                 variables = np.array(gradients)[:, 1]
-                for k, grad in enumerate(grads):
-                    if grad is not None:
-                        print(variables[k].name)
+                #for k, grad in enumerate(grads):
+                   # if grad is not None:
+                        #print(variables[k].name)
                 # input("[enter]")
 
                 self.optimization.append(self.optimizer.apply_gradients(gradients))
@@ -779,8 +779,8 @@ class VTSFE():
                     var_list=var_list
                 )
                 grads = np.array(gradients)[:, 1]
-                for k, variable in enumerate(grads):
-                    print(variable.name)
+               # for k, variable in enumerate(grads):
+                   # print(variable.name)
                 # input("[enter]")
 
                 self.optimization.append(self.optimizer.apply_gradients(gradients))
@@ -814,7 +814,7 @@ class VTSFE():
                 no_grad = True
                 for k, grad in enumerate(grads):
                     if grad is not None:
-                        print(variables[k].name)
+                      #  print(variables[k].name)
                         no_grad = False
                 if no_grad:
                     gradients = None
@@ -1453,6 +1453,7 @@ class VTSFE():
         """Reconstruct data from zs"""
   
         p = ()
+
         if transform_with_all_vtsfe:
             # If you want to retrieve your variables from the whole network
             for i, vae in enumerate(self.vae_subsequence):
