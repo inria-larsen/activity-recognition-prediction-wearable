@@ -45,18 +45,18 @@ class My_statistics():
         self.dist_real_reconstr_1D = np.mean(self.dist_real_reconstr, axis=2) #mean members
         self.mean_dist_real_reconstr = np.mean(self.dist_real_reconstr_1D, axis=1) #for all timestep
         self.var_dist_real_reconstr = np.var(self.dist_real_reconstr_1D, axis=1)
+        if(self.data_inf!=[]):
+                for i in range(self.data_shape[0]):
+                    #real_inf
+                    self.dist_real_inf[i] = abs(self.data - self.data_inf[i])
+                    self.dist_real_inf_1D[i] = np.mean(self.dist_real_inf[i], axis=2)
+                    self.mean_dist_real_inf[i] = np.mean(self.dist_real_inf_1D[i], axis=1)
+                    self.var_dist_real_inf[i] = np.var(self.dist_real_inf_1D[i], axis=1)            
+                    #reconstr_inf
+                    self.dist_reconstr_inf[i] = abs(self.data_reconstr - self.data_inf[i])
+                    self.dist_reconstr_inf_1D[i] = np.mean(self.dist_reconstr_inf[i], axis=2)
+                    self.mean_dist_reconstr_inf[i] = np.mean(self.dist_reconstr_inf_1D[i], axis=1)
+                    self.var_dist_reconstr_inf[i] = np.var(self.dist_reconstr_inf_1D[i], axis=1)        
         
-        for i in range(self.data_shape[0]):
-            #real_inf
-            self.dist_real_inf[i] = abs(self.data - self.data_inf[i])
-            self.dist_real_inf_1D[i] = np.mean(self.dist_real_inf[i], axis=2)
-            self.mean_dist_real_inf[i] = np.mean(self.dist_real_inf_1D[i], axis=1)
-            self.var_dist_real_inf[i] = np.var(self.dist_real_inf_1D[i], axis=1)            
-            #reconstr_inf
-            self.dist_reconstr_inf[i] = abs(self.data_reconstr - self.data_inf[i])
-            self.dist_reconstr_inf_1D[i] = np.mean(self.dist_reconstr_inf[i], axis=2)
-            self.mean_dist_reconstr_inf[i] = np.mean(self.dist_reconstr_inf_1D[i], axis=1)
-            self.var_dist_reconstr_inf[i] = np.var(self.dist_reconstr_inf_1D[i], axis=1)        
-
-
+        
         

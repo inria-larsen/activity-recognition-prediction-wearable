@@ -65,11 +65,16 @@ class Launcher():
         self.config.DATA_VISUALIZATION["x_samples"] = x_samples
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
-        self.vtsfe.show_data(
-            self.config.DATA_VISUALIZATION,
-            data_inf = data_inf
-        )
-
+        if(data_inf!= []):
+            self.vtsfe.show_data(
+                self.config.DATA_VISUALIZATION,
+                data_inf = data_inf
+            )
+        else:
+            self.vtsfe.show_data(
+                self.config.DATA_VISUALIZATION
+            )
+        
     def show_data_ori(self, sample_indices=None):
         self.init_vtsfe()
         if sample_indices is None:
