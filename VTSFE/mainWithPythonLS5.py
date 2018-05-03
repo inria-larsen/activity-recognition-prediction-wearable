@@ -63,7 +63,7 @@ from app.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_
 # from app.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
 # from app.tighter_lb_joint_mvnx_7D_L30 import tighter_lb_joint_mvnx_7D_L30
 
-#from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
+from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
 #from app.tighter_lb_light_position_mvnx_69D import tighter_lb_light_position_mvnx_69D
 # from app.tighter_lb_light_position_mvnx_5D import tighter_lb_light_position_mvnx_5D
 # from app.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
@@ -83,15 +83,22 @@ if leave_one_out:
 else:
     ti = "_test_"+str(test_index)
 
+#retrieve information about number of epochs used to learn
+nb_epochs = 10
+for i, val in enumerate(sys.argv):
+    if(val == 'nb_epochs'):
+        nb_epochs = int(sys.argv[i+1])
+
+print("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+ti)
 #trainings.append(("vae_only_joint_mvnx_2D"+ti, vae_only_joint_mvnx_2D))    # OK
 # trainings.append(("vae_only_joint_mvnx_5D"+ti, vae_only_joint_mvnx_5D))    # OK
-trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK
+#trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D_separated_encoder_variables", vae_dmp_no_z_derivative_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D", vae_dmp_no_z_derivative_joint_mvnx_2D))  # OK
 #trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_5D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_5D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_7D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_7D_separated))  # OK
-#trainings.append(("tighter_lb_light_position_mvnx_2D"+ti, tighter_lb_light_position_mvnx_2D))
+trainings.append(("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+ti, tighter_lb_light_position_mvnx_2D))
 #trainings.append(("tighter_lb_light_position_mvnx_69D"+ti, tighter_lb_light_position_mvnx_69D))
 
 #trainings.append(("vae_dmp_position_mvnx_5D"+ti,vae_dmp_position_mvnx_5D ))
@@ -120,7 +127,7 @@ DATA_VISUALIZATION = {
     "dynamic_plot": False,
     "show": True
 }
-nbLS = 7
+nbLS = 2
 # show input data space
 show_data = False
 # plot learning errors through epochs
@@ -137,10 +144,12 @@ launch_stats= False
 # movement types shown at data reconstruction
 reconstr_data_displayed_movs = ["kicking"]#, "bent_fw_strongly"]
 commWithMatlab = False
-restore = True
-train = False
+little_stats  = False
+restore = False
+train = True
 lrs = []
 mses = []
+
 for i, training in enumerate(trainings):
     restore_path = None
     if restore:
@@ -155,7 +164,7 @@ for i, training in enumerate(trainings):
 
     lr.config.TRAINING.update({
         "batch_size": 7,
-        "nb_epochs": 10,
+        "nb_epochs": nb_epochs,
         "display_step": 1,
         "checkpoint_step": 10
     })
@@ -276,7 +285,7 @@ for i, training in enumerate(trainings):
             
             my_statistics = lr.compute_stats(compare_to_other_models=True, nb_samples_per_mov=10, sample_indices=sample_indices, only_hard_joints=True, data_inf=x_reconstr_from_ls)
             
-            with open('myLongStatsLS69', 'wb') as fichier:
+            with open('myLongStats_LS'+nbLS, 'wb') as fichier:
                 mon_pickler= pickle.Pickler(fichier)
                 mon_pickler.dump(my_statistics)
             #dist_real_reconstr[nbPercent,:], dist_real_inf[nbPercent,:], dist_reconstr_inf[nbPercent,:] = lr.compute_stats(compare_to_other_models=True, nb_samples_per_mov=10, sample_indices=sample_indices, only_hard_joints=True, data_inf=x_reconstr_from_ls[nbPercent])
@@ -284,7 +293,14 @@ for i, training in enumerate(trainings):
                 # sample_indices=range(nb_training_samples, lr.data_driver.nb_samples_per_mov),
                 # sample_indices=range(nb_training_samples),
 
-             
+        if little_stats:
+            my_statistics = lr.compute_stats(compare_to_other_models=True, nb_samples_per_mov=10, sample_indices=[8], only_hard_joints=True, data_inf=[])
+        
+            with open('myLittleStats_LS2_epochs_'+str(nb_epochs), 'wb') as fichier:
+                mon_pickler= pickle.Pickler(fichier)
+                mon_pickler.dump(my_statistics)
+
+        
 
         if unitary_tests:
             """Test if the program can retrieve the laten space, plot it correctly, reconstruct one latent space correctly and plot it correctly"""
@@ -312,9 +328,9 @@ for i, training in enumerate(trainings):
 
 
             #test Unitaire : avec latent space pas correct (pour verif reconstr utlise bien le latent space test)
-            for i in range(70):
-                test[i,0] += 3
-                test[i,1] -= 3
+            for idx in range(70):
+                test[idx,0] += 3
+                test[idx,1] -= 3
             lr.show_latent_space(test, sample_indices=lisst)
             x_reconstr_from_ls = lr.retrieve_data_from_latent_space_ori(test)
             lr.show_reconstr_data_ori(x_reconstr_from_ls, type_indices={'bent_fw'}, sample_indices=[8])
