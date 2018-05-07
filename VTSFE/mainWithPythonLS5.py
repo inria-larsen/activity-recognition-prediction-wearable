@@ -52,7 +52,7 @@ from app.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_
 
 ## positions
 #from app.vae_dmp_position_mvnx_2D import vae_dmp_position_mvnx_2D
-#from app.vae_dmp_position_mvnx_5D import vae_dmp_position_mvnx_5D
+from app.vae_dmp_position_mvnx_5D import vae_dmp_position_mvnx_5D
 # from app.vae_dmp_joint_mvnx_7D import vae_dmp_joint_mvnx_7D
 
 # from app.tighter_lb_position_mvnx_2D_L15 import tighter_lb_position_mvnx_2D_L15
@@ -63,10 +63,10 @@ from app.tighter_lb_light_joint_mvnx_7D_separated import tighter_lb_light_joint_
 # from app.tighter_lb_joint_mvnx_5D_L30 import tighter_lb_joint_mvnx_5D_L30
 # from app.tighter_lb_joint_mvnx_7D_L30 import tighter_lb_joint_mvnx_7D_L30
 
-from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
+#from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
 #from app.tighter_lb_light_position_mvnx_69D import tighter_lb_light_position_mvnx_69D
 # from app.tighter_lb_light_position_mvnx_5D import tighter_lb_light_position_mvnx_5D
-# from app.tighter_lb_light_joint_mvnx_7D import tighter_lb_light_joint_mvnx_7D
+from app.tighter_lb_light_position_mvnx_2D import tighter_lb_light_position_mvnx_2D
 
 trainings = []
 
@@ -89,7 +89,6 @@ for i, val in enumerate(sys.argv):
     if(val == 'nb_epochs'):
         nb_epochs = int(sys.argv[i+1])
 
-print("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+ti)
 #trainings.append(("vae_only_joint_mvnx_2D"+ti, vae_only_joint_mvnx_2D))    # OK
 # trainings.append(("vae_only_joint_mvnx_5D"+ti, vae_only_joint_mvnx_5D))    # OK
 #trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK
@@ -98,10 +97,10 @@ print("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+ti)
 #trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_5D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_5D_separated))  # OK
 # trainings.append(("vae_dmp_joint_mvnx_7D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_7D_separated))  # OK
-trainings.append(("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+ti, tighter_lb_light_position_mvnx_2D))
+#trainings.append(("tighter_lb_light_position_mvnx_7D"+ti, tighter_lb_light_position_mvnx_7D))
 #trainings.append(("tighter_lb_light_position_mvnx_69D"+ti, tighter_lb_light_position_mvnx_69D))
 
-#trainings.append(("vae_dmp_position_mvnx_5D"+ti,vae_dmp_position_mvnx_5D ))
+trainings.append(("vae_dmp_position_mvnx_5D"+ti+"_nbEpochs"+str(nb_epochs),vae_dmp_position_mvnx_5D ))
 
 #trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
 # trainings.append(("tighter_lb_light_joint_mvnx_5D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_5D_separated))   # OK
@@ -113,6 +112,7 @@ trainings.append(("tighter_lb_light_position_mvnx_2D_nbEpochs_"+str(nb_epochs)+t
 # trainings.append(("tighter_lb_joint_mvnx_2D_L15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # OK
 # trainings.append(("tighter_lb_joint_mvnx_2D_L30_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L30_separated))   # OK
 # trainings.append(("tighter_lb_joint_mvnx_2D_L15_P15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # Killed
+print(str(trainings[0])+ "; nbEpoch "+str(nb_epochs))
 
 ###################################
 ### POurquoi tu ne visualise qu'un mouvement ? C'est pas censé etre une distribution ?###
@@ -127,7 +127,7 @@ DATA_VISUALIZATION = {
     "dynamic_plot": False,
     "show": True
 }
-nbLS = 2
+nbLS = 5
 # show input data space
 show_data = False
 # plot learning errors through epochs
@@ -146,7 +146,7 @@ reconstr_data_displayed_movs = ["kicking"]#, "bent_fw_strongly"]
 commWithMatlab = False
 little_stats  = False
 restore = False
-train = True
+train = True  
 lrs = []
 mses = []
 
