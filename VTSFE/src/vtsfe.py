@@ -1533,14 +1533,15 @@ class VTSFE():
             print("\n---- VTSFE "+self.save_path+" RESTORED ----\n")
 
 
-    def save_session(self, data_driver, data):
+    def save_session(self, data_driver, data, epoch ):
         # Save the variables to disk.
+        #pdb.set_trace()
         if self.save_path is not None:
-            tf.train.Saver().save(self.session, "./checkpoints/"+self.save_path)
-            data_driver.save_data("./training_errors/"+self.save_path, "errors", data)
+            tf.train.Saver().save(self.session, "./checkpoints/"+self.save_path+"_epoch_"+str(epoch))
+            data_driver.save_data("./training_errors/"+self.save_path+"_epoch_"+str(epoch), "errors", data)
 
-            print("\n---- VTSFE SAVED IN FILE: ./checkpoints/"+self.save_path+" ----\n")
-            print("\n---- TRAINING ERRORS SAVED IN FILE: ./training_errors/"+self.save_path+" ----\n")
+            print("\n---- VTSFE SAVED IN FILE: ./checkpoints/"+self.save_path+"_epoch_"+str(epoch) + " ----\n")
+            print("\n---- TRAINING ERRORS SAVED IN FILE: ./training_errors/"+self.save_path+"_epoch_"+str(epoch)+" ----\n")
 
 
     def train(self, data, training):
@@ -1738,7 +1739,7 @@ class VTSFE():
                         vae_reconstr_errors, vae_reconstr_variances,
                         vae_model_errors, vae_model_variances,
                         vae_latent_errors, vae_latent_variances
-                    ))
+                    ),epoch)
 
             end = datetime.now()
             print("\n------- Training end: {} -------\n".format(end.isoformat()[11:]))
@@ -1750,13 +1751,14 @@ class VTSFE():
                 vae_reconstr_errors, vae_reconstr_variances,
                 vae_model_errors, vae_model_variances,
                 vae_latent_errors, vae_latent_variances
-            ))
+            ),epoch)
             return (
                 global_error,
                 vae_errors, vae_variances,
                 vae_reconstr_errors, vae_reconstr_variances,
                 vae_model_errors, vae_model_variances,
-                vae_latent_errors, vae_latent_variances
+                vae_latent_errors, vae_latent_variances,
+                epoch
             )
 
 

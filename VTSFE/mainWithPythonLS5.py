@@ -100,7 +100,7 @@ for i, val in enumerate(sys.argv):
 #trainings.append(("tighter_lb_light_position_mvnx_7D"+ti, tighter_lb_light_position_mvnx_7D))
 #trainings.append(("tighter_lb_light_position_mvnx_69D"+ti, tighter_lb_light_position_mvnx_69D))
 
-trainings.append(("vae_dmp_position_mvnx_5D"+ti+"_nbEpochs"+str(nb_epochs),vae_dmp_position_mvnx_5D ))
+trainings.append(("vae_dmp_position_mvnx_5D"+ti,vae_dmp_position_mvnx_5D ))
 
 #trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
 # trainings.append(("tighter_lb_light_joint_mvnx_5D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_5D_separated))   # OK

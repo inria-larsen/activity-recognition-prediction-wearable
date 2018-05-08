@@ -35,6 +35,7 @@ class Launcher():
         })
         self.data_driver = Data_driver(self.config.DATA_PARAMS)
         self.data_driver.parse()
+        #self.data_driver.saveData()
 
         # data shape = [nb_mov*nb_samples_per_mov, nb_frames, dim(values)] = [nb_samples, nb_frames, dim(values)]
         self.config.DATA_VISUALIZATION = {
@@ -677,7 +678,7 @@ class Launcher():
         
         #retourne xs = 2 :
         zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
-        print( "dans fonction " + str(len(zs)))
+        
         self.vtsfe.show_latent_space(self.data_driver, zs,  s_indices,"z", zs_inf, nb_samples_per_mov=10, displayed_movs=self.data_driver.mov_types, show_frames=False, titleFrame=titleFrame)
 
         if self.config.VTSFE_PARAMS["use_z_derivative"]:
@@ -699,7 +700,6 @@ class Launcher():
         
         #retourne xs = 2 :
         zs = self.vtsfe.transform(x_samples, transform_with_all_vtsfe=self.config.DATA_VISUALIZATION["transform_with_all_vtsfe"])
-        print( "dans fonction " + str(len(zs)))
          
         return zs   
 

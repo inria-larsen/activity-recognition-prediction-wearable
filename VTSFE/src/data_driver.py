@@ -3,7 +3,7 @@
 import xml.etree.ElementTree as ET
 from os import listdir
 from os.path import isfile, join
-
+import os
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
@@ -373,6 +373,7 @@ class Data_driver():
                 data.append([])
 
             for filepath, label in filepaths:
+                
                 tree = ET.parse(filepath)
                 root = tree.getroot()
 
@@ -458,6 +459,7 @@ class Data_driver():
             return data, labels
 
         filepaths = []
+        
         samples_per_mov_count = [0]*len(self.mov_types)
         self.mov_indices = {}
 
@@ -477,8 +479,32 @@ class Data_driver():
         self.data = np.array(data, dtype=np.float32)
         self.data_labels = np.array(labels)
         self.input_dim = self.data.shape[-1]
+        
 
 
+    def saveData(self,nbLS=69):
+        
+        for actionType in range(7):
+            #print("saving data "+str(actionType))
+            try:
+              #  print("try to create: "+"./data/observations/"+self.data_labels[(actionType*10)+1])
+                os.mkdir("./data/observations/"+self.data_labels[(actionType*10)+1])
+            except OSError:
+               # print("Error during creation: "+"./data/observations/"+self.data_labels[(actionType*10)+1])
+                pass
+            for innx in range(10):
+                f = open("./data/observations/"+self.data_labels[(actionType*10)+1]+"/record"+str(innx)+".txt", "w+")
+                for vb in range(0,70):
+                    nameString = ''
+                    
+                    for nbstring in range(nbLS-1):
+                        nameString += str(self.data[actionType,innx,vb,nbstring])+"\t"
+                    nameString +=str(self.data[actionType,innx,vb,nbLS-1])+"\n"
+                    f.write(nameString)
+                #print("saving test "+str(innx))
+                f.close()
+    
+    
     def split(self, nb_blocks, nb_samples, train_proportion=0, test_proportion=0, eval_proportion=0):
         if train_proportion < 0 or test_proportion < 0 or eval_proportion < 0:
             return None
