@@ -169,6 +169,77 @@ def generate_list_features(n_features, possible_features):
 
 	return list_features, dim_features
 
+
+def fisher_score(data_c, data_all):
+	nbr_features = len(data_all.T)
+	n_states = len(data_c)
+
+	fisher_score = np.zeros(nbr_features)
+
+	for i in range(nbr_features):
+		mean_i = np.mean(data_all[:,i])
+		num = 0
+		den = 0
+		for j in range(n_states):
+			mean_j = np.mean(data_c[j][:,i])
+			std_j = np.std(data_c[j][:,i])
+			n_j = len(data_c[j])
+
+			num += n_j*(mean_j - mean_i)*(mean_j - mean_i)
+			den += n_j*std_j*std_j
+
+		fisher_score[i] = num/den
+
+	return fisher_score
+
+
+def fisher_score2(data_c, data_all):
+	nbr_features = len(data_all.T)
+	n_states = len(data_c)
+
+	fisher_score = np.zeros(nbr_features)
+
+	means_c = {}
+
+	for c in range(n_states):
+		means_c[c] = np.mean(data_c[c],axis = 0)
+
+	overall_mean = np.mean(data_all, axis = 0)
+
+	# calculate between class covariance matrix
+	# S_B = \sigma{N_i (m_i - m) (m_i - m).T}
+	S_B = np.zeros((nbr_features, nbr_features))
+	for c in range(n_states):
+		N_k = len(data_c[c])
+		S_B = np.multiply(N_k, np.outer((means_c[c] - overall_mean), (means_c[c] - overall_mean)))
+	#	 S_B += np.multiply(len(self.classwise[c]),
+	#						np.outer((means[c] - overall_mean), 
+	#								 (means[c] - overall_mean)))
+
+	# # calculate within class covariance matrix
+	# # S_W = \sigma{S_i}
+	# # S_i = \sigma{(x - m_i) (x - m_i).T}
+	# S_W = np.zeros(S_B.shape) 
+	# for c in range(n_states): 
+	#	 tmp = np.subtract(self.drop_col(self.classwise[c], self.labelcol).T, np.expand_dims(means[c], axis=1))
+	#	 S_W = np.add(np.dot(tmp, tmp.T), S_W)
+
+	# for i in range(nbr_features):
+	# 	mean_i = np.mean(data_all[:,i])
+	# 	num = 0
+	# 	den = 0
+	# 	for j in range(n_states):
+	# 		mean_j = np.mean(data_c[j][:,i])
+	# 		std_j = np.std(data_c[j][:,i])
+	# 		n_j = len(data_c[j])
+
+	# 		num += n_j*(mean_j - mean_i)*(mean_j - mean_i)
+	# 		den += n_j*std_j*std_j
+
+	# 	fisher_score[i] = num/den
+
+	return fisher_score
+
 # def update_list_name_features(list_features, list_all_features, list_name_features):
 # 	name_features = []
 # 	for features in list_features:

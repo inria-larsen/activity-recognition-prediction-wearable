@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="test" name_sequences="load_handling">
+    <features/>
+    <states>
+      <state index="0" label="kneeling_bent"/>
+      <state index="1" label="kneeling_upright"/>
+      <state index="2" label="standing_bent_forward"/>
+      <state index="3" label="standing_overhead_work_elbow_at_above_shoulder"/>
+      <state index="4" label="standing_overhead_work_hands_above_head"/>
+      <state index="5" label="standing_strongly_bent_forward"/>
+      <state index="6" label="standing_upright"/>
+      <state index="7" label="walking_upright"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>

@@ -570,8 +570,6 @@ class DataBase():
 
 		list_items = info_signal.findGroup('list').tail().toString().split(' ')
 
-		print(list_items)
-
 		self.glove_timestamps = [[]]
 		self.data_glove = []
 
