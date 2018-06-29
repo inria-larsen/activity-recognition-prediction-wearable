@@ -66,6 +66,7 @@ class Launcher():
         self.config.DATA_VISUALIZATION["x_samples"] = x_samples
         self.config.DATA_VISUALIZATION["sample_indices"] = s_indices
         self.config.DATA_VISUALIZATION["only_hard_joints"] = only_hard_joints
+        self.config.DATA_VISUALIZATION["plot_3D"] = True
         if(data_inf!= []):
             self.vtsfe.show_data(
                 self.config.DATA_VISUALIZATION,

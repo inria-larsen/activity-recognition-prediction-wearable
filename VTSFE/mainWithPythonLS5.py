@@ -18,6 +18,7 @@ from app.vae_only_joint_mvnx_2D import vae_only_joint_mvnx_2D
 from app.vae_only_joint_mvnx_5D import vae_only_joint_mvnx_5D
 from app.vae_only_joint_mvnx_7D import vae_only_joint_mvnx_7D
 from app.vae_only_position_mvnx_7D import vae_only_position_mvnx_7D
+from app.vae_only_position_mvnx_50D import vae_only_position_mvnx_50D
 
 from app.vae_dmp_no_z_derivative_joint_mvnx_2D_separated import vae_dmp_no_z_derivative_joint_mvnx_2D_separated
 from app.vae_dmp_no_z_derivative_joint_mvnx_2D import vae_dmp_no_z_derivative_joint_mvnx_2D
@@ -90,8 +91,9 @@ for i, val in enumerate(sys.argv):
         nb_epochs = int(sys.argv[i+1])
 
 #trainings.append(("vae_only_joint_mvnx_2D"+ti, vae_only_joint_mvnx_2D))    # OK
-# trainings.append(("vae_only_joint_mvnx_5D"+ti, vae_only_joint_mvnx_5D))    # OK
-#trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK
+#trainings.append(("vae_only_joint_mvnx_5D"+ti, vae_only_joint_mvnx_5D))    # OK   +"_epoch_"+str(nb_epochs)
+trainings.append(("vae_only_position_mvnx_50D"+ti+"_epoch_"+str(nb_epochs), vae_only_position_mvnx_50D))    # OK   
+#trainings.append(("vae_only_joint_mvnx_7D"+ti, vae_only_joint_mvnx_7D))    # OK  
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D_separated_encoder_variables", vae_dmp_no_z_derivative_joint_mvnx_2D_separated))  # OK
 # trainings.append(("vae_dmp_no_z_derivative_joint_mvnx_2D", vae_dmp_no_z_derivative_joint_mvnx_2D))  # OK
 #trainings.append(("vae_dmp_joint_mvnx_2D_separated_encoder_variables"+ti, vae_dmp_joint_mvnx_2D_separated))  # OK
@@ -100,7 +102,7 @@ for i, val in enumerate(sys.argv):
 #trainings.append(("tighter_lb_light_position_mvnx_7D"+ti, tighter_lb_light_position_mvnx_7D))
 #trainings.append(("tighter_lb_light_position_mvnx_69D"+ti, tighter_lb_light_position_mvnx_69D))
 
-trainings.append(("vae_dmp_position_mvnx_5D"+ti,vae_dmp_position_mvnx_5D ))
+#trainings.append(("vae_dmp_position_mvnx_5D"+ti+"_epoch_"+str(nb_epochs),vae_dmp_position_mvnx_5D ))
 
 #trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_2D_separated))   # OK
 # trainings.append(("tighter_lb_light_joint_mvnx_5D_separated_encoder_variables"+ti, tighter_lb_light_joint_mvnx_5D_separated))   # OK
@@ -129,7 +131,7 @@ DATA_VISUALIZATION = {
 }
 nbLS = 5
 # show input data space
-show_data = False
+show_data = True
 # plot learning errors through epochs
 plot_error = False
 # show latent space
@@ -137,7 +139,7 @@ show_latent_space = False
 # plot the global MSE and MSE for each movement type
 plot_mse = False
 # show reconstruction of input data space, compare it between models in trainings
-show_reconstr_data = True
+show_reconstr_data = False
 record_latent_space = False
 unitary_tests = False
 launch_stats= False
@@ -145,8 +147,8 @@ launch_stats= False
 reconstr_data_displayed_movs = ["kicking"]#, "bent_fw_strongly"]
 commWithMatlab = False
 little_stats  = False
-restore = False
-train = True  
+restore = True
+train = False  
 lrs = []
 mses = []
 
@@ -166,7 +168,7 @@ for i, training in enumerate(trainings):
         "batch_size": 7,
         "nb_epochs": nb_epochs,
         "display_step": 1,
-        "checkpoint_step": 10
+        "checkpoint_step": 5
     })
 
     training_indices = list(range(test_index))+list(range(test_index+1,10)) #contient tout saut le test

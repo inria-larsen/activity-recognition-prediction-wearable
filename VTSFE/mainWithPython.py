@@ -118,7 +118,7 @@ DATA_VISUALIZATION = {
 }
 
 # show input data space
-show_data = False
+show_data = True
 # plot learning errors through epochs
 plot_error = False
 # show latent space
@@ -129,7 +129,7 @@ plot_mse = False
 show_reconstr_data = False
 record_latent_space = False
 unitary_tests = False
-launch_stats= True
+launch_stats= False
 # movement types shown at data reconstruction
 reconstr_data_displayed_movs = ["kicking"]
 commWithMatlab = False
@@ -165,6 +165,7 @@ for i, training in enumerate(trainings):
     nb_training_samples = len(training_indices)
 
     if show_data:
+        
         #lr.show_data_ori(
         #   sample_indices=slice(nb_training_samples+1, None))
         lr.show_data(

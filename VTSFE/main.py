@@ -96,7 +96,6 @@ trainings.append(("tighter_lb_light_joint_mvnx_2D_separated_encoder_variables"+t
 # trainings.append(("tighter_lb_joint_mvnx_2D_L15_P15_separated_encoder_variables_test_8", tighter_lb_joint_mvnx_2D_L15_separated))   # Killed
 
 ###################################
-
 DATA_VISUALIZATION = {
     "nb_samples_per_mov": 1,
     "window_size": 15,
@@ -156,6 +155,7 @@ for i, training in enumerate(trainings):
         if index not in training_indices:
             test_indices.append(index)
     data, remains = lr.data_driver.get_data_set(training_indices, shuffle_samples=False)
+    nb_training_samples = len(training_indices)
 
     if show_data:
         lr.show_data(

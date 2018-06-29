@@ -58,7 +58,7 @@ DMP_PARAMS = {
         "n": 50,    # if n == None, that model will build base functions every mu_step. Otherwise, mu_step is overwritten by a computed step based on n.
         "mu_step" : 2,
         "sigma": 2.5,
-        "show": False
+        "show": True #ori : j'ai change ici
     },
     "activation_function": tf.nn.elu,   # softmax. activation function used in article, but since it rescales input values to range [0, 1], all observations look the same => f is approximately the same for all movement types
     "output_function":     tf.identity,   # identity
