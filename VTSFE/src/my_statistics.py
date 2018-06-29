@@ -36,6 +36,8 @@ class My_statistics():
         self.var_dist_real_inf = np.zeros([self.data_shape[0],self.data_shape[2]])
         self.var_dist_reconstr_inf = np.zeros([self.data_shape[0],self.data_shape[2]])
         
+        self.varGlobalErr_real_reconstr = 0
+        self.meanGlobalErr_real_reconstr  =0
         
 
     def get_distance(self):
@@ -43,8 +45,10 @@ class My_statistics():
         #real_reconstr
         self.dist_real_reconstr = abs(self.data - self.data_reconstr)
         self.dist_real_reconstr_1D = np.mean(self.dist_real_reconstr, axis=2) #mean members
-        self.mean_dist_real_reconstr = np.mean(self.dist_real_reconstr_1D, axis=1) #for all timestep
+        self.mean_dist_real_reconstr = np.mean(self.dist_real_reconstr_1D, axis=1) #mean timesteps and members
         self.var_dist_real_reconstr = np.var(self.dist_real_reconstr_1D, axis=1)
+        self.meanGlobalErr_real_reconstr = np.mean(self.mean_dist_real_reconstr)
+        self.varGlobalErr_real_reconstr = np.var(self.mean_dist_real_reconstr)
         if(self.data_inf!=[]):
                 for i in range(self.data_shape[0]):
                     #real_inf
