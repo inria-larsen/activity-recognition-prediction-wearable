@@ -1,7 +1,9 @@
-from lxml import etree
+import lxml
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+
+
 
 class mvnx_tree():
 	"""
@@ -23,7 +25,7 @@ class mvnx_tree():
 					'centerOfMass',
 					'sensorOrientation',
 					'sensorAngularVelocity',
-					'sensorAcceleration'
+					'sensorFreeAcceleration'
 					]
 
 	def __init__(self, path):
@@ -32,7 +34,8 @@ class mvnx_tree():
 		Take in input the path where the file is located
 		"""
 		try:
-			mvnx_tree = etree.parse(path)
+			parser = lxml.etree.XMLParser(collect_ids=False)
+			mvnx_tree = lxml.etree.parse(path,  parser=parser)
 			self.data = next(mvnx_tree.iterfind(self.prefix+'subject'))
 		except OSError as e:
 			raise(e)
