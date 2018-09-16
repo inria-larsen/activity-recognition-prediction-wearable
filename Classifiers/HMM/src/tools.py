@@ -455,51 +455,157 @@ def get_accuracy(confusion_matrix):
 	return accuracy
 
 
+def load_data_from_dataBase(data_base, rf):
+	"""
+	Load motion capture data from mvnx file
+	"""
+	timestamps = []
+	data_win = []
 
-# def update_best_features(best_features, best_scores, best_n_festures, scores, features_name
-# 						, nb_features, n_best, best_path, path, size_window, win):
-# 	if(best_scores[0][2] == 0):
-# 		best_scores[0] = scores
-# 		best_features.append(features_name)
-# 		best_path.append(path)
-# 		best_n_festures[0] = int(nb_features)
-# 		win.append(size_window)
-# 	else:
-# 		for i in range(len(best_scores)):
-# 			if(scores[2] > best_scores[i][2]):
-# 				best_scores.insert(i, scores)
-# 				best_features.insert(i, features_name)
-# 				best_path.insert(i, path)
-# 				best_n_festures.insert(i, int(nb_features))
-# 				win.insert(i, size_window)
-# 				if(len(best_scores) > n_best):
-# 					del best_scores[-1]
-# 					del best_features[-1]
-# 					del best_n_festures[-1]
-# 					del best_path[-1]
-# 					del win[-1]
-# 				break
-				
-# 			elif(i == (len(best_scores)-1)):
-# 				best_scores.append(scores)
-# 				best_features.append(features_name)
-# 				best_n_festures.append(int(nb_features))
-# 				best_path.append(path)
-# 				win.append(size_window)
-# 				if(len(best_scores) > n_best):
-# 					del best_scores[-1]
-# 					del best_features[-1]
-# 					del best_n_festures[-1]
-# 					del win[-1]
-# 				break	
-# 	return
+	window_size = float(rf.find('slidding_window_size').toString())
+	signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
+	nb_port = int(len(signals))
+	nb_active_port = 0
+	list_features, dim_features = data_base.add_signals_to_dataBase(rf)
+	glove_on = 0
+
+	if('eglove' in signals):
+		info_signal = rf.findGroup('eglove')
+		glove_on = int(info_signal.find('enable').toString())
+		if(glove_on):
+			data_glove, time_glove = data_base.add_data_glove(info_signal)
+
+	sub_data = pr.concatenate_data(data_base, list_features)
+	t = []
+
+	t = data_base.get_data_by_features('time')
+	t_mocap = t.tolist()
+	mocap_data = sub_data.tolist()
 
 
-# def csv_to_latex(csv_file):
-# 	latex_tab = pd.read_csv(csv_file, sep=',', index_col = 0)
-# 	return latex_tab.to_latex()
+	if(glove_on):
+		t_glove = time_glove
+		glove_data = data_glove.tolist()
+
+		t_ = 0
+		while(t_glove[t_] < t_mocap[0]):
+			t_ += 1
+		t_start = t_
 
 
-# def plot_labels(label_sequence, list_labels):
+		while(t_mocap[t_] < t_glove[-1]):
+			t_ += 1
+			if(t_ == len(t_mocap)):
+				break
 
-# 	return
+		t_end = t_+1
+
+		del glove_data[0:t_start]
+		del t_glove[0:t_start]
+
+		del glove_data[t_end:]
+		del t_glove[t_end:]
+
+		data_force = np.zeros((len(t_mocap), np.shape(glove_data)[1]))
+
+		count = 0
+
+		for k in range(len(t_mocap)):
+			data_force[k] = glove_data[count]
+			if(t_glove[count] < t_mocap[k]):
+				count += 1
+				if(count == len(glove_data)):
+					break
+
+		data_out, timestamps_out = pr.slidding_window(data_force, t_mocap, window_size)
+		data_glove = data_out
+
+	if(window_size > 0):
+		data_out, timestamps_out = pr.slidding_window(mocap_data, t_mocap, window_size)
+	else:
+		data_out = mocap_data
+		timestamps_out = t_mocap
+
+	data_win = data_out
+
+	if(glove_on):		
+		data_win = np.concatenate((data_win, data_glove) , axis = 1)
+
+
+	t = timestamps_out
+	timestamps = timestamps_out
+
+	if(glove_on):
+		if('gloveForces' not in list_features):
+			list_features.append('gloveForces')
+			dim_features.append(7)
+
+	return data_win, timestamps, list_features, dim_features
+
+
+
+def load_data(path, name_seq, name_track, labels_folder):
+	"""
+	Load data from csv file
+	"""
+	list_states = []
+
+	data_base = pd.read_csv(path + '/data_csv/' + name_seq + '.csv')
+	ref_data = DataBase(path + '/', name_seq)
+
+	list_features = list(data_base.columns.values)
+	del list_features[0:2]
+	dim_features = np.ones(len(list_features))
+
+	time = data_base['timestamps']
+
+	labels, states = ref_data.load_labels_refGT(time, name_track, 'labels_3A')
+
+
+	data = data_base[list_features].as_matrix()
+
+	for state in states:
+		if(state not in list_states):
+			list_states.append(state)
+			list_states = sorted(list_states)
+
+
+	return data, labels, time, list_states, list_features
+
+def feature_selection(data, real_labels, list_features):
+	obs = []
+	obs = data[0]
+	lengths = []
+	lengths.append(len(data[0]))
+	labels = real_labels[0]
+
+	for i in range(1, len(data)):
+		obs = np.concatenate([obs, data[i]])
+		lengths.append(len(data[i]))
+		labels = np.concatenate([labels, real_labels[i]])
+
+
+	list_states, labels = np.unique(labels, return_inverse=True)
+	n_states = len(list_states)
+
+	df_data = pd.DataFrame(obs, columns = list_features)
+
+	df_labels = pd.DataFrame(labels)
+	df_labels.columns = ['state']
+
+	df_total = pd.concat([df_data, df_labels], axis=1)
+
+	data = []
+	for state, df in df_total.groupby('state'):
+		data.append(df[list_features].values)
+
+	f_score = fisher_score(data, obs)
+	list_id_sort = np.argsort(f_score).tolist()
+	sorted_score = []
+	sorted_features = []
+
+	for id_sort in reversed(list_id_sort):
+		sorted_features.append(list_features[id_sort])
+		sorted_score.append(f_score[id_sort])
+
+	return sorted_features, sorted_score
