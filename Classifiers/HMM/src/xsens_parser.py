@@ -20,12 +20,12 @@ class mvnx_tree():
 					'acceleration',
 					'angularVelocity',
 					'angularAcceleration',
+					'sensorFreeAcceleration',
+					'sensorMagneticField',
+					'sensorOrientation',
 					'jointAngle',
 					'jointAngleXZY',
-					'centerOfMass',
-					'sensorOrientation',
-					'sensorAngularVelocity',
-					'sensorFreeAcceleration'
+					'centerOfMass'
 					]
 
 	def __init__(self, path):
