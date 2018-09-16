@@ -253,49 +253,11 @@ def prepare_segment_analysis(timestamps, prediction_labels, reference_labels, id
 
 
 
+def plot_confusion_matrix2(path, name, confusion_matrix, list_states, all_in_one = 0, save=0):
+	"""
+	Plot and save the confusion matrix for prediction and recall score
+	"""
 
-# def normalize_data(data, xmin, xmax):
-# 	data_norm = 2*(data - xmin)/(xmax - xmin) - 1
-# 	return data_norm
-
-# # def compute_results(model, path):
-# # 	data_test = model.get_data_test()
-# # 	print('size', np.shape(data_test))
-# # 	index = model.get_test_set_index()
-# # 	print('index', index)
-# # 	labels = model.get_ref_labels(index[0])
-# # 	print(len(labels))
-# # 	list_states = model.get_list_states()
-
-# # 	obs = data_test[0][0]
-# # 	Z = model.predict(obs)
-
-# # 	pred_labels = []
-# # 	for j in range(len(Z)):
-# # 		pred_labels.append(list_states[Z[j]])
-
-# # 	list_states = model.get_list_states()
-
-# # 	confusion_matrix = compute_confusion_matrix(pred_labels, labels, list_states, path)
-# # 	return confusion_matrix
-
-
-
-# # save confusion matrix in csv file
-# def save_confusion_matrix(name_file, path, confusion_matrix, labels):
-# 	c = csv.writer(open(path + name_file + '_confusion.csv', "w", newline=''))
-# 	line = []
-# 	for i in range(len(labels)):
-# 		line.append(labels[i].title())
-# 	c.writerow(line)
-# 	for i in range(len(labels)):
-# 		line = [labels[i].title()]
-# 		for j in range(len(labels)):
-# 			line.append(confusion_matrix[i, j])
-# 		c.writerow(line)
-# 	return
-
-def plot_confusion_matrix2(path, name, confusion_matrix, list_states, save=0):
 	real_len, pred_len = np.shape(confusion_matrix)
 
 	precision_map = np.zeros((real_len, pred_len))
@@ -306,51 +268,58 @@ def plot_confusion_matrix2(path, name, confusion_matrix, list_states, save=0):
 			recall_map[i, j] = confusion_matrix[i, j] / np.sum(confusion_matrix[i])
 
 
-	precision_map = np.around(precision_map, 4)*100
-	recall_map = np.around(recall_map, 4)*100
+	precision_map = np.around(precision_map, 2)*100
+	recall_map = np.around(recall_map, 2)*100
 
 	precision_pd = pd.DataFrame(data = precision_map, 
 				index = list_states
 				, columns = list_states
 				)
 
-
 	recall_pd = pd.DataFrame(data = recall_map, 
 			index = list_states
 			,columns = list_states
 			)
 
-	# recall_total, prec_total, F1_score = np.around(compute_score(confusion_matrix), 4)*100
+	# Put both plots in one figure
+	if(all_in_one):
+		fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20,8))
 
-	fig = plt.figure()
-	sns.set(font_scale = 1.5)
-	# ax1 = plt.subplot("121")
-	sns.heatmap(recall_pd, vmax=100., annot=True, fmt='g', cbar=False)
-	# ax1.set_title('Recall (%) map - Total = ' + str(recall_total))
-	plt.yticks(rotation=0) 
-	plt.xticks(rotation=45)
-	plt.ylabel('Real labels')
-	plt.xlabel('Predict labels')
+		sns.set(font_scale = 2.0)
+		sns.heatmap(recall_pd, vmax=100., annot=True, fmt='g', cbar=False, ax=ax1)
+		ax1.set_yticklabels(list_states, rotation=0, fontsize = 26) 
+		ax1.set_xticklabels(list_states, rotation=45, fontsize = 26)
+		ax1.set_ylabel('Real labels', fontsize = 30)
+		ax1.set_xlabel('Predicted labels', fontsize = 30)
+		ax1.set_title('Recall', fontsize = 30)
 
-	plt.title('Recall')
+		sns.heatmap(precision_pd, vmax=100., annot=True, label='big', fmt='g', cbar=False, ax=ax2)
+		ax2.set_yticklabels(list_states, rotation=0, fontsize = 26)
+		ax2.set_xticklabels(list_states, rotation=45, fontsize = 26)
+		ax2.set_ylabel('Real labels', fontsize = 30)
+		ax2.set_xlabel('Predicted labels', fontsize = 30)
+		ax2.set_title('Precision', fontsize = 30)
+
+		fig.tight_layout()
+
+	else:
+		fig = plt.figure()
+
+		sns.set(font_scale = 1.5)
+		sns.heatmap(recall_pd, vmax=100., annot=True, fmt='g', cbar=False)
+		plt.yticks(rotation=0) 
+		plt.xticks(rotation=45)
+		plt.ylabel('Real labels')
+		plt.xlabel(' labels')
+
+		plt.title('Recall')
+	
 
 	if(save):
-		plt.savefig(name + '_recall.pdf', bbox_inches='tight')
+		plt.savefig(path + name + '_confusion.pdf', bbox_inches='tight')
 
-	fig = plt.figure()
-
-	# ax2 = plt.subplot("122")
-	sns.heatmap(precision_pd, vmax=100., annot=True, label='big', fmt='g', cbar=False)
-	# ax2.set_title('Precision (%) map - Total = ' + str(prec_total))
-	plt.yticks(rotation=0)
-	plt.xticks(rotation=45)
-	plt.ylabel('Real labels')
-	plt.xlabel('Predict labels')
-
-	plt.title('Precision')
-
-	if(save):
-		plt.savefig(name + '_precision.pdf', bbox_inches='tight')
+	if(all_in_one == 0):
+		fig = plt.figure()
 
 	return
 
@@ -361,9 +330,7 @@ def plot_confusion_matrix(path, name, title, confusion_matrix, save=0):
 	fig = plt.figure(figsize=(12,10))
 	sns.set(font_scale = 2.5)
 	plt.title(title, fontsize=35)
-	# ax1 = plt.subplot("121")
 	sns.heatmap(confusion_matrix, annot=True, fmt='g', cbar = False)
-	# ax1.set_title('Recall (%) map - Total = ' + str(recall_total))
 	plt.yticks(rotation=0) 
 	plt.xticks(rotation=45)
 	plt.ylabel('Real labels', fontsize=30)
@@ -373,54 +340,11 @@ def plot_confusion_matrix(path, name, title, confusion_matrix, save=0):
 		plt.savefig(path + name + '.pdf', bbox_inches='tight')
 	return
 
-# def plot_confusion_matrix_df(confusion_matrix):
-# 	print('aaa\n', confusion_matrix)
-# 	real_len, pred_len = np.shape(confusion_matrix)
-
-# 	fig = plt.figure()
-# 	sns.set(font_scale = 1.5)
-# 	# ax1 = plt.subplot("121")
-# 	sns.heatmap(confusion_matrix, annot=True, fmt='g', cbar = False)
-# 	# ax1.set_title('Recall (%) map - Total = ' + str(recall_total))
-# 	plt.yticks(rotation=0) 
-# 	plt.xticks(rotation=45)
-# 	plt.ylabel('Real labels')
-# 	plt.xlabel('Predict labels')
-
-# 	plt.title('Confusion Matrix')
-
-# 	return fig
-
-# def save_tab_score(name_file, path, features, scores):
-# 	scores = np.around(np.asarray(scores)*100, decimals = 2)
-# 	c = csv.writer(open(path + name_file + '_performance.csv', "w", newline=''))
-# 	c.writerow(['Features', 'Precision', 'Recall', 'F1-Score'])
-# 	for i in range(len(scores)):
-# 		line = [features[i]]
-# 		for j in range(len(scores[i])):
-# 			line.append(scores[i][j])
-# 		c.writerow(line)
-# 	return
-
-# def read_confusion_file(path_file):
-# 	confusion_matrix = np.zeros((1, 1))
-# 	cr = csv.reader(open(path_file, "r"))
-# 	# cr = csv.reader(open(path_model + name + '/' + name_csv_file,"r"))
-# 	i = -1
-# 	for row in cr:
-# 		if(i == -1):
-# 			labels = row
-# 			confusion_matrix = np.zeros((len(labels), len(labels)))
-# 			i += 1
-# 		else:
-# 			if(row == []):
-# 				continue
-# 			confusion_matrix[i] = row[1:]
-# 			i += 1
-# 	return confusion_matrix, labels
-
 
 def compute_score(confusion_matrix):
+	"""
+	Return the precision, recall and F1-score based on the confusion matrix
+	"""
 	n_states = len(confusion_matrix)
 	precision = np.zeros((n_states, 1))
 	recall = np.zeros((n_states, 1))
