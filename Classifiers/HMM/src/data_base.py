@@ -170,8 +170,6 @@ class DataBase():
 		return self.real_labels, self.list_states
 
 		
-		for file, i in zip(list_files, range(self.n_seq)):
-			ref = anvil_tree(path + file)
 
 	def load_labels_ref3A(self, timestamps, name_track, labels_folder = 'labels', GT = 0):
 		""" Load the reference labels from csv file from 3 annotators
@@ -180,15 +178,6 @@ class DataBase():
 		Take in input the timestamps corresponding to the motion capture data
 		Take in input the name of the track used for the labels and the label folder
 		Possibility to extract the Ground Truth if GT = 1 (default = 0)
-			labels, start, end = ref.get_data(name_track)
-			# for in ref.get_data():
-			# 	self.ref_data[i]
-			self.ref_data[i].append(ref.get_data(name_track))
-			
-			for state in sorted(ref.get_list_states()):
-				if(state not in self.list_states):
-					self.list_states.append(state)
-					self.list_states = sorted(self.list_states)
 
 		list_states: sorted list of string containing the list of states
 		"""
@@ -304,7 +293,17 @@ class DataBase():
 
 		self.list_states, l = np.unique(self.real_labels, return_inverse=True)
 
-	def add_signals_to_dataBase(self, rf):
+		if(GT):
+			df_GT = pd.DataFrame({
+				'timestamps': timestamps,
+				'labels': self.real_labels
+				})
+
+			df_GT.to_csv(self.path_data + '/' + labels_folder + '/' + self.name_seq + '_' + name_track + '_GT.csv', index=False)
+
+		return self.real_labels, self.list_states
+
+	def add_signals_to_dataBase(self, rf, processing=False):
 		self.config_file = rf
 
 		signals = self.config_file.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
