@@ -63,7 +63,7 @@ class ModelHMM():
 		self.n_seq = len(data)
 		self.list_features = list_features
 		self.dim_features = dim_features
-		self.n_feature = sum(dim_features)
+		self.n_feature = int(sum(dim_features))
 
 
 		# Concatenate all the sequence in one and create a vector with the length of each sequence
@@ -78,7 +78,6 @@ class ModelHMM():
 			lengths.append(len(data[i]))
 			labels = np.concatenate([labels, real_labels[i]])
 
-
 		# Get the list and number of states
 		self.list_states, labels = np.unique(labels, return_inverse=True)
 		self.n_states = len(self.list_states)
@@ -89,6 +88,8 @@ class ModelHMM():
 		end = np.cumsum(lengths)
 		start = end - lengths
 
+
+
 		# Compute the initial probabilities
 		init_prob = Y[start].sum(axis=0)/Y[start].sum()
 		# init_prob = np.ones(self.n_states)/self.n_states
@@ -97,11 +98,13 @@ class ModelHMM():
 		trans_prob = np.zeros((self.n_states, self.n_states)).astype(int)
 		for i in range(1, len(labels)):
 			trans_prob[labels[i-1], labels[i]] += 1
+
+
 		
 		trans_prob = trans_prob/np.sum(trans_prob, axis=0)
 
 		# Compute the emission distribution
-		Mu, covars = tools.mean_and_cov(obs, labels, self.n_states, self.n_feature)
+		Mu, covars = tools.mean_and_cov(obs, labels, self.n_states, self.list_features)
 
 		# Update the parameters of the model
 		self.model.startprob_ = init_prob
