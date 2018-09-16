@@ -487,26 +487,22 @@ class DataBase():
 		""" Return the real labels related to the timestamps in input
 		
 		"""
-		self.real_labels = [[]]
+		self.real_labels = []
 
-		for i in range(len(timestamps)):
-			flag = 0
-			time = (np.asarray(timestamps[i]) - timestamps[i][0])
-
+		flag = 0
+		time = (np.asarray(timestamps) - timestamps[0])
 
 
-			end = self.ref_data[i][0][2]
-			labels = self.ref_data[i][0][0]
 
-			for t in time:
-				if(t >= end[flag]):
-					flag += 1
-					if(flag >= len(end)):
-						break
-				self.real_labels[i].append(labels[flag])
+		end = self.ref_data[0][2]
+		labels = self.ref_data[0][0]
 
-			if(i < self.n_seq -1):
-				self.real_labels.append([])
+		for t in time:
+			if(t >= end[flag]):
+				flag += 1
+				if(flag >= len(end)):
+					break
+			self.real_labels.append(labels[flag])
 
 		return self.real_labels
 
