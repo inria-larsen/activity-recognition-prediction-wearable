@@ -526,6 +526,9 @@ class DataBase():
 
 
 	def add_data_glove(self, info_signal):
+		"""
+		Add data of eglove and synchronised them with motion capture timestamps
+		"""
 		path = self.path_data + self.eglove_folder
 		list_files = os.listdir(path)
 		list_files.sort()
@@ -549,8 +552,6 @@ class DataBase():
 
 			for row in reader:
 				data_forces.append(list(map(float, row[0:7])))
-				# data_angles.append(list(map(float, row[4:7])))
-
 				self.glove_timestamps.append(float(row[7]))
 
 
