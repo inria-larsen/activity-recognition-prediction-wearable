@@ -304,6 +304,9 @@ class DataBase():
 		return self.real_labels, self.list_states
 
 	def add_signals_to_dataBase(self, rf, processing=False):
+		"""
+		 This funciton aims to load the data from the mvnx file based on the .ini (rf) file in input
+		"""
 		self.config_file = rf
 
 		signals = self.config_file.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
@@ -315,18 +318,19 @@ class DataBase():
 			is_enabled = int(info_signal.find('enable').toString())
 
 			if(signal == 'eglove'):
-			 	# list_items = info_signal.findGroup('list').tail().toString().split(' ')
-			 	# self.add_data_glove(list_items)
 			 	continue
 
 			related_data = info_signal.find('related_data').toString()
 			if(related_data == ''):
 				related_data = signal
 
-
+			# Retrieve the data from .ini file
 			info_related_data = self.config_file.findGroup(related_data)
+
 			
+			# Check if the signal is enabled
 			if(is_enabled):
+				print(signal)
 				list_items = info_signal.findGroup('list').tail().toString().split(' ')
 				order_diff = info_signal.find('diff_order').toString()
 				is_norm = info_signal.find('norm').toString()
@@ -353,102 +357,108 @@ class DataBase():
 				else:
 					dist_com = int(dist_com)
 
-				
-				features_mvnx = self.mvnx_tree[0].get_list_features()
+				if(related_data in features_mvnx):
+					data = self.mvnx_tree.get_data(related_data)
 
-				for i in range(self.n_seq):
-					if(related_data in features_mvnx):
-						data = self.mvnx_tree[i].get_data(related_data)
+				# If processing = True, the position data are processed with transformation to 
+				# be in relative position regarding pelvis
+				if(related_data == 'position' and processing == True):
+					orientation = self.mvnx_tree.get_data('orientation')
+					for t in range(len(data)):
+						abs_data = deepcopy(data[t])
+						o_data = orientation[t]
 
-					if(normalize == 1):				
-						data_normalize = deepcopy(data)
-						data_init = deepcopy(data_normalize[0])
-						for t in range(len(data_normalize)):
-							# data_normalize[t] = data_normalize[t] - data_init
-							data_normalize[t] = (data_normalize[t] - data_init)/data_init
-							# data_normalize[t] = data_normalize[t]/data_init
+						i = 0
+						q0 = o_data[i*4]
+						q1 = o_data[i*4 + 1]
+						q2 = o_data[i*4 + 2]
+						q3 = o_data[i*4 + 3]
 
-						data = data_normalize
+						R = np.array([[q0*q0 + q1*q1 - q2*q2 - q3*q3, 2*q1*q2 - 2*q0*q3, 2*q1*q3 + 2*q0*q2],
+							[2*q1*q2 + 2*q0*q3, q0*q0 - q1*q1 + q2*q2 - q3*q3, 2*q2*q3 - 2*q0*q1],
+							[2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, q0*q0 - q1*q1 - q2*q2 + q3*q3]])
+
+						for i in range(23):
+							data[t, i*3:i*3+3] = abs_data[i*3:i*3+3] - abs_data[0:3]
+							data[t, i*3:i*3+3] = R@data[t,i*3:i*3+3]
 
 
-							
-					if(order_diff > 0):
-						data_diff = np.diff(np.asarray(data), order_diff, axis=0)
-						for j in range(order_diff):
-							data_diff = np.insert(data_diff, 0, 0, axis=0)
+				# Normalize the data regarding the initial position
+				if(normalize == 1):				
+					data_normalize = deepcopy(data)
+					data_init = deepcopy(data_normalize[0])
+					for t in range(len(data_normalize)):
+						data_normalize[t] = (data_normalize[t] - data_init)/data_init
 
-						order = 6
-						fs = 240
-						nyq = 0.5 * fs
-						cutoff = 30
-						normal_cutoff = cutoff / nyq
+					data = data_normalize
 
-						b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
-						data = scipy.signal.lfilter(b, a, data_diff, axis = 0)*fs
 
+				# Derive the data depending on the order
+				if(order_diff > 0):
+					data_diff = np.diff(np.asarray(data), order_diff, axis=0)
+					for j in range(order_diff):
+						data_diff = np.insert(data_diff, 0, 0, axis=0)
+
+					order = 6
+					fs = 240
+					nyq = 0.5 * fs
+					cutoff = 30
+					normal_cutoff = cutoff / nyq
+
+					b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
+					data = scipy.signal.lfilter(b, a, data_diff, axis = 0)*fs
+
+
+				dimension = np.shape(data)[1]
+
+
+				if(list_items[0] == ''):
+					if(signal == 'CoMVelocityNorm'):
+						data = data[:,0:2]	
+					if(is_norm):
+						data = np.linalg.norm(data, axis = 1)
+						dimension = 1
+
+					self.mocap_data.append(data)
 					
+					if(not(signal in self.list_features[0])):
+						# Update the list of features with name and dimension
+						self.list_features[0].append(signal)
+						self.list_features[1].append(dimension)
 
-					dimension = np.shape(data)[1]
+				else:
+					related_items = info_related_data.find("related_items").toString()
 
-					if((list_items[0] == 'all') or (list_items[0] == '')):
-						if(signal == 'CoMVelocityNorm'):
-							data = data[:,0:2]	
+					if(list_items[0] == 'all'):
+						items = rf.findGroup(related_items).tail().toString().replace(')', '').replace('(', '').split(' ')
+						del items[0:4]
+						items = items[::2]
+
+					else: 
+						items = deepcopy(list_items)
+
+					for item in items:
+						nb_items = int(rf.findGroup(related_items).find('Total').toString())
+						dimension_reduce = int(dimension/nb_items)
+
+						id_item = rf.findGroup(related_items).find(item).toString()
+						id_item = int(id_item)*dimension_reduce
+
+						data_reduce = data[:,id_item:id_item + dimension_reduce]
+
+						# Vector data in one dimension
 						if(is_norm):
-							data = np.linalg.norm(data, axis = 1)
-							dimension = 1
+							data_reduce = np.linalg.norm(data_reduce, axis = 1)
+							dimension_reduce = 1
 
-						self.mocap_data[i].append(data)
-						
-						if(not(signal in self.list_features[0])):
+						self.mocap_data.append(data_reduce)
+
+						name_signal = signal + '_' + item
+
+						if(not(name_signal in self.list_features[0])):
 							# Update the list of features with name and dimension
-							self.list_features[0].append(signal)
-							self.list_features[1].append(dimension)
-
-					else:
-						related_items = info_related_data.find("related_items").toString()
-
-						for item in list_items:
-							nb_items = int(rf.findGroup(related_items).find('Total').toString())
-							dimension_reduce = int(dimension/nb_items)
-
-							id_item = rf.findGroup(related_items).find(item).toString()
-							id_item = int(id_item)*dimension_reduce
-
-							if(item == 'jL5S1'):
-								data_reduce = data[:,id_item + 2]
-								data_reduce = np.expand_dims(data_reduce, axis=1)
-								dimension_reduce = 1
-							else:
-								data_reduce = data[:,id_item:id_item + dimension_reduce]
-
-							if(is_norm):
-								data_reduce = np.linalg.norm(data_reduce, axis = 1)
-								dimension_reduce = 1
-
-							if(dist_com):
-								data_com = self.mvnx_tree[i].get_data('centerOfMass')
-
-								data_dist = np.zeros((len(data_com)))
-
-								for t in range(len(data_com)):
-
-									data_dist[t] = np.sqrt(
-										# (data_reduce[t, 0] - data_com[t, 0]) * (data_reduce[t, 0] - data_com[t, 0]) +
-										# (data_reduce[t, 1] - data_com[t, 1]) * (data_reduce[t, 1] - data_com[t, 1]) +
-										(data_reduce[t, 2] - data_com[t, 2]) * (data_reduce[t, 2] - data_com[t, 2]))
-								
-								data_reduce = np.expand_dims(data_dist, axis=1)
-								dimension_reduce = 1
-
-
-							self.mocap_data[i].append(data_reduce)
-
-							name_signal = signal + '_' + item
-
-							if(not(name_signal in self.list_features[0])):
-								# Update the list of features with name and dimension
-								self.list_features[0].append(name_signal)
-								self.list_features[1].append(dimension_reduce)
+							self.list_features[0].append(name_signal)
+							self.list_features[1].append(dimension_reduce)
 
 
 		list_features = self.list_features[0][1:]
@@ -457,216 +467,13 @@ class DataBase():
 		return list_features, dim_features
 
 
-	def add_mvnx_data(self, list_features, sub_list):
-		""" Add to the dataset the data corresponding to the list of features in input
-
-		input:
-		list_features: list of string corresponding to the features in mvnx file
-		ouput: returns all the data per sequence in a list of array
-		"""
-
-		features_mvnx = self.mvnx_tree[0].get_list_features()
-				
-		for feature in list_features:
-			if(feature in self.list_features[0]):  # Check if the feature is not already in the database
-				continue
-
-			if(feature in features_mvnx): # Check if the feature exists in mvnx file
-				if(feature == 'centerOfMass'):
-					for i in range(self.n_seq):
-						com = self.mvnx_tree[i].get_data(feature)
-						if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
-							self.mocap_data[i].append(com)
-							continue
-						if('z' in sub_list[0]):
-							self.mocap_data[i].append(com[:,0])
-						if('y' in sub_list[0]):
-							self.mocap_data[i].append(com[:,1])
-						if('x' in sub_list[0]):
-							self.mocap_data[i].append(com[:,2])
-						
-					# if(((sub_list[0] == 'all') or (sub_list[0] == ''))):
-					# 	self.list_features[0].append(feature)
-					# 	self.list_features[1].append(3)
-		
-					# if('z' in sub_list[0]):		
-					# 	self.list_features[0].append('COM_Z')
-					# 	self.list_features[1].append(1)
-
-					# if('y' in sub_list[0]):		
-					# 	self.list_features[0].append('COM_Y')
-					# 	self.list_features[1].append(1)
-
-					# if('x' in sub_list[0]):		
-					# 	self.list_features[0].append('COM_X')
-					# 	self.list_features[1].append(1)
-
-					# if('z' in sub_list):
-
-				elif((sub_list[0] == 'all') or (sub_list[0] == '')):
-					for i in range(self.n_seq):
-						self.mocap_data[i].append(self.mvnx_tree[i].get_data(feature))
-
-					# Update the list of features with name and dimension
-					self.list_features[0].append(feature)
-					self.list_features[1].append(len(self.mvnx_tree[i].get_data(feature).T))
-
-				elif(feature in segment_features):
-					self.add_features_by_segments(feature, sub_list)
-
-				elif(feature in joint_features):
-					self.add_features_by_joints(feature, sub_list)
-
-				elif(feature in sensor_features):
-					self.add_features_by_sensors(feature, sub_list)
-
-			# elif(feature == 'CoMVelocity'):
-			# 	for i in range(self.n_seq):
-			# 		com = self.mvnx_tree[i].get_data('centerOfMass')
-			# 		com_vel = np.diff(com, axis=0)
-			# 		com_vel = np.insert(com_vel, 0, 0, axis=0)
-
-			# 		self.mocap_data[i].append(com_vel)
-
-			# 	self.list_features[0].append(feature)
-			# 	self.list_features[1].append(3)
-
-
-
-
-
-
-
-
-		list_features = self.list_features[0][1:]
-		dim_features = self.list_features[1][1:]
-
-		return list_features, dim_features
-
-
-	def add_features_by_segments(self, feature, list_segments):
-		""" Add to the dataset the data corresponding to the segments specified in input
-
-		input:
-		feature: a string corresponding the available features for segments in mvnx:
-				'orientation'
-				'position'
-				'velocity'
-				'acceleration'
-		list_segments: list of string containing the segments name to retrieve data
-		Add all data in the mocap_data list and returns it
-		"""
-		segments_mvnx = self.mvnx_tree[0].get_list_tags('segments')
-
-		if(feature in segment_features):
-			for segment in list_segments:
-				if((segment not in segments_mvnx) or # check if the segment name exist and not already in the features list
-					((feature + '_' + segment) in self.list_features[0])): 
-					continue
-				
-				id_segment = self.mvnx_tree[0].get_id_segment(segment)
-
-				for i in range(self.n_seq):
-					if(feature in self.list_features[0]): # check if the feature is already loaded
-						data = self.get_data_by_features(feature, i)
-					else:
-						data = self.mvnx_tree[i].get_data(feature)
-
-					dimension = int(np.shape(data)[1]/len(segments_mvnx))
-
-					self.mocap_data[i].append(np.asarray(
-						data[:,id_segment * dimension : id_segment * dimension + dimension]))
-
-				self.list_features[0].append(feature + '_' + segment)
-				self.list_features[1].append(dimension)
-
-		return self.mocap_data
-
-
-	def add_features_by_joints(self, feature, list_joints):
-		""" Add to the dataset the data corresponding to the joints specified in input
-
-		input:
-		feature: a string corresponding the available features for joints in mvnx:
-				'jointAngle'
-				'jointAngleXZY'
-				'angularVelocity'
-				'angularAcceleration'
-		list_joints: list of string containing the joint name to retrieve data
-		Add all data in the mocap_data list and returns it
-		"""
-		joints_mvnx = self.mvnx_tree[0].get_list_tags('joints')
-		
-		if(feature in joint_features):
-			for joint in list_joints:
-				if((joint not in joints_mvnx) or # check if the joint name exist and not already in the features list
-					((feature + '_' + joint) in self.list_features[0])): 
-					continue
-				
-				id_joint = self.mvnx_tree[0].get_id_joint(joint)
-
-				for i in range(self.n_seq):
-					if(feature in self.list_features[0]): # check if the feature is already loaded
-						data = self.get_data_by_features(feature, i)
-					else:
-						data = self.mvnx_tree[i].get_data(feature)
-
-					dimension = int(np.shape(data)[1]/len(joints_mvnx))
-
-					self.mocap_data[i].append(np.asarray(
-						data[:,id_joint * dimension : id_joint * dimension + dimension]))
-
-				self.list_features[0].append(feature + '_' + joint)
-				self.list_features[1].append(dimension)
-
-		return self.mocap_data
-
-
-	def add_features_by_sensors(self, feature, list_sensors):
-		""" Add to the dataset the data corresponding to the inertial sensors specified in input
-
-		input:
-		feature: a string corresponding the available features for sensor in mvnx:
-				'sensorOrientation',
-				'sensorAngularVelocity',
-				'sensorAcceleration'
-		list_joints: list of string containing the sensor name to retrieve data
-		Add all data in the mocap_data list and returns it
-		"""
-		sensors_mvnx = self.mvnx_tree[0].get_list_tags('sensors')
-		
-		if(feature in sensor_features):
-			for sensor in list_sensors:
-				if((sensor not in sensors_mvnx) or # check if the sensor name exist and not already in the features list
-					((feature + '_' + sensor) in self.list_features[0])): 
-					continue
-				
-				id_sensor = self.mvnx_tree[0].get_id_sensor(sensor)
-
-				for i in range(self.n_seq):
-					if(feature in self.list_features[0]): # check if the feature is already loaded
-						data = self.get_data_by_features(feature, i)
-					else:
-						data = self.mvnx_tree[i].get_data(feature)
-
-					dimension = int(np.shape(data)[1]/len(sensors_mvnx))
-
-					self.mocap_data[i].append(np.asarray(
-						data[:,id_sensor * dimension : id_sensor * dimension + dimension]))
-
-				self.list_features[0].append(feature + '_' + sensor)
-				self.list_features[1].append(dimension)
-
-		return self.mocap_data
-
-
-	def get_data_by_features(self, name_feature, num_sequence):
+	def get_data_by_features(self, name_feature):
 		"""
 		Input: a string for the name of the feature
 		Return the data corresponding to the feature in input
 		"""
 		index_feature =  self.list_features[0].index(name_feature)
-		return self.mocap_data[num_sequence][index_feature]
+		return self.mocap_data[index_feature]
 
 	def get_dimension_features(self, list_features):
 		dimension_list = [] 
