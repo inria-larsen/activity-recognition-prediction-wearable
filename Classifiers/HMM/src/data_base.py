@@ -100,29 +100,17 @@ class DataBase():
 		self.name_seq = file
 
 
-	def load_mvnx_data(self):
+	def load_mvnx_data(self, path):
 		""" 
 		Load the mocap mvnx files corresponding to xsens MoCap data
 		"""
-		path = self.path_data + self.mvnx_folder
-		list_files = os.listdir(path)
-		list_files.sort()
-
-		if(self.n_seq == -1):
-			self.n_seq = len(list_files)
-
-		# check all the files in the mvnx folder
-		for file, i in zip(list_files, range(self.n_seq)):
-			self.mvnx_tree.append(mvnx_tree(path + file))
-			self.mocap_data[i].append(self.mvnx_tree[i].get_timestamp_ms())
-
-			if(i < self.n_seq - 1):
-				self.mocap_data.append([])
+		self.mvnx_tree = mvnx_tree(path + self.name_seq + '.mvnx')
+		self.mocap_data.append(self.mvnx_tree.get_timestamp_ms())
 
 		# set the timestamp as the first data on the list of features
 		self.list_features[0].append('time')
 		self.list_features[1].append(1)
-		return path
+		return
 
 
 	def load_labels_ref(self, name_track = '0'):
