@@ -79,12 +79,11 @@ class DataBase():
 	video: contains the video of the xsens model
 	"""
 
-	labels_folder = "/labels/"
 	mvnx_folder = "/mvnx/"
 	eglove_folder = "/glove/"
 	videos_folder = "/video/"
 
-	def __init__(self, path, n_seq = -1):
+	def __init__(self, path, file):
 		"""
 		Constructor of the dataset.
 		Parameters;
@@ -92,12 +91,13 @@ class DataBase():
 		n_seq (optional): the number of sequence to add in the dataset
 		"""
 		self.path_data = path
+		self.name_seq = ''
 		self.mvnx_tree = []
-		self.mocap_data = [[]]
-		self.ref_data = [[]]
+		self.mocap_data = []
+		self.ref_data = []
 		self.list_features = [[], []]
 		self.list_states = []
-		self.n_seq = n_seq
+		self.name_seq = file
 
 
 	def load_mvnx_data(self):
