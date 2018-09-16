@@ -130,3 +130,5 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+Classifiers/HMM/test/
