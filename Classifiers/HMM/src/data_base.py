@@ -148,14 +148,38 @@ class DataBase():
 
 		return
 
+	def load_labels_refGT(self, timestamps, name_track, labels_folder = 'labels'):
+		""" Load the reference labels from csv file from ground truth
 
-		self.ref_data = [[]]
-		self.real_labels = [[]]
+		This function updates the reference data and the list of states.
+		Take in input the timestamps corresponding to the motion capture data
+		Take in input the name of the track used for the labels and the label folder
+
+		list_states: sorted list of string containing the list of states
+		"""
+		path = self.path_data + '/' + labels_folder + '/'
+		time_start = [[]]
+
+		self.ref_data = []
+		self.real_labels = []
 		self.list_states = []
+
+		self.real_labels = pd.read_csv(path + self.name_seq + '_GT.csv')[name_track].values
+		self.list_states, l = np.unique(self.real_labels, return_inverse=True)
+
+		return self.real_labels, self.list_states
+
 		
 		for file, i in zip(list_files, range(self.n_seq)):
 			ref = anvil_tree(path + file)
 
+	def load_labels_ref3A(self, timestamps, name_track, labels_folder = 'labels', GT = 0):
+		""" Load the reference labels from csv file from 3 annotators
+
+		This function updates the reference data and the list of states.
+		Take in input the timestamps corresponding to the motion capture data
+		Take in input the name of the track used for the labels and the label folder
+		Possibility to extract the Ground Truth if GT = 1 (default = 0)
 			labels, start, end = ref.get_data(name_track)
 			# for in ref.get_data():
 			# 	self.ref_data[i]
@@ -166,22 +190,119 @@ class DataBase():
 					self.list_states.append(state)
 					self.list_states = sorted(self.list_states)
 
+		list_states: sorted list of string containing the list of states
+		"""
+		path = self.path_data + '/' + labels_folder + '/'
+		time_start = [[]]
 
-			flag = 0
-			time = self.get_data_by_features('time', i)
+		self.ref_data = []
+		self.real_labels = []
+		self.list_states = []
 
-			for t in time:
-				if(t >= end[flag]):
-					flag += 1
-					if(flag >= len(end)):
-						break
-				self.real_labels[i].append(labels[flag])
+		df_labels = pd.read_csv(path + 'Segments_' + self.name_seq + '_' + name_track + '_3A.csv')
 
-			if(i < self.n_seq -1):
-				self.real_labels.append([])
-				self.ref_data.append([])
+		t_sample = (np.asarray(timestamps) - timestamps[0]).tolist()
+		# t_sample = np.arange(0, timestamps[-1], 0.04).tolist()
+		# t_sample.append(timestamps[-1])
 
-		return
+		count = 0
+		labels = []
+		for t in t_sample:
+			labels.append(df_labels.iloc[count, 3:6].values)
+
+			time = df_labels.iloc[count, 1:2].values
+			if(t > time):
+				count += 1
+				if(count == len(df_labels)):
+					break
+
+		labels = np.array(labels)
+
+		T = timestamps[-1]/len(timestamps)*2
+
+		t_sample = pd.DataFrame({'t': t_sample})
+		df_labels = pd.DataFrame(labels)
+
+		if(GT):
+			for i in range(0, len(timestamps)):
+				df_labels_win = df_labels[t_sample['t'].between(timestamps[i], timestamps[i]+T, inclusive=True)]
+				list_label_win = np.concatenate(df_labels_win.values)
+				cnt = Counter(list_label_win)
+				if(len(cnt) >= 2):
+					if(cnt.most_common(2)[0][1] == cnt.most_common(2)[1][1]):
+						list_label_win = []
+						for j in range(len(df_labels_win)):
+							cnt = Counter(df_labels_win.iloc[j].values.tolist())
+							if(len(cnt) >= 2):
+								if(cnt.most_common(2)[0][1] == cnt.most_common(2)[1][1]):
+									list_label_win.append('NONE')
+								else:
+									list_label_win.append(cnt.most_common(1)[0][0])
+							else:
+								list_label_win.append(cnt.most_common(1)[0][0])
+
+						cnt = Counter(list_label_win)
+
+				self.real_labels.append((cnt.most_common(1)[0][0]))
+
+		else:
+			self.real_labels = df_labels
+
+		seq_none = [[]]
+		count_none = 0
+		for i in range(0, len(timestamps)):
+			self.real_labels[i] = self.real_labels[i].replace("standing", "St")
+			self.real_labels[i] = self.real_labels[i].replace("walking", "Wa")
+			self.real_labels[i] = self.real_labels[i].replace("crouching", "Cr")
+			self.real_labels[i] = self.real_labels[i].replace("kneeling", "Kn")
+
+			self.real_labels[i] = self.real_labels[i].replace("upright", "U")
+			self.real_labels[i] = self.real_labels[i].replace("_forward","")
+			self.real_labels[i] = self.real_labels[i].replace("strongly_bent","BS")
+			self.real_labels[i] = self.real_labels[i].replace("bent","BF")
+			self.real_labels[i] = self.real_labels[i].replace("overhead_work_hands_above_head","OH")
+			self.real_labels[i] = self.real_labels[i].replace("overhead_work_elbow_at_above_shoulder","OS")
+
+
+			self.real_labels[i] = self.real_labels[i].replace("fine_manipulation_no_task","idle")
+			self.real_labels[i] = self.real_labels[i].replace("release__no_task","idle")
+			self.real_labels[i] = self.real_labels[i].replace("reaching_no_task","idle")
+			self.real_labels[i] = self.real_labels[i].replace("picking","Pi")
+			self.real_labels[i] = self.real_labels[i].replace("placing","Pl")
+			self.real_labels[i] = self.real_labels[i].replace("release","Rl")
+			self.real_labels[i] = self.real_labels[i].replace("reaching","Re")
+			self.real_labels[i] = self.real_labels[i].replace("screwing","Sc")
+			self.real_labels[i] = self.real_labels[i].replace("fine_manipulation","Fm")
+			self.real_labels[i] = self.real_labels[i].replace("carrying","Ca")
+			self.real_labels[i] = self.real_labels[i].replace("idle","Id")      
+
+			if(GT):
+				if(self.real_labels[i]=='NONE'):
+					seq_none[count_none].append(i)
+					if(self.real_labels[i+1] != 'NONE'):
+						count_none += 1
+						seq_none.append([])
+
+		del seq_none[-1]
+
+		if(GT):
+			for i in range(len(seq_none)):
+				A = deepcopy(seq_none[i])
+				while(len(seq_none[i]) >= 1):
+					if(len(seq_none[i]) == 1):
+						if(random.randint(0,1)):
+							self.real_labels[seq_none[i][0]] = self.real_labels[seq_none[i][0]+1]
+						else:
+							self.real_labels[seq_none[i][0]] = self.real_labels[seq_none[i][0]-1]
+						del seq_none[i][0]
+
+					else:
+						self.real_labels[seq_none[i][0]] = self.real_labels[seq_none[i][0]-1]
+						self.real_labels[seq_none[i][-1]] = self.real_labels[seq_none[i][-1]+1]
+						del seq_none[i][0]
+						del seq_none[i][-1]
+
+		self.list_states, l = np.unique(self.real_labels, return_inverse=True)
 
 	def add_signals_to_dataBase(self, rf):
 		self.config_file = rf
