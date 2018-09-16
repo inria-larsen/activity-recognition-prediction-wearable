@@ -32,17 +32,6 @@ def mean_and_cov(all_data, labels, n_states, list_features):
 	for state, df in df_total.groupby('state'):
 		data.append(df[list_features].values)
 
-	# data = [[]]
-	# for i in range(n_states - 1):
-	# 	data.append([])
-
-	# for i in range(len(labels)):
-	# 	num_state = labels[i]
-	# 	if(len(data[num_state])<=0):
-	# 		data[num_state].append(all_data[i])
-	# 	else:
-	# 		data[num_state] = np.vstack((data[num_state], all_data[i]))
-
 	sigma = np.zeros(((n_states,n_feature,n_feature)))
 	mu = np.zeros((n_states, np.sum(n_feature)))
 
@@ -162,9 +151,6 @@ def split_data_base2(data_set, labels, ratio):
 	
 	return base_ref, labels_ref, base_test, labels_test, id_train, id_test
 
-# def synchronize_glove(data_glove, time_glove):
-# 	return data_glove_sync, time_glove_sync, data
-
 
 def generate_list_features(n_features, possible_features):
 	list_features = []
@@ -188,6 +174,9 @@ def generate_list_features(n_features, possible_features):
 
 
 def fisher_score(data_c, data_all):
+	"""
+	Compute the Fisher score for each features of the dataset
+	"""
 	nbr_features = len(data_all.T)
 	n_states = len(data_c)
 
@@ -198,6 +187,8 @@ def fisher_score(data_c, data_all):
 		num = 0
 		den = 0
 		for j in range(n_states):
+			if(len(data_c[j]) == 0):
+				continue
 			mean_j = np.mean(data_c[j][:,i])
 			std_j = np.std(data_c[j][:,i])
 			n_j = len(data_c[j])
@@ -206,106 +197,17 @@ def fisher_score(data_c, data_all):
 			den += n_j*std_j*std_j
 
 		fisher_score[i] = num/den
+		if(np.isnan(fisher_score[i])):
+			fisher_score[i] = 0
 
 	return fisher_score
 
-
-def fisher_score2(data_c, data_all):
-	nbr_features = len(data_all.T)
-	n_states = len(data_c)
-
-	fisher_score = np.zeros(nbr_features)
-
-	means_c = {}
-
-	for c in range(n_states):
-		means_c[c] = np.mean(data_c[c],axis = 0)
-
-	overall_mean = np.mean(data_all, axis = 0)
-
-	# calculate between class covariance matrix
-	# S_B = \sigma{N_i (m_i - m) (m_i - m).T}
-	S_B = np.zeros((nbr_features, nbr_features))
-	for c in range(n_states):
-		N_k = len(data_c[c])
-		S_B = np.multiply(N_k, np.outer((means_c[c] - overall_mean), (means_c[c] - overall_mean)))
-	#	 S_B += np.multiply(len(self.classwise[c]),
-	#						np.outer((means[c] - overall_mean), 
-	#								 (means[c] - overall_mean)))
-
-	# # calculate within class covariance matrix
-	# # S_W = \sigma{S_i}
-	# # S_i = \sigma{(x - m_i) (x - m_i).T}
-	# S_W = np.zeros(S_B.shape) 
-	# for c in range(n_states): 
-	#	 tmp = np.subtract(self.drop_col(self.classwise[c], self.labelcol).T, np.expand_dims(means[c], axis=1))
-	#	 S_W = np.add(np.dot(tmp, tmp.T), S_W)
-
-	# for i in range(nbr_features):
-	# 	mean_i = np.mean(data_all[:,i])
-	# 	num = 0
-	# 	den = 0
-	# 	for j in range(n_states):
-	# 		mean_j = np.mean(data_c[j][:,i])
-	# 		std_j = np.std(data_c[j][:,i])
-	# 		n_j = len(data_c[j])
-
-	# 		num += n_j*(mean_j - mean_i)*(mean_j - mean_i)
-	# 		den += n_j*std_j*std_j
-
-	# 	fisher_score[i] = num/den
-
-	return fisher_score
-
-# def update_list_name_features(list_features, list_all_features, list_name_features):
-# 	name_features = []
-# 	for features in list_features:
-# 		index = list_all_features.index(features)
-# 		name_features.append(list_name_features[index])
-# 	return name_features
-
-
-# def slide_windows(data, size_window):
-# 	win = int(size_window/2)
-# 	data_out = []
-
-# 	for i in np.arange(win, len(data)-win, win):
-# 		average = np.mean(data[i-win : i+win+1], axis=0)
-# 		data_out.append(average)
-
-# 	data_windows = np.zeros((np.shape(data_out)))
-# 	for i in range(len(data_out)):
-# 		data_windows[i,:] = data_out[i]
-# 	return data_windows
-
-
-# def all_data_concatenate(list_features, all_data):
-# 	data_conc = []
-# 	for features in list_features:
-# 		data = all_data.get_data_by_features(features)
-# 		if(len(data_conc)<=0):
-# 			data_conc = data
-# 		else:
-# 			data_conc = np.hstack((data_conc, data))
-# 	return data_conc
-
-# def set_name_ouput(list_features, all_features, name_features):
-# 	features_sorted = sorted(all_features)
-# 	id_feature = all_features.index(list_features[0])
-# 	name_output_file = name_features[id_feature]
-# 	name_output = []
-# 	name_output.append(name_features[id_feature])
-# 	for i in range(1, len(list_features)):
-# 		id_feature = all_features.index(list_features[i])
-# 		name_output_file += '_' + name_features[id_feature]
-# 		name_output.append(name_features[id_feature])
-# 	name_output = sorted(name_output)
-# 	name_output_file = name_output[0]
-# 	for i in range(1, len(name_output)):
-# 		name_output_file += '_' + name_output[i]
-# 	return name_output_file
 
 def compute_confusion_matrix(pred_labels, real_labels, list_states):
+	"""
+	Return the confusion matrix (size: n_states*n_states)
+	Take in input the prediction label, real label and list states
+	"""
 	n_states = len(list_states)
 	confusion_matrix = np.zeros((n_states, n_states)).astype(int)
 	for j in range(len(real_labels)):
@@ -314,7 +216,7 @@ def compute_confusion_matrix(pred_labels, real_labels, list_states):
 		confusion_matrix[index_real, index_pred] += 1
 	return confusion_matrix.astype(int)
 
-def prepare_segment_analysis(timestamps, prediction_labels, reference_labels):
+def prepare_segment_analysis(timestamps, prediction_labels, reference_labels, id_test):
 	ground_truth = [[]]
 	prediction = [[]]
 	time = [[]]
@@ -322,6 +224,7 @@ def prepare_segment_analysis(timestamps, prediction_labels, reference_labels):
 	id_sample_end = [[]]
 
 	for i in range(len(prediction_labels)):
+		print(np.shape(prediction_labels[i]), np.shape(reference_labels[i]), id_test[i])
 		for t in range(len(prediction_labels[i])):
 			if(t == 0):
 				prediction[i].append(prediction_labels[i][t])
