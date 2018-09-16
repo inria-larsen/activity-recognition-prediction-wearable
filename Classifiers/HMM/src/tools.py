@@ -1,30 +1,47 @@
 # from features_organizer import FeaturesOrganizer
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 import csv
 import pandas as pd
 import seaborn as sns
 from collections import Counter
 from sklearn.model_selection import train_test_split
+from sklearn import metrics
+import yarp
+import data_processing as pr
+from data_base import DataBase
+import matplotlib
+from mlxtend.plotting import plot_confusion_matrix
 
-
-def mean_and_cov(all_data, labels, n_states, n_feature):
+def mean_and_cov(all_data, labels, n_states, list_features):
 	""" Compute the means and covariance matrix for each state 
 
 	Return a vector of scalar and a vector of matrix corresponding to the mean 
 	of the distribution and the covariance
 	"""
+	n_feature = len(list_features)
+	df_data = pd.DataFrame(all_data, columns = list_features)
 
-	data = [[]]
-	for i in range(n_states - 1):
-		data.append([])
+	df_labels = pd.DataFrame(labels)
+	df_labels.columns = ['state']
 
-	for i in range(len(labels)):
-		num_state = labels[i]
-		if(len(data[num_state])<=0):
-			data[num_state].append(all_data[i])
-		else:
-			data[num_state] = np.vstack((data[num_state], all_data[i]))
+	df_total = pd.concat([df_data, df_labels], axis=1)
+
+	data = []
+	for state, df in df_total.groupby('state'):
+		data.append(df[list_features].values)
+
+	# data = [[]]
+	# for i in range(n_states - 1):
+	# 	data.append([])
+
+	# for i in range(len(labels)):
+	# 	num_state = labels[i]
+	# 	if(len(data[num_state])<=0):
+	# 		data[num_state].append(all_data[i])
+	# 	else:
+	# 		data[num_state] = np.vstack((data[num_state], all_data[i]))
 
 	sigma = np.zeros(((n_states,n_feature,n_feature)))
 	mu = np.zeros((n_states, np.sum(n_feature)))
