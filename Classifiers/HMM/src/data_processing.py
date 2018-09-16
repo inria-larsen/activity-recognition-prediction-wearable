@@ -59,22 +59,19 @@ def slidding_window(data_input, timestamps, size_window):
 
 
 def concatenate_data(data_set, list_features):	
-	data_out = [[]]
-	n_seq = data_set.get_nbr_sequence()
-	for seq in range(n_seq):
-		index = 0
-		for features in list_features:
-			data_in = data_set.get_data_by_features(features, seq)
-			if(len(np.shape(data_in)) == 1):
-				data_in = np.expand_dims(data_in, axis=1)
-			if(index == 0):	
-				data_out[seq] = data_in
-			else:
-				data_out[seq] = np.concatenate((data_out[seq], data_in), axis = 1)
-			index += 1
+	data_out = []
+	index = 0
+	for features in list_features:
+		data_in = data_set.get_data_by_features(features)
 
-		if(seq < n_seq - 1):
-			data_out.append([])
+		if(len(np.shape(data_in)) == 1):
+			data_in = np.expand_dims(data_in, axis=1)
+		if(index == 0):	
+			data_out = data_in
+		else:
+			data_out = np.concatenate((data_out, data_in), axis = 1)
+		index += 1
+
 	return data_out
 
 
