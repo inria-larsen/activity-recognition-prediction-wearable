@@ -5,8 +5,11 @@ import numpy as np
 import os
 import scipy.signal
 import matplotlib.pyplot as plt
+import pandas as pd
 from copy import deepcopy
 import csv
+from collections import Counter
+import random 
 
 segment_features = [
 			'orientation',
@@ -27,6 +30,40 @@ sensor_features = [
 			'sensorAngularVelocity',
 			'sensorAcceleration'
 					]
+
+features_mvnx = [ 
+				'orientation',
+				'position',
+				'velocity',
+				'acceleration',
+				'angularVelocity',
+				'angularAcceleration',
+				'jointAngle',
+				'jointAngleXZY',
+				'centerOfMass',
+				'sensorOrientation',
+				'sensorAngularVelocity',
+				'sensorFreeAcceleration'
+				]
+
+# list_joints = ['jL5S1',
+# 			'jL4L3',
+# 			'jL1T12',
+# 			'jT9T8',
+# 			'jT1C7',
+# 			jC1Head
+# 			jRightT4Shoulder
+# 			jRightShoulder
+# 			jRightElbow
+# 			jRightWrist
+# 			jLeftT4Shoulder
+# 			jLeftShoulder
+# 			jLeftElbow
+# 			jLeftWrist
+# 			jRightHip
+# 			jRightKnee
+# 			jRightAnkle
+# 			]
 
 
 
