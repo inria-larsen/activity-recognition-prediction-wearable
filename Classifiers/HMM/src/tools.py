@@ -364,6 +364,24 @@ def compute_score(confusion_matrix):
 
 	return prec_total, recall_total, F1_score
 
+def compute_MCC_score(y_true, y_pred, list_states):
+	"""
+	Compute the MCC score based on the sequence of real labels, predicted labels and list states
+	"""
+	index_real = []
+	index_pred = []
+	for j in range(len(y_true)):
+		index_real.append(list_states.index(y_true[j]))
+		index_pred.append(list_states.index(y_pred[j]))
+	return metrics.matthews_corrcoef(index_real, index_pred)
+
+def compute_F1_score(y_true, y_pred, list_states):
+	"""
+	Compute the F1-score based on the sequence of real labels, predicted labels and list states
+	"""
+	return metrics.f1_score(y_true, y_pred, list_states, average = 'micro')
+
+def save_results_to_csv(y_true, y_pred, time, name_file):
 def compute_score_by_states(confusion_matrix):
 	n_states = len(confusion_matrix)
 	precision = np.zeros((n_states))
