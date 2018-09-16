@@ -113,7 +113,7 @@ class DataBase():
 		return
 
 
-	def load_labels_ref(self, name_track = '0'):
+	def load_labels_ref(self, name_track = '0', labels_folder = 'labels'):
 		""" Load the reference labels from Anvil file
 
 		This function updates the reference data and the list of states.
@@ -124,13 +124,29 @@ class DataBase():
 
 		list_states: sorted list of string containing the list of states
 		"""
-
-
-		path = self.path_data + self.labels_folder
-		list_files = os.listdir(path)
-		list_files.sort()
-
+		path = self.path_data + '/' + labels_folder + '/'
 		time_start = [[]]
+
+		self.ref_data = []
+		self.real_labels = []
+		self.list_states = []
+
+		ref = anvil_tree(path + self.name_seq + '.anvil')
+		labels, start, end = ref.get_data(name_track)
+
+		for i in range(len(labels)):
+			if labels[i] == 'NONE':
+				labels[i] = labels[i+1]
+			# labels[i] = labels[i].replace("Kn","Cr")
+
+		self.ref_data.append([labels, start, end])
+			
+		for state in sorted(ref.get_list_states()):
+			if(state not in self.list_states):
+				self.list_states.append(state)
+				self.list_states = sorted(self.list_states)
+
+		return
 
 
 		self.ref_data = [[]]
