@@ -382,7 +382,54 @@ def compute_F1_score(y_true, y_pred, list_states):
 	return metrics.f1_score(y_true, y_pred, list_states, average = 'micro')
 
 def save_results_to_csv(y_true, y_pred, time, name_file):
+	time_ = (time - time[0]).values
+
+	length_seg = []
+	start_seg = []
+	end_seg = []
+	labels_GT = []
+	labels_pred = []
+
+	labels_GT.append(y_true[0])
+	labels_pred.append(y_pred[0])
+	start_seg.append(time_[0])
+
+	index_seg = 0
+
+	length = len(y_true)
+	for t in range(1, length):
+		if(y_true[t] != labels_GT[index_seg] or y_pred[t] != labels_pred[index_seg]):
+			labels_GT.append(y_true[t])
+			labels_pred.append(y_pred[t])
+			end_seg.append(time_[t])
+			start_seg.append(time_[t])
+			length_seg.append(end_seg[index_seg] - start_seg[index_seg])
+			index_seg += 1
+
+	end_seg.append(time_[-1])
+	length_seg.append(end_seg[index_seg] - start_seg[index_seg])
+
+
+	columns = ['start', 'end', 'length', 'labels_GT', 'labels_pred']
+
+	df_results = pd.DataFrame(
+			{'start': start_seg,
+			 'end': end_seg,
+			 'length': length_seg,
+			 'labels_GT' : labels_GT,
+			 'labels_pred' : labels_pred,
+			})
+
+	df_results = df_results[['start', 'end', 'length', 'labels_GT', 'labels_pred']]
+
+	df_results.to_csv(name_file + ".csv", index=False)
+	return
+
+
 def compute_score_by_states(confusion_matrix):
+	"""
+	Compute the recognition scores of each state based on the confusion matrix
+	"""
 	n_states = len(confusion_matrix)
 	precision = np.zeros((n_states))
 	recall = np.zeros((n_states))
