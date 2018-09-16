@@ -50,7 +50,7 @@ class eglove_tree():
 	def get_timestamp(self):
 		timestamp = []
 		for frame in self.frames:
-			timestamp.append(float(frame.get('ts')) + 1.0)
+			timestamp.append(float(frame.get('ts')))
 		return timestamp
 
 	def get_time(self):

@@ -103,7 +103,7 @@ def video_sequence(real_labels, predict_labels, video_input, video_output):
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break
 				count += 1
-				if(count >= 120/20):
+				if(count >= 60/24):
 					flag += 1
 					count = 0
 			else:
@@ -113,5 +113,8 @@ def video_sequence(real_labels, predict_labels, video_input, video_output):
 		out.release()
 		cv2.destroyAllWindows()
 		return
+
+
+
 
 
