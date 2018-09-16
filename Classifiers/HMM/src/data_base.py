@@ -492,8 +492,6 @@ class DataBase():
 		flag = 0
 		time = (np.asarray(timestamps) - timestamps[0])
 
-
-
 		end = self.ref_data[0][2]
 		labels = self.ref_data[0][0]
 
@@ -534,7 +532,7 @@ class DataBase():
 
 		list_items = info_signal.findGroup('list').tail().toString().split(' ')
 
-		self.glove_timestamps = [[]]
+		self.glove_timestamps = []
 		self.data_glove = []
 
 		is_norm = info_signal.find('norm').toString()
@@ -543,35 +541,28 @@ class DataBase():
 		else:
 			is_norm = int(is_norm)
 
-		for file, i in zip(list_files, range(self.n_seq)):
-			with open(path + '/' + list_files[i], 'rt') as f:
-				reader = csv.reader(f, delimiter=' ')
+		with open(path + '/' + self.name_seq + '_glove.txt', 'rt') as f:
+			reader = csv.reader(f, delimiter=' ')
 
-				data_forces = []
-				data_angles = []
+			data_forces = []
+			data_angles = []
 
-				for row in reader:
-					data_forces.append(list(map(float, row[0:4])))
-					data_angles.append(list(map(float, row[4:7])))
+			for row in reader:
+				data_forces.append(list(map(float, row[0:7])))
+				# data_angles.append(list(map(float, row[4:7])))
 
-					self.glove_timestamps[i].append(float(row[7]))
+				self.glove_timestamps.append(float(row[7]))
 
 
-				data_reduce = np.asarray(data_forces)
+			data_reduce = np.asarray(data_forces)
 
-				if(is_norm):				
-					data_reduce = np.linalg.norm(data_forces, axis = 1)
-					data_reduce = np.expand_dims(data_reduce, axis=1)
+			if(is_norm):				
+				data_reduce = np.linalg.norm(data_forces, axis = 1)
+				data_reduce = np.expand_dims(data_reduce, axis=1)
 
-				# data_angles = np.asarray(data_angles)
 
-				# data_reduce = np.concatenate((data_reduce, data_angles), axis = 1)
-
-				self.data_glove.append(data_reduce)
+			self.data_glove = data_reduce
 				
-			if(i < self.n_seq - 1):
-				self.glove_timestamps.append([])
-
 		return self.data_glove, self.glove_timestamps
 
 	def get_timestamps_glove(self):
