@@ -5,48 +5,82 @@ import os
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 import cv2
+from copy import deepcopy
 
 
 def draw_distribution(score, list_states, real_labels):
-	labels = list_states.tolist()
-	for i in range(len(list_states)):
-		labels[i] = labels[i].title()
-		labels[i] = labels[i].replace("_", " ")
+	
 
-	clrs = np.zeros((len(labels), 3))
-	sns.set(font_scale=1.5)
+	clrs = np.zeros((len(list_states), 3))
+	# sns.set(font_scale=1.5)
 	id_pred = np.argmax(score)
-	id_real = list_states.tolist().index(real_labels)
-	for x in range(len(labels)):
+	id_real = list_states.index(real_labels)
+
+	
+
+	for x in range(len(list_states)):
 		if((id_pred == id_real) and (x == id_real)):
 			clrs[x] = [0,1,0]
-		elif(x == id_real):
-			clrs[x] = [0,0,1]
+		# elif(x == id_real):
+		# 	clrs[x] = [0,0,1]
 		else:
 			clrs[x] = [1,0,0]
+
+	labels = deepcopy(list_states)
+	for i in range(len(labels)):
+		labels[i] = labels[i].title()
+		labels[i] = labels[i].replace("_", " ")
+		labels[i] = labels[i].replace("St", "Standing")
+		labels[i] = labels[i].replace("Wa", "Walking")
+		labels[i] = labels[i].replace("Kn", "Kneeling")
+		labels[i] = labels[i].replace("Cr", "Crouching")
+
+		labels[i] = labels[i].replace("Bf", "Bent forward")
+		labels[i] = labels[i].replace("Bs", "Strongly bent")
+		labels[i] = labels[i].replace("U", "Upright")
+		labels[i] = labels[i].replace("Oh", "Hands above head")
+		labels[i] = labels[i].replace("Os", "Elbows above shoulders")
+
+		labels[i] = labels[i].replace("Id", "Idle")
+		labels[i] = labels[i].replace("Re", "Reach")
+		labels[i] = labels[i].replace("Rl", "Release")
+		labels[i] = labels[i].replace("Fm", "Fine Manipulation")
+		labels[i] = labels[i].replace("Sc", "Screw")
+		labels[i] = labels[i].replace("Ca", "Carry")
+		labels[i] = labels[i].replace("Pl", "Place")
+		labels[i] = labels[i].replace("Pi", "Pick")
+
 	ax = sns.barplot(score, labels, palette=clrs)
 	ax.set_xlim(0,1)
-	plt.title('Probability distribution')
-	ax.title.set_fontsize(20)
-	plt.ylabel('States')
-	plt.xlabel('Probabilities')
-	plt.subplots_adjust(left=0.2)
+	plt.title('Posture')
+
+	ax.title.set_fontsize(50)
+	plt.yticks(size = 40)
+	plt.xticks(size = 40)
+	# plt.ylabel('States')
+	plt.xlabel('Probabilities', size=20)
+	plt.subplots_adjust(left=0.7)
+	
 	return sns.barplot(score, labels, palette=clrs)
 
 def video_distribution(score_samples, list_states, real_labels, fps, path, name_file):
-	fig=plt.figure()
+
+	fig=plt.figure(figsize=(15,10))
+	# plt.rcParams["figure.figsize"] = (5,50)
+	
 	ax = fig.add_subplot(1,1,1)
 	n_frame = np.shape(real_labels)[0]
 
 	ax = draw_distribution(score_samples[0], list_states, real_labels[0])
 
-	def animate(i):
-		plt.clf()
-		ax = draw_distribution(score_samples[i], list_states, real_labels[i])
+	# def animate(i):
+	# 	plt.clf()
+	# 	ax = draw_distribution(score_samples[i], list_states, real_labels[i])
 
-	anim=animation.FuncAnimation(fig,animate,repeat=False,blit=False,frames=n_frame, interval=fps)
+	# anim=animation.FuncAnimation(fig,animate,repeat=False,blit=False,frames=n_frame, interval=fps)
 
-	anim.save(path + name_file + '.mp4',writer=animation.FFMpegWriter(fps=8))
+	# anim.save(path + name_file + '.mp4',writer=animation.FFMpegWriter(fps=8))
+	plt.show()
 	return
 
 def draw_pos(ax, pos_data):
@@ -79,25 +113,23 @@ def draw_pos(ax, pos_data):
 
 
 def video_sequence(real_labels, predict_labels, video_input, video_output):
-		print(len(real_labels), len(predict_labels))
-		print(video_input)
-		# path = 'C:/Users/amalaise/Documents/These/Xsens/170515_ThyssenkruppData/thyssenkrupp/video_mp4/thyssenkrupp_seq' + str(index) + '.mp4'
 		cap = cv2.VideoCapture(video_input)
 
 		# Define the codec and create VideoWriter object
 		fourcc = cv2.VideoWriter_fourcc(*'XVID')
-		out = cv2.VideoWriter(video_output, fourcc, 24.0, (800,600))
+		out = cv2.VideoWriter(video_output, fourcc, 24.0, (1280,720))
 		# out = cv2.VideoWriter(path_destination + 'sequence_' + str(index) + '.avi',fourcc, 24.0, (800,600))
 
 		count = 0
 		flag = 0
 		while(cap.isOpened()):
 			ret, frame = cap.read()
+			
 			if(ret and flag < len(real_labels)):
-				cv2.putText(frame,'Real state: ' + str(real_labels[flag])
-					, (10,25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
-				cv2.putText(frame,'Predict state: ' + str(predict_labels[flag])
-					, (10,55), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+				cv2.putText(frame,'Predicted Posture: ' + str(real_labels[flag])
+					, (50,25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
+				cv2.putText(frame,'Predicted Action: ' + str(predict_labels[flag])
+					, (50,55), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 3)
 				cv2.imshow('frame', frame)
 				out.write(frame)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
