@@ -451,15 +451,33 @@ class DataBase():
 							data_reduce = np.linalg.norm(data_reduce, axis = 1)
 							dimension_reduce = 1
 
-						self.mocap_data.append(data_reduce)
+						if(dimension_reduce > 1):
+							list_quaternion = ['q0', 'q1', 'q2', 'q3']
+							list_dimension = ['x', 'y', 'z']
 
-						name_signal = signal + '_' + item
+							for d in range(dimension_reduce):
+								if(signal == 'orientation' or signal == 'sensorOrientation'):
+									name_dimension = list_quaternion[d]
+								elif(signal == 'centerOfMass'):
+									name_signal = signal + '_' + list_dimension[d]
+									self.list_features[0].append(name_signal)
+									self.list_features[1].append(1)
+									self.mocap_data.append(data_reduce[:,d])
+									continue
+								else:
+									name_dimension = list_dimension[d]
 
-						if(not(name_signal in self.list_features[0])):
-							# Update the list of features with name and dimension
-							self.list_features[0].append(name_signal)
-							self.list_features[1].append(dimension_reduce)
+								self.mocap_data.append(data_reduce[:,d])
+								name_signal = signal + '_' + item + '_' + name_dimension
 
+								if(not(name_signal in self.list_features[0])):
+									# Update the list of features with name and dimension
+									self.list_features[0].append(name_signal)
+									self.list_features[1].append(1)
+									# self.list_features[1].append(dimension_reduce)
+
+						else:
+							self.mocap_data.append(data_reduce)
 
 		list_features = self.list_features[0][1:]
 		dim_features = self.list_features[1][1:]

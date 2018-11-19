@@ -50,10 +50,10 @@ if __name__ == '__main__':
 	testing = 1
 	save = 0
 	ratio = [70, 30, 0]
-	nbr_cross_val = 10
+	nbr_cross_val = 0
 	test_generalisation = 0
 	test_iteration = 0
-
+	model_fisher = 0
 	nbr_features = 50
 	
 
@@ -78,6 +78,10 @@ if __name__ == '__main__':
 
 		for file in list_files:
 			name_seq = os.path.splitext(file)[0]
+
+			if(name_seq == 'Participant_909_Setup_A_Seq_3_Trial_4'):
+				print(name_seq)
+				continue
 
 			info_participant.append(participant)
 			info_sequences.append(name_seq)
@@ -191,18 +195,21 @@ if __name__ == '__main__':
 	for nbr_features in range(1, len(sorted_features_wrapper)+1):
 		if(test_iteration == 0):
 			best_features_wrapper = find_best_features('wrapper_dimensions_' + name_track + ".csv")
+			dim_features = np.ones(len(best_features_wrapper))
 		else:
 			
 			best_features_wrapper = sorted_features_wrapper[nbr_features-1]
+			dim_features = np.ones(nbr_features)
 			
-
-		best_features_fisher = sorted_features_fisher[0:nbr_features]
+		if(model_fisher):
+			best_features_fisher = sorted_features_fisher[0:nbr_features]
+			confusion_matrix_fisher = np.zeros((len(list_states), len(list_states)))
 
 		data_win = deepcopy(data_win2)
 
-		dim_features = np.ones(nbr_features)
+		
 
-		confusion_matrix_fisher = np.zeros((len(list_states), len(list_states)))
+		
 		confusion_matrix_wrapper = np.zeros((len(list_states), len(list_states)))
 
 		TP = 0
@@ -220,11 +227,31 @@ if __name__ == '__main__':
 		F1_w = []
 
 		if(nbr_cross_val == 0):
-			model = ModelHMM()
-			model.train(data_win, real_labels, best_features, dim_features)
+			data_reduce = []
+			for data in data_win:
+				df = pd.DataFrame(data)
+				df.columns = list_features
+				data_reduce.append(df[best_features_wrapper].values)
 
-			if(save):
-				model.save_model(path_model, name_model, "load_handling")
+			data_ref, labels_ref, data_test, labels_test, id_train, id_test = tools.split_data_base2(data_reduce, real_labels, ratio)
+			model = ModelHMM()
+			model.train(data_ref, labels_ref, best_features_wrapper, dim_features)
+			model.save_model('model', 'test_video_action', "load_handling")
+
+			info_split = []
+
+			for seq, num_seq in zip(info_sequences, range(len(info_sequences))):
+				if(num_seq in id_train):
+					info_split.append('training')
+				else:
+					info_split.append('testing')
+
+			df = pd.DataFrame({'Sequence': info_sequences,
+				'Base': info_split})
+
+			df.to_csv('model/test_video_action.csv', index=False)
+
+			sys.exit("Shut down")
 
 
 		for n_subject in range(len(list_participant)):

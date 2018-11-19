@@ -65,7 +65,6 @@ class ModelHMM():
 		self.dim_features = dim_features
 		self.n_feature = int(sum(dim_features))
 
-
 		# Concatenate all the sequence in one and create a vector with the length of each sequence
 		obs = []
 		obs = data[0]
@@ -178,7 +177,6 @@ class ModelHMM():
 		self.model = joblib.load(model_file)
 
 		tree = ET.parse(model_file + '.xml')
-		print(tree)
 		data = next(tree.iterfind('model'))
 		states = list(next(data.iterfind('states')))
 		self.list_states = []
