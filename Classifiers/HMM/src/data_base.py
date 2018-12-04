@@ -171,7 +171,7 @@ class DataBase():
 
 		
 
-	def load_labels_ref3A(self, timestamps, name_track, labels_folder = 'labels', GT = 0):
+	def load_labels_ref3A(self, timestamps, name_track, participant, GT = 0):
 		""" Load the reference labels from csv file from 3 annotators
 
 		This function updates the reference data and the list of states.
@@ -181,25 +181,35 @@ class DataBase():
 
 		list_states: sorted list of string containing the list of states
 		"""
-		path = self.path_data + '/' + labels_folder + '/'
+
+		timestamps = np.asarray(timestamps)
+		path = self.path_data + '/annotations/labels_csv2/' + participant + '/'
 		time_start = [[]]
 
 		self.ref_data = []
 		self.real_labels = []
 		self.list_states = []
 
-		df_labels = pd.read_csv(path + 'Segments_' + self.name_seq + '_' + name_track + '_3A.csv')
+		# df_labels = pd.read_csv(path + 'Segments_' + self.name_seq + '_' + name_track + '_3A.csv')
 
-		t_sample = (np.asarray(timestamps) - timestamps[0]).tolist()
-		# t_sample = np.arange(0, timestamps[-1], 0.04).tolist()
+		columns_labels = ['t_video']
+		for i in range(3):
+			columns_labels.append(name_track + '_Annotator' + str(i+1))
+
+
+		df_labels = pd.read_csv(path + self.name_seq +  '.labels.csv')
+		df_labels = df_labels[columns_labels]
+
+			# t_sample = (timestamps - timestamps[0]).tolist()
+
+		t_sample = df_labels['t_video']
 		# t_sample.append(timestamps[-1])
 
 		count = 0
 		labels = []
 		for t in t_sample:
-			labels.append(df_labels.iloc[count, 3:6].values)
-
-			time = df_labels.iloc[count, 1:2].values
+			labels.append(df_labels.iloc[count, 1:4].values)
+			time = df_labels.iloc[count, 0]
 			if(t > time):
 				count += 1
 				if(count == len(df_labels)):
@@ -207,14 +217,21 @@ class DataBase():
 
 		labels = np.array(labels)
 
-		T = timestamps[-1]/len(timestamps)*2
+		timestamps = timestamps - timestamps[0]
+		# timestamps = np.array(df_labels['t_video'])
 
-		t_sample = pd.DataFrame({'t': t_sample})
+		T = 0.25
+
+		# t_sample = pd.DataFrame({'t': t_sample})
 		df_labels = pd.DataFrame(labels)
 
 		if(GT):
 			for i in range(0, len(timestamps)):
-				df_labels_win = df_labels[t_sample['t'].between(timestamps[i], timestamps[i]+T, inclusive=True)]
+				# if(timestamps[i]+T/2 >= timestamps[-1]):
+				# 	break
+				df_labels_win = df_labels[t_sample.between(timestamps[i], timestamps[i]+T, inclusive=True)]
+				if(df_labels_win.empty):
+					break
 				list_label_win = np.concatenate(df_labels_win.values)
 				cnt = Counter(list_label_win)
 				if(len(cnt) >= 2):
@@ -239,31 +256,31 @@ class DataBase():
 
 		seq_none = [[]]
 		count_none = 0
-		for i in range(0, len(timestamps)):
-			self.real_labels[i] = self.real_labels[i].replace("standing", "St")
-			self.real_labels[i] = self.real_labels[i].replace("walking", "Wa")
-			self.real_labels[i] = self.real_labels[i].replace("crouching", "Cr")
-			self.real_labels[i] = self.real_labels[i].replace("kneeling", "Kn")
+		for i in range(0, len(self.real_labels)):
+		# 	self.real_labels[i] = self.real_labels[i].replace("standing", "St")
+		# 	self.real_labels[i] = self.real_labels[i].replace("walking", "Wa")
+		# 	self.real_labels[i] = self.real_labels[i].replace("crouching", "Cr")
+		# 	self.real_labels[i] = self.real_labels[i].replace("kneeling", "Kn")
 
-			self.real_labels[i] = self.real_labels[i].replace("upright", "U")
-			self.real_labels[i] = self.real_labels[i].replace("_forward","")
-			self.real_labels[i] = self.real_labels[i].replace("strongly_bent","BS")
-			self.real_labels[i] = self.real_labels[i].replace("bent","BF")
-			self.real_labels[i] = self.real_labels[i].replace("overhead_work_hands_above_head","OH")
-			self.real_labels[i] = self.real_labels[i].replace("overhead_work_elbow_at_above_shoulder","OS")
+		# 	self.real_labels[i] = self.real_labels[i].replace("upright", "U")
+		# 	self.real_labels[i] = self.real_labels[i].replace("_forward","")
+		# 	self.real_labels[i] = self.real_labels[i].replace("strongly_bent","BS")
+		# 	self.real_labels[i] = self.real_labels[i].replace("bent","BF")
+		# 	self.real_labels[i] = self.real_labels[i].replace("overhead_work_hands_above_head","OH")
+		# 	self.real_labels[i] = self.real_labels[i].replace("overhead_work_elbow_at_above_shoulder","OS")
 
 
-			self.real_labels[i] = self.real_labels[i].replace("fine_manipulation_no_task","idle")
-			self.real_labels[i] = self.real_labels[i].replace("release__no_task","idle")
-			self.real_labels[i] = self.real_labels[i].replace("reaching_no_task","idle")
-			self.real_labels[i] = self.real_labels[i].replace("picking","Pi")
-			self.real_labels[i] = self.real_labels[i].replace("placing","Pl")
-			self.real_labels[i] = self.real_labels[i].replace("release","Rl")
-			self.real_labels[i] = self.real_labels[i].replace("reaching","Re")
-			self.real_labels[i] = self.real_labels[i].replace("screwing","Sc")
-			self.real_labels[i] = self.real_labels[i].replace("fine_manipulation","Fm")
-			self.real_labels[i] = self.real_labels[i].replace("carrying","Ca")
-			self.real_labels[i] = self.real_labels[i].replace("idle","Id")      
+		# 	self.real_labels[i] = self.real_labels[i].replace("fine_manipulation_no_task","idle")
+		# 	self.real_labels[i] = self.real_labels[i].replace("release__no_task","idle")
+		# 	self.real_labels[i] = self.real_labels[i].replace("reaching_no_task","idle")
+		# 	self.real_labels[i] = self.real_labels[i].replace("picking","Pi")
+		# 	self.real_labels[i] = self.real_labels[i].replace("placing","Pl")
+		# 	self.real_labels[i] = self.real_labels[i].replace("release","Rl")
+		# 	self.real_labels[i] = self.real_labels[i].replace("reaching","Re")
+		# 	self.real_labels[i] = self.real_labels[i].replace("screwing","Sc")
+		# 	self.real_labels[i] = self.real_labels[i].replace("fine_manipulation","Fm")
+		# 	self.real_labels[i] = self.real_labels[i].replace("carrying","Ca")
+		# 	self.real_labels[i] = self.real_labels[i].replace("idle","Id")      
 
 			if(GT):
 				if(self.real_labels[i]=='NONE'):
@@ -293,13 +310,13 @@ class DataBase():
 
 		self.list_states, l = np.unique(self.real_labels, return_inverse=True)
 
-		if(GT):
-			df_GT = pd.DataFrame({
-				'timestamps': timestamps,
-				'labels': self.real_labels
-				})
+		# if(GT):
+		# 	df_GT = pd.DataFrame({
+		# 		'timestamps': timestamps,
+		# 		'labels': self.real_labels
+		# 		})
 
-			df_GT.to_csv(self.path_data + '/' + labels_folder + '/' + self.name_seq + '_' + name_track + '_GT.csv', index=False)
+		# 	df_GT.to_csv(self.path_data + '/' + labels_folder + '/' + self.name_seq + '_' + name_track + '_GT.csv', index=False)
 
 		return self.real_labels, self.list_states
 
@@ -314,6 +331,7 @@ class DataBase():
 		nb_active_port = 0
 
 		for signal in signals:
+			print(signal)
 			info_signal = self.config_file.findGroup(signal)
 			is_enabled = int(info_signal.find('enable').toString())
 
@@ -330,7 +348,7 @@ class DataBase():
 			
 			# Check if the signal is enabled
 			if(is_enabled):
-				print(signal)
+				# print(signal)
 				list_items = info_signal.findGroup('list').tail().toString().split(' ')
 				order_diff = info_signal.find('diff_order').toString()
 				is_norm = info_signal.find('norm').toString()
@@ -378,7 +396,7 @@ class DataBase():
 							[2*q1*q2 + 2*q0*q3, q0*q0 - q1*q1 + q2*q2 - q3*q3, 2*q2*q3 - 2*q0*q1],
 							[2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, q0*q0 - q1*q1 - q2*q2 + q3*q3]])
 
-						for i in range(23):
+						for i in range(1, 23):
 							data[t, i*3:i*3+3] = abs_data[i*3:i*3+3] - abs_data[0:3]
 							data[t, i*3:i*3+3] = R@data[t,i*3:i*3+3]
 
@@ -407,7 +425,6 @@ class DataBase():
 
 					b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
 					data = scipy.signal.lfilter(b, a, data_diff, axis = 0)*fs
-
 
 				dimension = np.shape(data)[1]
 
@@ -479,8 +496,11 @@ class DataBase():
 						else:
 							self.mocap_data.append(data_reduce)
 
+
 		list_features = self.list_features[0][1:]
 		dim_features = self.list_features[1][1:]
+
+
 
 		return list_features, dim_features
 
@@ -541,6 +561,9 @@ class DataBase():
 
 	def get_list_states(self):
 		return self.list_states
+
+	def get_data_base(self):
+		return self
 
 
 	def add_data_glove(self, info_signal):

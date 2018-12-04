@@ -32,7 +32,7 @@ def get_best_features(file_name):
 
 if __name__ == '__main__':
 
-	max_iter = 10
+	max_iter = 15
 
 	# Prepare the data base
 	yarp.Network.init()
@@ -47,12 +47,14 @@ if __name__ == '__main__':
 	name_track = rf.find('level_taxonomy').toString()
 	labels_folder = rf.find('labels_folder').toString()
 
-	list_participant = os.listdir(path)
+	path_data_root = path + '/xsens/allFeatures_csv/'
+
+	list_participant = os.listdir(path_data_root)
 	list_participant.sort()
-	list_participant = ['541', '909', '3327', '5124', '5521', '5535', '8410', '9266', '9875']
+
 	print(list_participant)
 
-	# list_participant = ['909']
+	# list_participant = ['Participant_2274']
 
 	participant_label = []
 	num_sequence = []
@@ -72,19 +74,17 @@ if __name__ == '__main__':
 
 	i=0
 	for participant, nbr in zip(list_participant, range(len(list_participant))):
-		path_data = path + '/' + participant + '/data_csv/'
+		path_data = path_data_root  + participant
 		print('Loading: ' + participant)
 		
 		list_files = os.listdir(path_data)
 		list_files.sort()
 
+
 		for file in list_files:
 			name_seq = os.path.splitext(file)[0]
-
-			data, labels, time, list_s, list_features = tools.load_data(path + '/' + participant + '/', name_seq, name_track, labels_folder)
+			data, labels, time, list_s, list_features = tools.load_data(path, participant, name_seq, name_track, labels_folder)
 			real_labels.append(labels)
-
-
 
 			df_all_data.append(pd.DataFrame(data, columns = list_features))
 
@@ -107,6 +107,8 @@ if __name__ == '__main__':
 
 	score = []
 	best_features = []
+	best_features_total = [[]]
+	score_total = [[]]
 	flag = 0
 
 	# name_track = 'details'
@@ -129,10 +131,11 @@ if __name__ == '__main__':
 		tic = TIME_.clock()
 
 		if(iteration >= 1 or flag == 1):
-			if(len(best_features) >= 10):
-				top_list_feature = [deepcopy(best_features[0])]
-			else:
-				top_list_feature = deepcopy(best_features[0:-1])
+			top_list_feature = deepcopy(best_features_total[iteration-1][0:1])
+			# if(len(best_features) >= 10):
+			# 	top_list_feature = [deepcopy(best_features[0])]
+			# else:
+			# 	top_list_feature = deepcopy(best_features[0:-1])
 
 		else:
 			top_list_feature = ['']
@@ -213,15 +216,34 @@ if __name__ == '__main__':
 							score.append(F1_S)
 							best_features.append(sub_list_features)
 
+				if(len(score_total[iteration]) == 0):
+					score_total[iteration].append(F1_S)
+					best_features_total[iteration].append(sub_list_features)
+				else:
+
+					for num in range(len(score_total[iteration])):
+						if(F1_S > score_total[iteration][num]):
+							score_total[iteration].insert(num, F1_S)
+							best_features_total[iteration].insert(num, sub_list_features)
+							break
+
+						if(num == len(score_total[iteration])-1):
+							score_total[iteration].append(F1_S)
+							best_features_total[iteration].append(sub_list_features)
+
+
 			score_totaux = pd.DataFrame(
 				{'best_features': best_features,
 				 'score': score,
 				})
-			# score_totaux.to_csv(path + '/' + file_name, index=False)
+			print(path)
+			score_totaux.to_csv(path + '/' + file_name + '_New' + str(iteration+1), index=False)
 
 			toc = TIME_.clock()
 			print('Time: ', toc - tic)
 
+		score_total.append([])
+		best_features_total.append([])
 	plt.show()
 
 

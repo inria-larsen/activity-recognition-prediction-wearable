@@ -13,6 +13,8 @@ import data_processing as pr
 from data_base import DataBase
 import matplotlib
 from mlxtend.plotting import plot_confusion_matrix
+from copy import deepcopy
+import random 
 
 def mean_and_cov(all_data, labels, n_states, list_features):
 	""" Compute the means and covariance matrix for each state 
@@ -463,10 +465,11 @@ def load_data_from_dataBase(data_base, rf):
 	data_win = []
 
 	window_size = float(rf.find('slidding_window_size').toString())
+	print(window_size)
 	signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
 	nb_port = int(len(signals))
 	nb_active_port = 0
-	list_features, dim_features = data_base.add_signals_to_dataBase(rf)
+	list_features, dim_features = data_base.add_signals_to_dataBase(rf, True)
 	glove_on = 0
 
 	if('eglove' in signals):
@@ -544,22 +547,24 @@ def load_data_from_dataBase(data_base, rf):
 
 
 
-def load_data(path, name_seq, name_track, labels_folder):
+def load_data(path, participant, name_seq, name_track, labels_folder):
 	"""
 	Load data from csv file
 	"""
 	list_states = []
 
-	data_base = pd.read_csv(path + '/data_csv/' + name_seq + '.csv')
+
+	data_base = pd.read_csv(path + 'xsens/allFeatures_csv/' + participant + '/' + name_seq + '.csv')
 	ref_data = DataBase(path + '/', name_seq)
 
 	list_features = list(data_base.columns.values)
 	del list_features[0:2]
 	dim_features = np.ones(len(list_features))
 
-	time = data_base['timestamps']
+	time = data_base['timestamp']
 
-	labels, states = ref_data.load_labels_refGT(time, name_track, 'labels_3A')
+	labels, states = ref_data.load_labels_ref3A(time, name_track, participant, 1)
+
 
 
 	data = data_base[list_features].as_matrix()
@@ -609,3 +614,120 @@ def feature_selection(data, real_labels, list_features):
 		sorted_score.append(f_score[id_sort])
 
 	return sorted_features, sorted_score
+
+
+
+def load_labels_ref(timestamps, file_labels, name_track, participant, GT = 0):
+	""" Load the reference labels from csv file from 3 annotators
+
+	This function updates the reference data and the list of states.
+	Take in input the timestamps corresponding to the motion capture data
+	Take in input the name of the track used for the labels and the label folder
+	Possibility to extract the Ground Truth if GT = 1 (default = 0)
+
+	list_states: sorted list of string containing the list of states
+	"""
+
+	timestamps = np.asarray(timestamps)
+	time_start = [[]]
+
+	ref_data = []
+	real_labels = []
+	list_states = []
+
+	# df_labels = pd.read_csv(path + 'Segments_' + self.name_seq + '_' + name_track + '_3A.csv')
+
+	columns_labels = ['t_video']
+	for i in range(3):
+		columns_labels.append(name_track + '_Annotator' + str(i+1))
+
+
+	df_labels = pd.read_csv(file_labels)
+	df_labels = df_labels[columns_labels]
+
+		# t_sample = (timestamps - timestamps[0]).tolist()
+
+	t_sample = df_labels['t_video']
+	# t_sample.append(timestamps[-1])
+
+	count = 0
+	labels = []
+	for t in t_sample:
+		labels.append(df_labels.iloc[count, 1:4].values)
+		time = df_labels.iloc[count, 0]
+		if(t > time):
+			count += 1
+			if(count == len(df_labels)):
+				break
+
+	labels = np.array(labels)
+
+	timestamps = timestamps - timestamps[0]
+	# timestamps = np.array(df_labels['t_video'])
+
+	T = 0.25
+
+	# t_sample = pd.DataFrame({'t': t_sample})
+	df_labels = pd.DataFrame(labels)
+
+	if(GT):
+		for i in range(0, len(timestamps)):
+			# if(timestamps[i]+T/2 >= timestamps[-1]):
+			# 	break
+			df_labels_win = df_labels[t_sample.between(timestamps[i], timestamps[i]+T, inclusive=True)]
+			if(df_labels_win.empty):
+				break
+			list_label_win = np.concatenate(df_labels_win.values)
+			cnt = Counter(list_label_win)
+			if(len(cnt) >= 2):
+				if(cnt.most_common(2)[0][1] == cnt.most_common(2)[1][1]):
+					list_label_win = []
+					for j in range(len(df_labels_win)):
+						cnt = Counter(df_labels_win.iloc[j].values.tolist())
+						if(len(cnt) >= 2):
+							if(cnt.most_common(2)[0][1] == cnt.most_common(2)[1][1]):
+								list_label_win.append('NONE')
+							else:
+								list_label_win.append(cnt.most_common(1)[0][0])
+						else:
+							list_label_win.append(cnt.most_common(1)[0][0])
+
+					cnt = Counter(list_label_win)
+
+			real_labels.append((cnt.most_common(1)[0][0]))
+
+	else:
+		real_labels = df_labels
+
+	seq_none = [[]]
+	count_none = 0
+	for i in range(0, len(real_labels)):
+		if(GT):
+			if(real_labels[i]=='NONE'):
+				seq_none[count_none].append(i)
+				if(real_labels[i+1] != 'NONE'):
+					count_none += 1
+					seq_none.append([])
+
+	del seq_none[-1]
+
+	if(GT):
+		for i in range(len(seq_none)):
+			A = deepcopy(seq_none[i])
+			while(len(seq_none[i]) >= 1):
+				if(len(seq_none[i]) == 1):
+					if(random.randint(0,1)):
+						real_labels[seq_none[i][0]] = real_labels[seq_none[i][0]+1]
+					else:
+						real_labels[seq_none[i][0]] = real_labels[seq_none[i][0]-1]
+					del seq_none[i][0]
+
+				else:
+					real_labels[seq_none[i][0]] = real_labels[seq_none[i][0]-1]
+					real_labels[seq_none[i][-1]] = real_labels[seq_none[i][-1]+1]
+					del seq_none[i][0]
+					del seq_none[i][-1]
+
+	list_states, l = np.unique(real_labels, return_inverse=True)
+
+	return real_labels, list_states
