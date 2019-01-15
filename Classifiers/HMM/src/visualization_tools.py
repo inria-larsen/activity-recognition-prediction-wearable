@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 import os
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
-import cv2
+# import cv2
 from copy import deepcopy
 
 
@@ -16,20 +16,9 @@ def draw_distribution(score, list_states, real_labels):
 	id_pred = np.argmax(score)
 	id_real = list_states.index(real_labels)
 
-	
-
-	for x in range(len(list_states)):
-		if((id_pred == id_real) and (x == id_real)):
-			clrs[x] = [0,1,0]
-		# elif(x == id_real):
-		# 	clrs[x] = [0,0,1]
-		else:
-			clrs[x] = [1,0,0]
-
 	labels = deepcopy(list_states)
 	for i in range(len(labels)):
 		labels[i] = labels[i].title()
-		labels[i] = labels[i].replace("_", " ")
 		labels[i] = labels[i].replace("St", "Standing")
 		labels[i] = labels[i].replace("Wa", "Walking")
 		labels[i] = labels[i].replace("Kn", "Kneeling")
@@ -48,39 +37,57 @@ def draw_distribution(score, list_states, real_labels):
 		labels[i] = labels[i].replace("Sc", "Screw")
 		labels[i] = labels[i].replace("Ca", "Carry")
 		labels[i] = labels[i].replace("Pl", "Place")
-		labels[i] = labels[i].replace("Pi", "Pick")
+		labels[i] = labels[i].replace("Pi", "Pick")	
+		labels[i] = labels[i].replace("_", " ")
+
+	for x in range(len(list_states)):
+		if((id_pred == id_real) and (x == id_real)):
+			
+			clrs[x] = [0,1,0]
+		# elif(x == id_real):
+		# 	clrs[x] = [0,0,1]
+		else:
+			clrs[x] = [1,0,0]
+
+		if((x == id_real)):
+			labels[x] = labels[x].replace(" ", "\ ")
+			labels[x] = '$\\bf{' + labels[x] + '}$'
+			
+
 
 	ax = sns.barplot(score, labels, palette=clrs)
-	ax.set_xlim(0,1)
-	plt.title('Posture')
+	# ax.set_xlim(0, 1.0, 0.1)
+	ax.set_xticks(np.arange(0, 1.05, 0.5))
+	# ax.set_xticklabels(np.arange(0, 1.0), fontsize = 'x-large')
+	plt.title('Action')
 
 	ax.title.set_fontsize(50)
 	plt.yticks(size = 40)
-	plt.xticks(size = 40)
+	plt.xticks(size = 30)
 	# plt.ylabel('States')
-	plt.xlabel('Probabilities', size=20)
+	plt.xlabel('Probabilities', size=40)
 	plt.subplots_adjust(left=0.7)
 	
 	return sns.barplot(score, labels, palette=clrs)
 
 def video_distribution(score_samples, list_states, real_labels, fps, path, name_file):
 
-	fig=plt.figure(figsize=(15,10))
-	# plt.rcParams["figure.figsize"] = (5,50)
+	fig=plt.figure(figsize=(14,10))
+	# plt.rcParams["figure.figsize"] = (5,10)
 	
 	ax = fig.add_subplot(1,1,1)
 	n_frame = np.shape(real_labels)[0]
 
 	ax = draw_distribution(score_samples[0], list_states, real_labels[0])
 
-	# def animate(i):
-	# 	plt.clf()
-	# 	ax = draw_distribution(score_samples[i], list_states, real_labels[i])
+	def animate(i):
+		plt.clf()
+		ax = draw_distribution(score_samples[i], list_states, real_labels[i])
 
-	# anim=animation.FuncAnimation(fig,animate,repeat=False,blit=False,frames=n_frame, interval=fps)
+	anim=animation.FuncAnimation(fig,animate,repeat=False,blit=False,frames=n_frame, interval=fps)
 
-	# anim.save(path + name_file + '.mp4',writer=animation.FFMpegWriter(fps=8))
-	plt.show()
+	anim.save(path + name_file + '.mp4',writer=animation.FFMpegWriter(fps=8))
+	# plt.show()
 	return
 
 def draw_pos(ax, pos_data):

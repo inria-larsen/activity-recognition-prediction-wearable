@@ -11,7 +11,6 @@ from sklearn import metrics
 import data_processing as pr
 from data_base import DataBase
 import matplotlib
-from mlxtend.plotting import plot_confusion_matrix
 from copy import deepcopy
 import random 
 import pickle
