@@ -8,7 +8,6 @@ import seaborn as sns
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-import yarp
 import data_processing as pr
 from data_base import DataBase
 import matplotlib
