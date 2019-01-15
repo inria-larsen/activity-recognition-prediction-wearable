@@ -4,7 +4,6 @@ import data_processing as pr
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-import yarp
 import visualization_tools as v_tools
 import tools
 import pandas as pd 
@@ -132,6 +131,7 @@ if __name__ == '__main__':
 		max_iter = len(list_features)
 
 	for iteration in range(start, max_iter):
+		save_time = []
 		
 		print('\n#############################')
 		print('Iteration: ' + str(iteration+1))
@@ -263,10 +263,9 @@ if __name__ == '__main__':
 
 			toc = time.clock()
 			print('Time: ', toc - tic)
-
+			save_time.append(toc -tic)
+			time_totaux = pd.DataFrame({'time': save_time})
+			time_totaux.to_csv(path_save + '/' + 'time_' file_name + str(iteration+1), index=False)
 
 		score_total.append([])
 		best_features_total.append([])
-		plt.show()
-
-
