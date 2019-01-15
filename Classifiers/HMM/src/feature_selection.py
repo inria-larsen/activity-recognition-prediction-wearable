@@ -265,7 +265,7 @@ if __name__ == '__main__':
 			print('Time: ', toc - tic)
 			save_time.append(toc -tic)
 			time_totaux = pd.DataFrame({'time': save_time})
-			time_totaux.to_csv(path_save + '/' + 'time_' file_name + str(iteration+1), index=False)
+			time_totaux.to_csv(path_save + '/' + 'time_' +  file_name + str(iteration+1), index=False)
 
 		score_total.append([])
 		best_features_total.append([])
