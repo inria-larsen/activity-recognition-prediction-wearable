@@ -12,47 +12,64 @@ from copy import deepcopy
 from mem_top import mem_top
 from sys import getsizeof
 import os
-import time as TIME_
+import time
+import pickle
+import configparser
+from scipy.stats.mstats import gmean
+import argparse
 
 import warnings
 warnings.filterwarnings("ignore")
 
-def get_best_features(file_name):
-	best_features = []
-	df = pd.read_csv(file_name)
-	for i in range(len(df)):
-		line = df['best_features'].values[i] # Find the set of features with the best score
-		line = line.replace(',', '')
-		line = line.replace("[","")
-		line = line.replace("]","")
-		line = line.replace("'","")
-		best_features.append(line.split())
-	return best_features
+def ranking_features(df_score, list_tracks, method = 'mean'):
+	if(len(list_tracks)==1):
+		df_score = df_score.sort_values(by = list_tracks, ascending = False)
 
+	else:
+		if(method == 'gmean'):
+			df_combine = pd.DataFrame({'score_global': gmean(df_score, axis=1)})
+		elif(method == 'hmean'):
+			df_combine = pd.DataFrame({'score_global': df_score.hmean(axis=1)})
+		else:
+			df_combine = pd.DataFrame({'score_global': df_score.mean(axis=1)})
+
+		df_score = pd.concat([df_score, df_combine], axis=1)
+		df_score = df_score.sort_values(by = ['score_global'], ascending = False)
+
+	return df_score
 
 if __name__ == '__main__':
+	# arguments
+	parser=argparse.ArgumentParser()
+	parser.add_argument('--config', '-c', help='Configuration type', default="DEFAULT")
+	args=parser.parse_args()
+	config_type = args.config
 
-	max_iter = 15
+	local_path = os.path.abspath(os.path.dirname(__file__))
 
-	# Prepare the data base
-	yarp.Network.init()
-	rf = yarp.ResourceFinder()
-	rf.setDefaultContext("online_recognition")
-	rf.setDefaultConfigFile("default.ini")
-	rf.configure(sys.argv)
+	max_iter = 50
 
-	path = rf.find('path_data_base').toString()
-	path_model = rf.find('path_model').toString()
-	name_model = rf.find('name_model').toString()
-	name_track = rf.find('level_taxonomy').toString()
-	labels_folder = rf.find('labels_folder').toString()
+	config = configparser.ConfigParser()
+	config.read('config_file/config_file_selection.ini')
+
+	path = config["DEFAULT"]["path_data_base"]
+	path = os.path.join(local_path, path)
+	path_data_dump = config["DEFAULT"]["path_data_dump"]
+	path_data_dump = os.path.join(local_path, path_data_dump)
+	tracks = config[config_type]["list_tracks"].split(' ')
+	path_save = config["DEFAULT"]["path_save"] + '/' + config_type + '/'
+	file_name = config_type + '.csv'
+	local_features_flag = config[config_type]["local_features"]
+	method_sort = config[config_type]["method_sort"]
+
+	if(not(os.path.isdir(path_save))):
+		os.makedirs(path_save)
+
 
 	path_data_root = path + '/xsens/allFeatures_csv/'
 
 	list_participant = os.listdir(path_data_root)
 	list_participant.sort()
-
-	print(list_participant)
 
 	# list_participant = ['Participant_2274']
 
@@ -62,6 +79,7 @@ if __name__ == '__main__':
 	save = 0
 	ratio = [70, 30, 0]
 	nbr_cross_val = 3
+	nbr_subsets_iter = 10
 
 	print('Loading data...')
 
@@ -72,70 +90,97 @@ if __name__ == '__main__':
 
 	df_all_data = []
 
-	i=0
-	for participant, nbr in zip(list_participant, range(len(list_participant))):
-		path_data = path_data_root  + participant
-		print('Loading: ' + participant)
-		
-		list_files = os.listdir(path_data)
-		list_files.sort()
+	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y', 'orientation_RightHand_q1', 'orientation_RightShoulder_q1', 'position_L5_x', 'position_LeftForeArm_z', 'position_LeftHand_z', 'position_RightLowerLeg_z', 'position_RightUpperArm_z', 'velocityNorm']
+	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y']
 
+	data_win2, real_labels, list_states, list_features = tools.load_data_from_dump(path_data_dump)
 
-		for file in list_files:
-			name_seq = os.path.splitext(file)[0]
-			data, labels, time, list_s, list_features = tools.load_data(path, participant, name_seq, name_track, labels_folder)
-			real_labels.append(labels)
+	if(local_features_flag):
+		list_reduce_features = tools.list_features_local(list_features)
 
-			df_all_data.append(pd.DataFrame(data, columns = list_features))
+	del real_labels[0]
+	del list_states[0]
+	del real_labels[1]
+	del list_states[1]
 
+	df_all_data = []
 
-			timestamps.append(time)
+	for data, num_data in zip(data_win2, range(len(data_win2))):
+		df_all_data.append(pd.DataFrame(data, columns = list_features))
+		df_all_data[-1] = df_all_data[-1][list_reduce_features]
+		data_win2[num_data] = df_all_data[-1][list_reduce_features].values
 
-			for state in list_s:
-				if(state not in list_states):
-					list_states.append(state)
-					list_states = sorted(list_states)
-			i += 1
+	list_features = list_reduce_features
 
-	print(list_states)
 	dim_features = np.ones(len(list_features))
-
-
-
 
 	print('Data Loaded')
 
+	flag = 0
 	score = []
 	best_features = []
-	best_features_total = [[]]
-	score_total = [[]]
-	flag = 0
-
-	# name_track = 'details'
-	file_name = 'wrapper_' + name_track + '.csv'
-	# file_name = 'wrapper_' + 'details' + ".csv"
-	if(os.path.isfile(path + '/' + file_name)):
-		best_features = get_best_features(path + '/' + file_name)
-		score = pd.read_csv(path + '/' + file_name)['score'].values.tolist()
-		file_name = 'wrapper_' + name_track + "1.csv"
-		flag = 1
-
-	print(np.shape(score), np.shape(best_features))
 
 
-	for iteration in range(max_iter):
+	num_iteration = 1
+	while(os.path.isfile(path_save + '/' + file_name + str(num_iteration))):
+		num_iteration += 1
+
+
+	start = num_iteration - 1
+
+	if(len(list_features)<max_iter):
+		max_iter = len(list_features)
+
+	for iteration in range(start, max_iter):
 		
 		print('\n#############################')
-		print('Iteration: ' + str(iteration))
+		print('Iteration: ' + str(iteration+1))
 		print('#############################')
-		tic = TIME_.clock()
+		tic = time.clock()
 
-		if(iteration >= 1 or flag == 1):
-			top_list_feature = deepcopy(best_features_total[iteration-1][0:1])
-			# if(len(best_features) >= 10):
-			# 	top_list_feature = [deepcopy(best_features[0])]
-			# else:
-			# 	top_list_feature = deepcopy(best_features[0:-1])
+		data_ref_all = [[]]
+		labels_ref = [[[]]]
+		data_test_all = [[]]
+		labels_test = [[[]]]
+		id_train = [[]]
+		id_test = [[]]
+
+		best_features_total = []
+		score_total = [[]]
+		
+
+		for i in range(len(tracks)):
+			if(i < len(tracks)-1):
+				score_total.append([])
+
+		for k in range(nbr_cross_val):
+
+			for num_track in range(len(tracks)):
+				if(num_track == 0):
+					data_ref_all[k], labels_ref[num_track][k], data_test_all[k], labels_test[num_track][k], id_train[k], id_test[k] = tools.split_data_base2(data_win2, real_labels[num_track], ratio)
+				else:
+					for id_subject in id_train[k]:
+						labels_ref[num_track][k].append(real_labels[num_track][id_subject])
+
+					for id_subject in id_test[k]:
+						labels_test[num_track][k].append(real_labels[num_track][id_subject])
+
+				if(len(labels_ref) < len(tracks)):
+					labels_ref.append([[]])
+					labels_test.append([[]])
+
+				if(k < nbr_cross_val-1):
+					labels_ref[num_track].append([])
+					labels_test[num_track].append([])
+
+			if(k < nbr_cross_val-1):
+				data_ref_all.append([])
+				data_test_all.append([])
+				id_train.append([])
+				id_test.append([])
+
+		if(iteration >= 1):
+			top_list_feature = tools.get_best_features(path_save + '/' + file_name + str(iteration))[0:nbr_subsets_iter]
 
 		else:
 			top_list_feature = ['']
@@ -159,91 +204,69 @@ if __name__ == '__main__':
 					sub_list_features.append(feature)
 					sub_list_features = sorted(sub_list_features)
 
-					if(sub_list_features in top_feature):
+					if(sub_list_features in best_features_total):
 						continue
 
 				else:
 					sub_list_features = [feature]
 
 		###################################################
-				
-				data_win = []
-				
-				for j in range(len(df_all_data)):
-					data_win.append(df_all_data[j][sub_list_features].values)
-				
-				F1_S = 0
-				MCC = 0
 
-				confusion_matrix = np.zeros((len(list_states), len(list_states)))
-				for nbr_test in range(nbr_cross_val):
-					
-					data_ref, labels_ref, data_test, labels_test, id_train, id_test = tools.split_data_base2(data_win, real_labels, ratio)
+				F1_S = [[]]
+				for i in range(len(tracks)):
+					if(i < len(tracks)-1):
+						F1_S.append([])
 
-					model = ModelHMM()
-					model.train(data_ref, labels_ref, sub_list_features, np.ones(len(sub_list_features)))
+				best_features_total.append(sub_list_features)
+			
+				for name_track, num_track in zip(tracks, range(len(tracks))):
 
-					#### Test
-					time_test = []
-					for id_subject in id_test:
-						time_test.append(timestamps[id_subject])
+					confusion_matrix = np.zeros((len(list_states[num_track]), len(list_states[num_track])))
+					F1_score = []
 
-					predict_labels, proba = model.test_model(data_test)
+					for nbr_test in range(nbr_cross_val):
 
-					for i in range(len(predict_labels)):
-						conf_mat = tools.compute_confusion_matrix(predict_labels[i], labels_test[i], list_states)
-						confusion_matrix += conf_mat
-						MCC += tools.compute_MCC_score(predict_labels[i], labels_test[i], list_states)/len(predict_labels)
+						data_ref = []
+						data_test = []
 
+						for data in data_ref_all[nbr_test]:
+							df_data = pd.DataFrame(data, columns = list_features)
+							data_ref.append(df_data[sub_list_features].values)
 
+						for data in data_test_all[nbr_test]:
+							df_data = pd.DataFrame(data, columns = list_features)
+							data_test.append(df_data[sub_list_features].values)
 
-				prec_total, recall_total, F1_score = tools.compute_score(confusion_matrix)	
-				acc = tools.get_accuracy(confusion_matrix)
-				F1_S = F1_score
-					# F1_S = MCC/nbr_cross_val
-				if(len(score) == 0):
-					score.append(F1_S)
-					best_features.append(sub_list_features)
-				else:
+						model = ModelHMM()
+						model.train(data_ref, labels_ref[num_track][nbr_test], sub_list_features, np.ones(len(sub_list_features)))
 
-					for num in range(len(score)):
-						if(F1_S > score[num]):
-							score.insert(num, F1_S)
-							best_features.insert(num, sub_list_features)
-							break
+						#### Test
+						predict_labels, proba = model.test_model(data_test)
+						
+						for i in range(len(predict_labels)):
+							F1_score.append(tools.compute_F1_score(labels_test[num_track][nbr_test][i], predict_labels[i], list_states[num_track]))
 
-						if(num == len(score)-1):
-							score.append(F1_S)
-							best_features.append(sub_list_features)
-
-				if(len(score_total[iteration]) == 0):
-					score_total[iteration].append(F1_S)
-					best_features_total[iteration].append(sub_list_features)
-				else:
-
-					for num in range(len(score_total[iteration])):
-						if(F1_S > score_total[iteration][num]):
-							score_total[iteration].insert(num, F1_S)
-							best_features_total[iteration].insert(num, sub_list_features)
-							break
-
-						if(num == len(score_total[iteration])-1):
-							score_total[iteration].append(F1_S)
-							best_features_total[iteration].append(sub_list_features)
-
+					F1_S[num_track] = np.mean(F1_score)
+					score_total[num_track].append(F1_S[num_track])
 
 			score_totaux = pd.DataFrame(
-				{'best_features': best_features,
-				 'score': score,
-				})
-			print(path)
-			score_totaux.to_csv(path + '/' + file_name + '_New' + str(iteration+1), index=False)
+				{'best_features': best_features_total})
 
-			toc = TIME_.clock()
+			for name_track, num_track in zip(tracks, range(len(tracks))):
+				df_track = pd.DataFrame(
+					{ name_track: score_total[num_track]})
+				score_totaux = pd.concat([score_totaux, df_track], axis=1)
+
+			score_totaux = ranking_features(score_totaux, tracks, method_sort)
+
+			score_totaux.to_csv(path_save + '/' + file_name + str(iteration+1), index=False)
+
+			toc = time.clock()
 			print('Time: ', toc - tic)
+
 
 		score_total.append([])
 		best_features_total.append([])
-	plt.show()
+		plt.show()
 
 

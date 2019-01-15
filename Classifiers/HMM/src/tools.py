@@ -15,6 +15,7 @@ import matplotlib
 from mlxtend.plotting import plot_confusion_matrix
 from copy import deepcopy
 import random 
+import pickle
 
 def mean_and_cov(all_data, labels, n_states, list_features):
 	""" Compute the means and covariance matrix for each state 
@@ -547,24 +548,25 @@ def load_data_from_dataBase(data_base, rf):
 
 
 
-def load_data(path, participant, name_seq, name_track, labels_folder):
+def load_data(path, participant, name_seq, name_track, labels_folder, list_features = []):
 	"""
 	Load data from csv file
 	"""
 	list_states = []
 
-
 	data_base = pd.read_csv(path + 'xsens/allFeatures_csv/' + participant + '/' + name_seq + '.csv')
 	ref_data = DataBase(path + '/', name_seq)
 
-	list_features = list(data_base.columns.values)
-	del list_features[0:2]
-	dim_features = np.ones(len(list_features))
+	list_all_features = list(data_base.columns.values)
+	del list_all_features[0:2]
+	dim_features = np.ones(len(list_all_features))
 
 	time = data_base['timestamp']
 
-	labels, states = ref_data.load_labels_ref3A(time, name_track, participant, 1)
+	if(len(list_features) == 0):
+		list_features = list_all_features
 
+	labels, states = ref_data.load_labels_ref3A(time, name_track, participant, 1)
 
 
 	data = data_base[list_features].as_matrix()
@@ -576,6 +578,7 @@ def load_data(path, participant, name_seq, name_track, labels_folder):
 
 
 	return data, labels, time, list_states, list_features
+	# return data, time, list_features
 
 def feature_selection(data, real_labels, list_features):
 	obs = []
@@ -731,3 +734,40 @@ def load_labels_ref(timestamps, file_labels, name_track, participant, GT = 0):
 	list_states, l = np.unique(real_labels, return_inverse=True)
 
 	return real_labels, list_states
+
+def get_best_features(file_name):
+	best_features = []
+	df = pd.read_csv(file_name)
+	for i in range(len(df)):
+		line = df['best_features'].values[i] # Find the set of features with the best score
+		line = line.replace(',', '')
+		line = line.replace("[","")
+		line = line.replace("]","")
+		line = line.replace("'","")
+		best_features.append(line.split())
+	return best_features
+
+
+def list_features_local(list_all_features):
+	list_features_remove = deepcopy(list_all_features)
+
+	for i in range(len(list_all_features)):
+		if(('Norm' in list_all_features[i]) or ('com' in list_all_features[i])):
+			del list_features_remove[list_features_remove.index(list_all_features[i])]
+
+	return list_features_remove
+
+
+def load_data_from_dump(path):
+	with open(path + 'save_data_dump.pkl', 'rb') as input:
+		data_win2 = pickle.load(input)
+	with open(path + 'save_labels_dump.pkl', 'rb') as input:
+		real_labels = pickle.load(input)
+	with open(path + 'save_liststates_dump.pkl', 'rb') as input:
+		list_states = pickle.load(input)
+	with open(path + 'save_listfeatures_dump.pkl', 'rb') as input:
+		list_features = pickle.load(input)
+
+	return data_win2, real_labels, list_states, list_features
+
+
