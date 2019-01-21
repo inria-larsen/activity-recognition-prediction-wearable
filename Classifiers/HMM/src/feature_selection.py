@@ -13,7 +13,7 @@ import os
 import time
 import pickle
 import configparser
-from scipy.stats.mstats import gmean
+from scipy import stats
 import argparse
 
 import warnings
@@ -25,9 +25,9 @@ def ranking_features(df_score, list_tracks, method = 'mean'):
 
 	else:
 		if(method == 'gmean'):
-			df_combine = pd.DataFrame({'score_global': gmean(df_score, axis=1)})
+			df_combine = pd.DataFrame({'score_global': stats.mstats.gmean(df_score.iloc[:,1:], axis=1)})
 		elif(method == 'hmean'):
-			df_combine = pd.DataFrame({'score_global': df_score.hmean(axis=1)})
+			df_combine = pd.DataFrame({'score_global': stats.hmean(df_score.iloc[:,1:], axis=1)})
 		else:
 			df_combine = pd.DataFrame({'score_global': df_score.mean(axis=1)})
 
@@ -59,6 +59,8 @@ if __name__ == '__main__':
 	file_name = config_type + '.csv'
 	local_features_flag = config[config_type]["local_features"]
 	method_sort = config[config_type]["method_sort"]
+
+	all_tracks = ['general_posture', 'detailed_posture', 'details', 'current_action']
 
 	if(not(os.path.isdir(path_save))):
 		os.makedirs(path_save)
@@ -95,10 +97,15 @@ if __name__ == '__main__':
 	else:
 		list_reduce_features = list_features
 
-	del real_labels[0]
-	del list_states[0]
-	del real_labels[1]
-	del list_states[1]
+	id_track_rm = 0
+	for num_track in range(len(all_tracks)):
+		if(not(all_tracks[num_track] in tracks)):
+			del real_labels[num_track - id_track_rm]
+			del list_states[num_track - id_track_rm]
+			id_track_rm += 1
+
+
+	print(list_states)
 
 	df_all_data = []
 
