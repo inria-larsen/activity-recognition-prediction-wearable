@@ -8,7 +8,6 @@ import visualization_tools as v_tools
 import tools
 import pandas as pd 
 from copy import deepcopy
-from mem_top import mem_top
 from sys import getsizeof
 import os
 import time
@@ -70,8 +69,6 @@ if __name__ == '__main__':
 	list_participant = os.listdir(path_data_root)
 	list_participant.sort()
 
-	# list_participant = ['Participant_2274']
-
 	participant_label = []
 	num_sequence = []
 	testing = 1
@@ -90,12 +87,13 @@ if __name__ == '__main__':
 	df_all_data = []
 
 	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y', 'orientation_RightHand_q1', 'orientation_RightShoulder_q1', 'position_L5_x', 'position_LeftForeArm_z', 'position_LeftHand_z', 'position_RightLowerLeg_z', 'position_RightUpperArm_z', 'velocityNorm']
-	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y']
 
 	data_win2, real_labels, list_states, list_features = tools.load_data_from_dump(path_data_dump)
 
-	if(local_features_flag):
+	if(local_features_flag == 'True'):
 		list_reduce_features = tools.list_features_local(list_features)
+	else:
+		list_reduce_features = list_features
 
 	del real_labels[0]
 	del list_states[0]
@@ -122,6 +120,9 @@ if __name__ == '__main__':
 
 	num_iteration = 1
 	while(os.path.isfile(path_save + '/' + file_name + str(num_iteration))):
+		df_time = pd.read_csv(path_save + '/' + 'time_' +  file_name + str(num_iteration))
+		if(num_iteration>1 and len(df_time)<=nbr_subsets_iter):
+			break
 		num_iteration += 1
 
 
