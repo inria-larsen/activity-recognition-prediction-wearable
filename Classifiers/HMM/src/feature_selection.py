@@ -126,12 +126,13 @@ if __name__ == '__main__':
 
 
 	num_iteration = 1
+	count_top_feature = 0
 	while(os.path.isfile(path_save + '/' + file_name + str(num_iteration))):
 		df_time = pd.read_csv(path_save + '/' + 'time_' +  file_name + str(num_iteration))
-		if(num_iteration>1 and len(df_time)<=nbr_subsets_iter):
+		if(num_iteration>1 and len(df_time)<nbr_subsets_iter):
+			count_top_feature = len(df_time)
 			break
 		num_iteration += 1
-
 
 	start = num_iteration - 1
 
@@ -193,11 +194,24 @@ if __name__ == '__main__':
 		else:
 			top_list_feature = ['']
 
-		for top_feature in top_list_feature:
+		skip_feature_num = 0
+		for top_feature, num_feature in zip(top_list_feature, range(len(top_list_feature))):
+			if(skip_feature_num < count_top_feature):
+				if(skip_feature_num == 0):
+					best_features_total = tools.get_best_features(path_save + '/' + file_name + str(iteration+1))
+					score_df = pd.read_csv(path_save + '/' + file_name + str(iteration+1))
+					for num_track in range(len(tracks)):
+						score_total[num_track] = score_df[tracks[num_track]].values.tolist()
+					save_time = pd.read_csv(path_save + '/' + 'time_' +  file_name + str(num_iteration)).values.tolist()
+				skip_feature_num += 1
+				continue
+			count_top_feature = 0
+
+
 			count = 0
 
 			print('##')
-			print(top_feature)
+			print(num_feature + 1, ' - ', top_feature)
 			print('##')
 
 			for feature in list_features:
@@ -250,7 +264,7 @@ if __name__ == '__main__':
 
 						#### Test
 						predict_labels, proba = model.test_model(data_test)
-						
+				
 						for i in range(len(predict_labels)):
 							F1_score.append(tools.compute_F1_score(labels_test[num_track][nbr_test][i], predict_labels[i], list_states[num_track]))
 
