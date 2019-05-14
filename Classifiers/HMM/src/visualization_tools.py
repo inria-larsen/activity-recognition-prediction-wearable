@@ -154,6 +154,22 @@ def video_sequence(real_labels, predict_labels, video_input, video_output):
 		return
 
 
+def plot_confusion_matrix(path, name, title, confusion_matrix, save=0):
+	real_len, pred_len = np.shape(confusion_matrix)
+
+	fig = plt.figure(figsize=(12,10))
+	sns.set(font_scale = 2.5)
+	plt.title(title, fontsize=35)
+	sns.heatmap(confusion_matrix, annot=True, fmt='g', cbar = False)
+	plt.yticks(rotation=0) 
+	plt.xticks(rotation=45)
+	plt.ylabel('Real labels', fontsize=30)
+	plt.xlabel('Predicted labels', fontsize=30)
+
+	if(save):
+		plt.savefig(path + name + '.pdf', bbox_inches='tight')
+	return
+
 
 
 

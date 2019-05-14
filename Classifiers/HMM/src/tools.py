@@ -106,22 +106,38 @@ def split_data_base(data_set, labels, ratio):
 	base_val = []
 	labels_val = []
 
-	id_train, id_subset = train_test_split(np.arange(nbr_sequences), train_size=ratio[0]/100)
-	id_test, id_val = train_test_split(id_subset, train_size=(ratio[2]*100/(100-ratio[0]))/100)
+	if(ratio[2] > 0):
 
-	for i in id_train:
-		base_ref.append(data_set[i])
-		labels_ref.append(labels[i])
+		id_train, id_subset = train_test_split(np.arange(nbr_sequences), train_size=ratio[0]/100)
+		id_test, id_val = train_test_split(id_subset, train_size=(ratio[2]*100/(100-ratio[0]))/100)
 
-	for i in id_test:
-		base_test.append(data_set[i])
-		labels_test.append(labels[i])
+		for i in id_train:
+			base_ref.append(data_set[i])
+			labels_ref.append(labels[i])
 
-	for i in id_val:
-		base_val.append(data_set[i])
-		labels_val.append(labels[i])
-	
-	return base_ref, labels_ref, base_test, labels_test, base_val, labels_val, id_train, id_test, id_val
+		for i in id_test:
+			base_test.append(data_set[i])
+			labels_test.append(labels[i])
+
+		for i in id_val:
+			base_val.append(data_set[i])
+			labels_val.append(labels[i])
+		
+		return base_ref, labels_ref, base_test, labels_test, base_val, labels_val, id_train, id_test, id_val
+
+	else:
+		id_train, id_test = train_test_split(np.arange(nbr_sequences), train_size=ratio[0]/100)
+
+		for i in id_train:
+			base_ref.append(data_set[i])
+			labels_ref.append(labels[i])
+
+		for i in id_test:
+			base_test.append(data_set[i])
+			labels_test.append(labels[i])
+		
+		return base_ref, labels_ref, base_test, labels_test, id_train, id_test
+
 
 
 
@@ -324,24 +340,6 @@ def plot_confusion_matrix2(path, name, confusion_matrix, list_states, all_in_one
 
 	return
 
-
-def plot_confusion_matrix(path, name, title, confusion_matrix, save=0):
-	real_len, pred_len = np.shape(confusion_matrix)
-
-	fig = plt.figure(figsize=(12,10))
-	sns.set(font_scale = 2.5)
-	plt.title(title, fontsize=35)
-	sns.heatmap(confusion_matrix, annot=True, fmt='g', cbar = False)
-	plt.yticks(rotation=0) 
-	plt.xticks(rotation=45)
-	plt.ylabel('Real labels', fontsize=30)
-	plt.xlabel('Predicted labels', fontsize=30)
-
-	if(save):
-		plt.savefig(path + name + '.pdf', bbox_inches='tight')
-	return
-
-
 def compute_score(confusion_matrix):
 	"""
 	Return the precision, recall and F1-score based on the confusion matrix
@@ -464,7 +462,6 @@ def load_data_from_dataBase(data_base, rf):
 	data_win = []
 
 	window_size = float(rf.find('slidding_window_size').toString())
-	print(window_size)
 	signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
 	nb_port = int(len(signals))
 	nb_active_port = 0
@@ -617,8 +614,7 @@ def feature_selection(data, real_labels, list_features):
 	return sorted_features, sorted_score
 
 
-
-def load_labels_ref(timestamps, file_labels, name_track, participant, GT = 0):
+def load_labels_ref(timestamps, file_labels, name_track, GT = 0):
 	""" Load the reference labels from csv file from 3 annotators
 
 	This function updates the reference data and the list of states.
@@ -670,6 +666,11 @@ def load_labels_ref(timestamps, file_labels, name_track, participant, GT = 0):
 
 	# t_sample = pd.DataFrame({'t': t_sample})
 	df_labels = pd.DataFrame(labels)
+
+	print(np.shape(df_labels), np.shape(t_sample), np.shape(timestamps))
+
+	# for i in range(0, len(timestamps)):
+
 
 	if(GT):
 		for i in range(0, len(timestamps)):
@@ -767,5 +768,24 @@ def load_data_from_dump(path):
 		list_features = pickle.load(input)
 
 	return data_win2, real_labels, list_states, list_features
+
+def save_data_to_dump(path, data, labels, list_states, list_features):
+	pickle.dump( data, open(path + "save_data_dump.pkl", "wb" ) )
+	pickle.dump( labels, open( "save_labels_dump.pkl", "wb" ) )
+	pickle.dump( list_states, open( "save_liststates_dump.pkl", "wb" ) )
+	pickle.dump( list_features, open( "save_listfeatures_dump.pkl", "wb" ) )
+
+
+def reduce_data_to_features(data_all, list_features_total, list_features_final):
+	reduce_data = []
+	for data in data_all:
+		df = pd.DataFrame(data)
+		df.columns = list_features_total
+		reduce_data.append(df[list_features_final].values)
+	return reduce_data
+
+
+
+
 
 

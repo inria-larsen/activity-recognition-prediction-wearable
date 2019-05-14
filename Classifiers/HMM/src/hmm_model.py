@@ -115,7 +115,6 @@ class ModelHMM():
 
 	def predict_states(self, obs):
 		""" Return for a sequence of observation a sequence of predicted labels
-
 		"""
 		return self.model.predict(obs)
 
@@ -142,20 +141,6 @@ class ModelHMM():
 
 		sub_feature_list = []
 
-		# for f,d, index in zip(self.list_features, self.dim_features, range(len(self.list_features))):
-		# 	name_feature = f.split('_')
-		# 	if(len(name_feature) == 1):
-		# 		feature = ET.SubElement(list_features, 'feature', index=str(index), label=f, dimension=str(d))
-		# 	else:
-		# 		category = name_feature[0]
-		# 		if(category in sub_feature_list):
-		# 			sub_features = ET.SubElement(list_features, 'sub_feature', label=category)
-		# 			sub_feature_list.append(category)
-		# 		else:
-		# 			sub_features = ET.find(category)
-
-				# feature = ET.SubElement(sub_features, 'feature', index=str(index), label=name_feature[1], dimension=str(d))
-			
 		states = ET.SubElement(model, 'states')
 		for s, index in zip(self.list_states, range(self.n_states)):
 			state = ET.SubElement(states, 'state', index=str(index), label=s)
@@ -189,6 +174,7 @@ class ModelHMM():
 		"""
 		This function return a list of labels infered from the sequences of observation in input
 		"""
+
 		predict_labels = [[]]
 		proba = []
 
