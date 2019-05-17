@@ -46,26 +46,6 @@ features_mvnx = [
 				'sensorFreeAcceleration'
 				]
 
-# list_joints = ['jL5S1',
-# 			'jL4L3',
-# 			'jL1T12',
-# 			'jT9T8',
-# 			'jT1C7',
-# 			jC1Head
-# 			jRightT4Shoulder
-# 			jRightShoulder
-# 			jRightElbow
-# 			jRightWrist
-# 			jLeftT4Shoulder
-# 			jLeftShoulder
-# 			jLeftElbow
-# 			jLeftWrist
-# 			jRightHip
-# 			jRightKnee
-# 			jRightAnkle
-# 			]
-
-
 
 
 class DataBase():
@@ -190,8 +170,6 @@ class DataBase():
 		self.real_labels = []
 		self.list_states = []
 
-		# df_labels = pd.read_csv(path + 'Segments_' + self.name_seq + '_' + name_track + '_3A.csv')
-
 		columns_labels = ['t_video']
 		for i in range(3):
 			columns_labels.append(name_track + '_Annotator' + str(i+1))
@@ -256,31 +234,7 @@ class DataBase():
 
 		seq_none = [[]]
 		count_none = 0
-		for i in range(0, len(self.real_labels)):
-		# 	self.real_labels[i] = self.real_labels[i].replace("standing", "St")
-		# 	self.real_labels[i] = self.real_labels[i].replace("walking", "Wa")
-		# 	self.real_labels[i] = self.real_labels[i].replace("crouching", "Cr")
-		# 	self.real_labels[i] = self.real_labels[i].replace("kneeling", "Kn")
-
-		# 	self.real_labels[i] = self.real_labels[i].replace("upright", "U")
-		# 	self.real_labels[i] = self.real_labels[i].replace("_forward","")
-		# 	self.real_labels[i] = self.real_labels[i].replace("strongly_bent","BS")
-		# 	self.real_labels[i] = self.real_labels[i].replace("bent","BF")
-		# 	self.real_labels[i] = self.real_labels[i].replace("overhead_work_hands_above_head","OH")
-		# 	self.real_labels[i] = self.real_labels[i].replace("overhead_work_elbow_at_above_shoulder","OS")
-
-
-		# 	self.real_labels[i] = self.real_labels[i].replace("fine_manipulation_no_task","idle")
-		# 	self.real_labels[i] = self.real_labels[i].replace("release__no_task","idle")
-		# 	self.real_labels[i] = self.real_labels[i].replace("reaching_no_task","idle")
-		# 	self.real_labels[i] = self.real_labels[i].replace("picking","Pi")
-		# 	self.real_labels[i] = self.real_labels[i].replace("placing","Pl")
-		# 	self.real_labels[i] = self.real_labels[i].replace("release","Rl")
-		# 	self.real_labels[i] = self.real_labels[i].replace("reaching","Re")
-		# 	self.real_labels[i] = self.real_labels[i].replace("screwing","Sc")
-		# 	self.real_labels[i] = self.real_labels[i].replace("fine_manipulation","Fm")
-		# 	self.real_labels[i] = self.real_labels[i].replace("carrying","Ca")
-		# 	self.real_labels[i] = self.real_labels[i].replace("idle","Id")      
+		for i in range(0, len(self.real_labels)):   
 
 			if(GT):
 				if(self.real_labels[i]=='NONE'):
@@ -310,70 +264,58 @@ class DataBase():
 
 		self.list_states, l = np.unique(self.real_labels, return_inverse=True)
 
-		# if(GT):
-		# 	df_GT = pd.DataFrame({
-		# 		'timestamps': timestamps,
-		# 		'labels': self.real_labels
-		# 		})
-
-		# 	df_GT.to_csv(self.path_data + '/' + labels_folder + '/' + self.name_seq + '_' + name_track + '_GT.csv', index=False)
-
 		return self.real_labels, self.list_states
 
-	def add_signals_to_dataBase(self, rf, processing=False):
+	def add_signals_to_dataBase(self, config, processing=False):
 		"""
 		 This funciton aims to load the data from the mvnx file based on the .ini (rf) file in input
 		"""
-		self.config_file = rf
+		self.config_file = config
 
-		signals = self.config_file.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
+		signals = config["DEFAULT"]["list_signals"].split(',')
 		nb_port = int(len(signals))
 		nb_active_port = 0
 
 		for signal in signals:
-			print(signal)
-			info_signal = self.config_file.findGroup(signal)
-			is_enabled = int(info_signal.find('enable').toString())
+			info_signal = config[signal]
+			is_enabled = int(info_signal["enable"])
 
-			if(signal == 'eglove'):
-			 	continue
 
-			related_data = info_signal.find('related_data').toString()
-			if(related_data == ''):
+			related_data = info_signal['related_data']
+			if(related_data == 'NONE'):
 				related_data = signal
 
 			# Retrieve the data from .ini file
-			info_related_data = self.config_file.findGroup(related_data)
+			info_related_data = config[related_data]
 
 			
 			# Check if the signal is enabled
 			if(is_enabled):
-				# print(signal)
-				list_items = info_signal.findGroup('list').tail().toString().split(' ')
-				order_diff = info_signal.find('diff_order').toString()
-				is_norm = info_signal.find('norm').toString()
-				normalize = info_signal.find('normalize').toString()
-				dist_com = info_signal.find('dist_com').toString()
+				list_items = info_signal['list'].split(',')
+				# order_diff = info_signal.find('diff_order').toString()
+				# is_norm = info_signal.find('norm').toString()
+				# normalize = info_signal.find('normalize').toString()
+				# dist_com = info_signal.find('dist_com').toString()
 
-				if(order_diff == ''):
-					order_diff = 0
-				else:
-					order_diff = int(order_diff)
+				# if(order_diff == 'NONE'):
+				# 	order_diff = 0
+				# else:
+				# 	order_diff = int(order_diff)
 
-				if(is_norm == ''):
-					is_norm = 0
-				else:
-					is_norm = int(is_norm)
+				# if(is_norm == 'NONE'):
+				# 	is_norm = 0
+				# else:
+				# 	is_norm = int(is_norm)
 
-				if(normalize == ''):
-					normalize = 0
-				else:
-					normalize = int(normalize)
+				# if(normalize == 'NONE'):
+				# 	normalize = 0
+				# else:
+				# 	normalize = int(normalize)
 
-				if(dist_com == ''):
-					dist_com = 0
-				else:
-					dist_com = int(dist_com)
+				# if(dist_com == 'NONE'):
+				# 	dist_com = 0
+				# else:
+				# 	dist_com = int(dist_com)
 
 				if(related_data in features_mvnx):
 					data = self.mvnx_tree.get_data(related_data)
@@ -396,12 +338,14 @@ class DataBase():
 							[2*q1*q2 + 2*q0*q3, q0*q0 - q1*q1 + q2*q2 - q3*q3, 2*q2*q3 - 2*q0*q1],
 							[2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, q0*q0 - q1*q1 - q2*q2 + q3*q3]])
 
-						for i in range(1, 23):
+						for i in range(0, 23):
 							data[t, i*3:i*3+3] = abs_data[i*3:i*3+3] - abs_data[0:3]
 							data[t, i*3:i*3+3] = R@data[t,i*3:i*3+3]
 
 
 				# Normalize the data regarding the initial position
+				normalize = 0
+				order_diff = 0
 				if(normalize == 1):				
 					data_normalize = deepcopy(data)
 					data_init = deepcopy(data_normalize[0])
@@ -428,7 +372,6 @@ class DataBase():
 
 				dimension = np.shape(data)[1]
 
-
 				if(list_items[0] == ''):
 					if(signal == 'CoMVelocityNorm'):
 						data = data[:,0:2]	
@@ -444,29 +387,30 @@ class DataBase():
 						self.list_features[1].append(dimension)
 
 				else:
-					related_items = info_related_data.find("related_items").toString()
+					related_items = info_related_data["related_items"]
 
 					if(list_items[0] == 'all'):
-						items = rf.findGroup(related_items).tail().toString().replace(')', '').replace('(', '').split(' ')
-						del items[0:4]
-						items = items[::2]
+						items = []
+						for key in config[related_items]: items.append(key)
+						del items[0:2]
+						del items[-5::]
 
 					else: 
 						items = deepcopy(list_items)
 
 					for item in items:
-						nb_items = int(rf.findGroup(related_items).find('Total').toString())
+						nb_items = int(config[related_items]["Total"])
 						dimension_reduce = int(dimension/nb_items)
 
-						id_item = rf.findGroup(related_items).find(item).toString()
+						id_item = config[related_items][item]
 						id_item = int(id_item)*dimension_reduce
 
 						data_reduce = data[:,id_item:id_item + dimension_reduce]
 
 						# Vector data in one dimension
-						if(is_norm):
-							data_reduce = np.linalg.norm(data_reduce, axis = 1)
-							dimension_reduce = 1
+						# if(is_norm):
+						# 	data_reduce = np.linalg.norm(data_reduce, axis = 1)
+						# 	dimension_reduce = 1
 
 						if(dimension_reduce > 1):
 							list_quaternion = ['q0', 'q1', 'q2', 'q3']
@@ -499,8 +443,6 @@ class DataBase():
 
 		list_features = self.list_features[0][1:]
 		dim_features = self.list_features[1][1:]
-
-
 
 		return list_features, dim_features
 
