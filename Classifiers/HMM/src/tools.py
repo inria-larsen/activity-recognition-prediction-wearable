@@ -454,18 +454,19 @@ def get_accuracy(confusion_matrix):
 	return accuracy
 
 
-def load_data_from_dataBase(data_base, rf):
+def load_data_from_dataBase(data_base, config):
 	"""
 	Load motion capture data from mvnx file
 	"""
 	timestamps = []
 	data_win = []
 
-	window_size = float(rf.find('slidding_window_size').toString())
-	signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
+	window_size = float(config["DEFAULT"]["slidding_window_size"])
+	signals = config["DEFAULT"]["list_signals"].split(',')
+
 	nb_port = int(len(signals))
 	nb_active_port = 0
-	list_features, dim_features = data_base.add_signals_to_dataBase(rf, True)
+	list_features, dim_features = data_base.add_signals_to_dataBase(config, True)
 	glove_on = 0
 
 	if('eglove' in signals):
@@ -479,7 +480,7 @@ def load_data_from_dataBase(data_base, rf):
 
 	t = data_base.get_data_by_features('time')
 	t_mocap = t.tolist()
-	mocap_data = sub_data.tolist()
+	mocap_data = sub_data
 
 
 	if(glove_on):
