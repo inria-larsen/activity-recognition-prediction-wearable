@@ -1,4 +1,3 @@
-# from features_organizer import FeaturesOrganizer
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -14,6 +13,7 @@ import matplotlib
 from copy import deepcopy
 import random 
 import pickle
+import os
 
 def mean_and_cov(all_data, labels, n_states, list_features):
 	""" Compute the means and covariance matrix for each state 
@@ -466,7 +466,7 @@ def load_data_from_dataBase(data_base, config):
 
 	nb_port = int(len(signals))
 	nb_active_port = 0
-	list_features, dim_features = data_base.add_signals_to_dataBase(config, True)
+	list_features, dim_features = data_base.add_signals_to_dataBase(config)
 	glove_on = 0
 
 	if('eglove' in signals):
@@ -661,17 +661,10 @@ def load_labels_ref(timestamps, file_labels, name_track, GT = 0):
 	labels = np.array(labels)
 
 	timestamps = timestamps - timestamps[0]
-	# timestamps = np.array(df_labels['t_video'])
 
 	T = 0.25
 
-	# t_sample = pd.DataFrame({'t': t_sample})
 	df_labels = pd.DataFrame(labels)
-
-	print(np.shape(df_labels), np.shape(t_sample), np.shape(timestamps))
-
-	# for i in range(0, len(timestamps)):
-
 
 	if(GT):
 		for i in range(0, len(timestamps)):
@@ -760,21 +753,27 @@ def list_features_local(list_all_features):
 
 def load_data_from_dump(path):
 	with open(path + 'save_data_dump.pkl', 'rb') as input:
-		data_win2 = pickle.load(input)
+		data_win = pickle.load(input)
 	with open(path + 'save_labels_dump.pkl', 'rb') as input:
 		real_labels = pickle.load(input)
 	with open(path + 'save_liststates_dump.pkl', 'rb') as input:
 		list_states = pickle.load(input)
 	with open(path + 'save_listfeatures_dump.pkl', 'rb') as input:
 		list_features = pickle.load(input)
+	with open(path + 'save_listsequence_dump.pkl', 'rb') as input:
+		list_sequence = pickle.load(input)
 
-	return data_win2, real_labels, list_states, list_features
+	return list_sequence, data_win, real_labels, list_states, list_features
 
-def save_data_to_dump(path, data, labels, list_states, list_features):
-	pickle.dump( data, open(path + "save_data_dump.pkl", "wb" ) )
-	pickle.dump( labels, open( "save_labels_dump.pkl", "wb" ) )
-	pickle.dump( list_states, open( "save_liststates_dump.pkl", "wb" ) )
-	pickle.dump( list_features, open( "save_listfeatures_dump.pkl", "wb" ) )
+def save_data_to_dump(path, list_seq, data, labels, list_states, list_features):
+	if not os.path.isdir("path"):
+		os.mkdir(path)
+
+	pickle.dump(data, open(path +"save_data_dump.pkl", "wb" ) )
+	pickle.dump(labels, open(path + "save_labels_dump.pkl", "wb" ) )
+	pickle.dump(list_states, open(path + "save_liststates_dump.pkl", "wb" ) )
+	pickle.dump(list_features, open(path + "save_listfeatures_dump.pkl", "wb" ) )
+	pickle.dump(list_seq, open(path + "save_listsequence_dump.pkl", "wb" ) )
 
 
 def reduce_data_to_features(data_all, list_features_total, list_features_final):

@@ -32,6 +32,7 @@ if __name__ == '__main__':
 	config.read('config_file/' + config_file)
 
 	path_data = config[config_type]["path_data"]
+	path_labels = config[config_type]["path_labels"]
 	path_save = config[config_type]["path_save"]
 
 	list_participant = os.listdir(path_data)
@@ -39,10 +40,11 @@ if __name__ == '__main__':
 
 	print('Loading data...')
 
-	timestamps = []
 	data_win = []
+	labels = []
+	list_seq = []
 
-	data_win = []
+	name_track = config[config_type]["name_track"]
 
 	for participant in list_participant:
 		path_seq = path_data + participant + '/' 
@@ -57,6 +59,8 @@ if __name__ == '__main__':
 			data_base = DataBase(path_seq, name_seq)
 			data_base.load_mvnx_data(path_seq)
 			data, time, list_features, dim_features = tools.load_data_from_dataBase(data_base, config)
+			file_label = path_labels + participant + '/' + os.path.splitext(name_seq)[0] + '.labels.csv'
+			real_labels, list_states = tools.load_labels_ref(time, file_label, name_track, GT = 1)
 
 			time = np.expand_dims(time, axis=1)
 			all_data = np.concatenate((time, data), axis=1)
@@ -66,13 +70,11 @@ if __name__ == '__main__':
 			df.columns = list_features
 
 			data_win.append(all_data)
-
-			name_file = path_save + '/' + name_seq + '.csv'
-
+			labels.append(real_labels)
+			list_seq.append(os.path.splitext(name_seq)[0])
 
 	# Save database
-	pickle.dump( data_win, open(path_save + "save_data_dump_joint.pkl", "wb" ) )
-	pickle.dump( list_features, open(path_save + "save_listfeatures_joint_dump.pkl", "wb" ) )
+	tools.save_data_to_dump(path_save, list_seq, data_win, labels, list_states, list_features)
 
 
 
