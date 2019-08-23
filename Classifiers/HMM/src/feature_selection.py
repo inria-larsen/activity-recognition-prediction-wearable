@@ -131,7 +131,7 @@ if __name__ == '__main__':
 	best_features = []
 
 
-	num_iteration = 10
+	num_iteration = 1
 	count_top_feature = 0
 	while(os.path.isfile(path_save + '/' + file_name + str(num_iteration))):
 		df_time = pd.read_csv(path_save + '/' + 'time_' +  file_name + str(num_iteration))
