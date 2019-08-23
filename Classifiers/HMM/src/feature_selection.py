@@ -88,14 +88,20 @@ if __name__ == '__main__':
 
 	df_all_data = []
 
-	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y', 'orientation_RightHand_q1', 'orientation_RightShoulder_q1', 'position_L5_x', 'position_LeftForeArm_z', 'position_LeftHand_z', 'position_RightLowerLeg_z', 'position_RightUpperArm_z', 'velocityNorm']
 
 	data_win2, real_labels, list_states, list_features = tools.load_data_from_dump(path_data_dump)
 
+	list_reduce_features = []
+	for feature in list_features:
+		if feature.split('_')[0] in ['sensorOrientation', 'sensorFreeAcceleration']:
+			list_reduce_features.append(feature)
+
 	if(local_features_flag == 'True'):
-		list_reduce_features = tools.list_features_local(list_features)
+		list_reduce_features = tools.list_features_local(list_reduce_features)
+		# list_reduce_features = tools.list_features_local(list_features)
 	else:
-		list_reduce_features = list_features
+		# list_reduce_features = list_features
+		list_reduce_features = list_reduce_features
 
 	id_track_rm = 0
 	for num_track in range(len(all_tracks)):
