@@ -760,13 +760,16 @@ def load_data_from_dump(path):
 		list_states = pickle.load(input)
 	with open(path + 'save_listfeatures_dump.pkl', 'rb') as input:
 		list_features = pickle.load(input)
-	with open(path + 'save_listsequence_dump.pkl', 'rb') as input:
-		list_sequence = pickle.load(input)
-
-	return list_sequence, data_win, real_labels, list_states, list_features
+	if path.isfile(path + 'save_listsequence_dump.pkl'):	
+		with open(path + 'save_listsequence_dump.pkl', 'rb') as input:
+			list_sequence = pickle.load(input)
+		return list_sequence, data_win, real_labels, list_states, list_features
+	
+	else:
+		return data_win, real_labels, list_states, list_features
 
 def save_data_to_dump(path, list_seq, data, labels, list_states, list_features):
-	if not os.path.isdir("path"):
+	if not os.path.exists(path):
 		os.mkdir(path)
 
 	pickle.dump(data, open(path +"save_data_dump.pkl", "wb" ) )
