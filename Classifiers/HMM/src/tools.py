@@ -751,18 +751,18 @@ def list_features_local(list_all_features):
 	return list_features_remove
 
 
-def load_data_from_dump(path):
-	with open(path + 'save_data_dump.pkl', 'rb') as input:
+def load_data_from_dump(path_data):
+	with open(path_data + 'save_data_dump.pkl', 'rb') as input:
 		data_win = pickle.load(input)
-	with open(path + 'save_labels_dump.pkl', 'rb') as input:
+	with open(path_data + 'save_labels_dump.pkl', 'rb') as input:
 		real_labels = pickle.load(input)
-	with open(path + 'save_liststates_dump.pkl', 'rb') as input:
+	with open(path_data + 'save_liststates_dump.pkl', 'rb') as input:
 		list_states = pickle.load(input)
-	with open(path + 'save_listfeatures_dump.pkl', 'rb') as input:
+	with open(path_data + 'save_listfeatures_dump.pkl', 'rb') as input:
 		list_features = pickle.load(input)
-	if path.isfile(path + 'save_listsequence_dump.pkl'):	
-		with open(path + 'save_listsequence_dump.pkl', 'rb') as input:
-			list_sequence = pickle.load(input)
+	if path.isfile(path_data + 'save_listsequence_dump.pkl'):	
+		with open(path_data + 'save_listsequence_dump.pkl', 'rb') as input:
+			path_data = pickle.load(input)
 		return list_sequence, data_win, real_labels, list_states, list_features
 	
 	else:
