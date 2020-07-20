@@ -36,8 +36,6 @@ class ActivityRecognitionModule(yarp.RFModule):
 		self.list_states = self.model.get_list_states()
 		self.buffer_model = [[]]
 
-		print(self.list_states)
-
 		size_buffer = int(rf.find('size_buffer').toString())
 
 		signals = rf.findGroup("Signals").tail().toString().replace(')', '').replace('(', '').split(' ')
@@ -133,13 +131,7 @@ class ActivityRecognitionModule(yarp.RFModule):
 				for prob, index in zip(probabilities[-1], range(len(probabilities[-1]))):
 					b_prob.addString(self.list_states[index])
 					b_prob.addDouble(prob)
-				self.probPort.write()
-
-		# else:
-			
-			
-
-				
+				self.probPort.write()				
 
 		return True
 
@@ -166,7 +158,6 @@ class CallbackData(yarp.BottleCallback):
 		data = self.buffer
 		self.buffer = []
 		return data
-
 
 if __name__=="__main__":
 	yarp.Network.init()

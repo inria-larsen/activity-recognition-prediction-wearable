@@ -4,6 +4,8 @@ import matplotlib.animation as animation
 import os
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
+import networkx as nx
 # import cv2
 from copy import deepcopy
 
@@ -169,6 +171,44 @@ def plot_confusion_matrix(path, name, title, confusion_matrix, save=0):
 	if(save):
 		plt.savefig(path + name + '.pdf', bbox_inches='tight')
 	return
+
+def plot_transition_diagram(name, transition_matrix, list_states):
+
+	transition_matrix = np.around(transition_matrix*100, decimals = 2)
+
+	q_df = pd.DataFrame(transition_matrix, columns=list_states, index=list_states)
+
+	edges = {}
+	for col in q_df.columns:
+		for idx in q_df.index:
+			edges[(idx,col)] = q_df.loc[idx,col]
+
+
+	# create graph object
+	G = nx.MultiDiGraph()
+
+	# nodes correspond to states
+	G.add_nodes_from(list_states)
+	# print('Nodes:\n{G.nodes()}\n')
+
+	# edges represent transition probabilities
+	for k, v in edges.items():
+		if v == 0:
+			continue
+		tmp_origin, tmp_destination = k[0], k[1]
+		G.add_edge(tmp_origin, tmp_destination, weight=v, label=v)
+	# print('Edges:')
+	# pprint(G.edges(data=True))    
+
+	pos = nx.drawing.nx_pydot.graphviz_layout(G, prog='dot')
+	nx.draw_networkx(G, pos)
+
+	# create edge labels for jupyter plot but is not necessary
+	edge_labels = {(n1,n2):d['label'] for n1,n2,d in G.edges(data=True)}
+	nx.draw_networkx_edge_labels(G , pos, edge_labels=edge_labels)
+	nx.drawing.nx_pydot.write_dot(G, name)
+
+
 
 
 

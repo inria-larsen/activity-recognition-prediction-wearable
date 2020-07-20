@@ -73,8 +73,8 @@ if __name__ == '__main__':
 			labels.append(real_labels)
 			list_seq.append(os.path.splitext(name_seq)[0])
 
-	# Save database
-	tools.save_data_to_dump(path_save, list_seq, data_win, labels, list_states, list_features)
+			# Save database
+			tools.save_data_to_dump(path_save, list_seq, data_win, labels, list_states, list_features)
 
 
 

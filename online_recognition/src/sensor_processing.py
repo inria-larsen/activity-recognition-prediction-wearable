@@ -47,6 +47,7 @@ class SensorProcessingModule(yarp.RFModule):
 
 		for signal in signals:
 			info_signal = rf.findGroup(signal)
+			print(signal)
 			is_enabled = int(info_signal.find('enable').toString())
 
 			if(signal == ('eglove')):
@@ -59,7 +60,6 @@ class SensorProcessingModule(yarp.RFModule):
 				if(output_port_name == ''):
 					output_port_name = input_port_name
 
-
 				if((list_items[0] == 'all') or (list_items[0] == '')):
 					if(not(input_port_name in self.list_name_ports)):
 						self.input_port.append(yarp.BufferedPortBottle())
@@ -67,8 +67,8 @@ class SensorProcessingModule(yarp.RFModule):
 						self.list_name_ports.append(input_port_name)
 						self.cback.append(CallbackData(size_buffer))
 						self.input_port[nb_active_port].useCallback(self.cback[nb_active_port])
+						nb_active_port += 1
 
-					nb_active_port += 1
 					self.output_port.append(yarp.BufferedPortBottle())
 					self.output_port[nb_output_port].open("/processing" + output_port_name + ':o')
 					self.related_port.append([input_port_name, 'all'])
@@ -100,7 +100,24 @@ class SensorProcessingModule(yarp.RFModule):
 						self.dist_com_list.append(int(dist_com), 0)
 
 				else:
-					for item in list_items:
+					for item_name in list_items:
+						item_carac = item_name.split('_')
+						item = item_carac[0]
+
+						print(item_carac)
+
+						if len(item_carac) == 2:
+							if item_carac[1] in ['x', 'q1']:
+								dim_item = 0
+							elif item_carac[1] in ['y', 'q2']:
+								dim_item = 1
+							elif item_carac[1] in ['z', 'q3']:
+								dim_item = 2
+							elif item_carac[1] in ['q4']:
+								dim_item = 3
+						else:
+							dim_item = 0
+
 						if(not(input_port_name in self.list_name_ports)):
 							self.input_port.append(yarp.BufferedPortBottle())
 							self.input_port[nb_active_port].open("/processing" + input_port_name + ':i')
@@ -137,15 +154,17 @@ class SensorProcessingModule(yarp.RFModule):
 
 
 						self.output_port.append(yarp.BufferedPortBottle())
-						self.output_port[nb_output_port].open("/processing" + output_port_name + '/' + item + ':o')
+						self.output_port[nb_output_port].open("/processing" + output_port_name + '/' + item_name + ':o')
 						related_items = info_signal.find("related_items").toString()
-						print(self.output_port[nb_output_port].getName(), related_items)
 						if(item == 'jL5S1'):
 							id_item = int(rf.findGroup(related_items).find(item).toString()) + 2
 							dimension = 1
 						else:
 							id_item = int(rf.findGroup(related_items).find(item).toString())
 							dimension = int(rf.findGroup(related_items).find('dimension').toString())
+
+						id_item = id_item*dimension + dim_item
+						dimension = 1
 
 						nb_output_port += 1
 						self.related_port.append([input_port_name, id_item, dimension])
@@ -164,9 +183,6 @@ class SensorProcessingModule(yarp.RFModule):
 
 		current_time = yarp.Time.now()
 
-		
-
-		
 		# Slidding Window
 		if((current_time - self.clock) >= self.window_size):
 			initalization = self.cback_init.get_data()
@@ -190,7 +206,7 @@ class SensorProcessingModule(yarp.RFModule):
 
 					# Check all ouput port to send data
 					for out_port, id_ouput in zip(self.output_port, range(len(self.output_port))):
-						
+
 						if(self.list_name_ports.index(self.related_port[id_ouput][0]) == id_input):
 
 							# Check which data send to the output port (segments/joints)
@@ -220,13 +236,18 @@ class SensorProcessingModule(yarp.RFModule):
 							else:
 								out = np.asarray(data_output)
 
-
+							if out_port.getName() == '/processing/xsens/Orientation:o':
+								out = out[:,69:161]
+							elif out_port.getName() == '/processing/xsens/Position:o':
+								out = out[:,0:69]
+								
 							# Compute the average signals on the sliding window
 							# output = np.mean(np.asarray(out[:,id_items[0]:id_items[-1]+1]), axis = 0)
 							if(len(np.shape(out)) == 1):
 								out = np.expand_dims(out, axis=1)
 
 							output = np.median(np.asarray(out[:,id_items*dimension:id_items*dimension+dimension]), axis = 0)
+							# output = np.median(np.asarray(out[:,id_items:id_items+1]), axis = 0)
 
 							if(out_port.getName() == '/processing/xsens/CoMVelocityNorm:o'):
 								output = output[0:2]
@@ -259,7 +280,6 @@ class SensorProcessingModule(yarp.RFModule):
 								# output = output - np.median(self.median_normalize)
 								# output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
 								output = (output - np.median(self.init_com[id_items]))/np.median(self.init_com[id_items])
-
 
 							# Send data to the ouput port
 							dimension = np.shape(output)[0]

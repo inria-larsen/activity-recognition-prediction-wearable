@@ -66,20 +66,22 @@ if __name__ == '__main__':
 		os.makedirs(path_save)
 
 
-	path_data_root = path + '/xsens/allFeatures_csv/'
+	# path_data_root = path + '/xsens/allFeatures_csv/'
 
-	list_participant = os.listdir(path_data_root)
-	list_participant.sort()
+	# list_participant = os.listdir(path_data_root)
+	# list_participant.sort()
 
-	participant_label = []
-	num_sequence = []
-	testing = 1
-	save = 0
-	ratio = [70, 30, 0]
-	nbr_cross_val = 3
-	nbr_subsets_iter = 10
+	# # list_participant = ['Participant_909']
 
-	print('Loading data...')
+	# participant_label = []
+	# num_sequence = []
+	# testing = 1
+	# save = 0
+	# ratio = [70, 30, 0]
+	# nbr_cross_val = 3
+	# nbr_subsets_iter = 10
+
+	# print('Loading data...')
 
 	timestamps = []
 
@@ -88,6 +90,11 @@ if __name__ == '__main__':
 
 	df_all_data = []
 
+
+	list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'comPos_centerOfMass_z', 'jointAngle_jLeftT4Shoulder_y', 'orientation_RightHand_q1', 'orientation_RightShoulder_q1', 'position_L5_x', 'position_LeftForeArm_z', 'position_LeftHand_z', 'position_RightLowerLeg_z', 'position_RightUpperArm_z', 'velocityNorm']
+	# list_reduce_features = ['acceleration_RightLowerLeg_y', 'acceleration_T8_z', 'orientation_RightHand_q1', 'jointAngle_jLeftT4Shoulder_y']
+
+	path_data_dump = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/xsens/'
 
 	data_win2, real_labels, list_states, list_features = tools.load_data_from_dump(path_data_dump)
 

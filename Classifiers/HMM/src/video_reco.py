@@ -47,20 +47,32 @@ if __name__ == '__main__':
 	list_participant = os.listdir(path)
 	list_participant.sort()
 
-	path_model = '/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/Classifiers/HMM/src/model/'
+	path_model = '/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/Classifiers/HMM/test/'
 	
 	sequence = 'Participant_909_Setup_A_Seq_3_Trial_4'
 
-	list_participant = ['909']
+	list_participant = ['Participant_909']
 
-	#video_input = '/home/amalaise/Documents/These/experiments/AnDy-LoadHandling/annotation/Videos_Xsens/Participant_909/' + sequence + '.mp4'
-	video_input = 'video_reco3.mp4'
+	video_input = '/home/amalaise/Documents/These/experiments/AnDy-LoadHandling/annotation/Videos_Xsens/Participant_909/' + sequence + '.mp4'
+	# video_input = 'video_reco3.mp4'
 
 
 	print('Loading data...')
 
-	best_features = find_best_features('wrapper_dimensions_' + name_track + ".csv")
+	path_wrapper = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/'
+
+
+	# best_features = find_best_features('wrapper_dimensions_' + name_track + ".csv")
+	file_name = path_wrapper + 'wrapper_'
+
+	if(name_track == 'current_action'):
+		best_features = tools.get_best_features(file_name + name_track + '.csv_11')[0]
+	else:
+		best_features = tools.get_best_features(file_name + name_track + '.csv_5')[0]
+
 	dim_features = np.ones(len(best_features))
+
+	print(best_features)
 
 	timestamps = []
 	data_win2 = []
@@ -71,8 +83,10 @@ if __name__ == '__main__':
 	info_sequences = []
 	i=0
 
+
+
 	for participant, nbr in zip(list_participant, range(len(list_participant))):
-		path_data = path + '/' + participant + '/data_csv/'
+		path_data = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/xsens/allFeatures_csv/Participant_909/'
 		print('Loading: ' + participant)
 		
 		list_files = ['Participant_909_Setup_A_Seq_3_Trial_4.csv']
@@ -83,17 +97,18 @@ if __name__ == '__main__':
 			info_participant.append(participant)
 			info_sequences.append(name_seq)
 
-			data_base = pd.read_csv(path_data + file)
+			
+
 			ref_data = DataBase(path + '/' + participant, name_seq)
 
-# 		data, time, list_features, dim_features = tools.load_data_from_dataBase(data_base, rf)
-# 		for d, t in zip(data, time):
-# 			data_win2.append(d)
-# 			timestamps.append(t)
+			data, labels, time, list_s, list_features = tools.load_data(path, participant, name_seq, name_track, labels_folder)
 
-			time = data_base['timestamps']
+
+			data_base = pd.DataFrame(data, columns = list_features)
+
+			# time = data_base['timestamp']
 		
-			labels, states = ref_data.load_labels_refGT(time, name_track, 'labels_3A')
+			# labels, states = ref_data.load_labels_refGT(time, name_track, 'labels_3A')
 			# ref_data.load_labels_ref(name_track, labels_folder)
 			# labels = ref_data.get_real_labels(time)
 			# states = ref_data.get_list_states()
@@ -106,14 +121,18 @@ if __name__ == '__main__':
 			i += 1
 
 	model = ModelHMM()
-	model.load_model(path_model + 'test_video')
+	model.load_model(path_model + 'test_' + name_track)
 	list_states = model.get_list_states()
+
+	print(list_states)
 
 
 	predict_labels, proba = model.test_model(data_win2)
 
 	real_labels = np.asarray(real_labels).T
 	predict_labels = np.asarray(predict_labels).T
+
+	
 
 	# for i in range(len(predict_labels)):
 	# 	print(predict_labels[i][0])

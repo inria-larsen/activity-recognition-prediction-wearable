@@ -1,20 +1,14 @@
-from hmm_model import ModelHMM
 from data_base import DataBase
-import data_processing as pr
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
-import yarp
-import visualization_tools as v_tools
 import tools
 import pandas as pd 
-from copy import deepcopy
-from mem_top import mem_top
-from sys import getsizeof
 import os
+import csv
+import argparse
+import configparser
 
-import warnings
-warnings.filterwarnings("ignore")
+import pickle
 
 
 if __name__ == '__main__':
@@ -23,30 +17,62 @@ if __name__ == '__main__':
 	It uses the information from a .ini file to select features to keep from the file
 	"""
 
-	yarp.Network.init()
-	rf = yarp.ResourceFinder()
-	rf.setDefaultContext("online_recognition")
-	rf.setDefaultConfigFile("convert.ini")
-	rf.configure(sys.argv)
+	# Get arguments
+	parser=argparse.ArgumentParser()
+	parser.add_argument('--file', '-f', help='Configuration file', default="config_dataset.ini")
+	parser.add_argument('--config', '-c', help='Configuration type', default="DEFAULT")
+	args=parser.parse_args()
+	config_file = args.file
+	config_type = args.config
 
-	path = rf.find('path_data_base').toString()
-	labels_folder = rf.find('labels_folder').toString()
+	local_path = os.path.abspath(os.path.dirname(__file__))
 
-	list_participant = os.listdir(path)
+	# Parameters configuration
+	config = configparser.ConfigParser()
+	config.read('config_file/' + config_file)
+
+	path_data = config[config_type]["path_data"]
+	path_save = config[config_type]["path_save"]
+
+	# yarp.Network.init()
+	# rf = yarp.ResourceFinder()
+	# rf.setDefaultContext("online_recognition")
+	# rf.setDefaultConfigFile("convert.ini")
+	# rf.configure(sys.argv)
+
+	# path = rf.find('path_data_base').toString()
+	# labels_folder = rf.find('labels_folder').toString()
+
+	# path = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/xsens/'
+
+	list_participant = os.listdir(path + '/xsens_mvnx/')
 	list_participant.sort()
-	print(list_participant)
 
 	print('Loading data...')
 
 	timestamps = []
 	data_win = []
 
-	list_participant = ['909']
+	# path_header = '/home/amalaise/Documents/These/experiments/data_loadHandling/header_xsens.csv'
 
-	# Loop on all participants
+
+	# header_xsens = pd.read_csv(path_header, header = None).values
+
+	# list_reduce_features = []
+
+	# for joint in list_joints:
+	# 	list_reduce_features.append('jointAngle_' + joint + '_' + 'x')
+	# 	list_reduce_features.append('jointAngle_' + joint + '_' + 'y')
+	# 	list_reduce_features.append('jointAngle_' + joint + '_' + 'z')
+
+	data_win = []
+
+	# list_all_measure = list_reduce_features
+	# list_all_measure.insert(0, 'timestamp')
+
 	for participant in list_participant:
-		path_data = path + '/' + participant + '/mvnx/'
-		path_save = path + '/' + participant + '/xsens_csv/'
+		path_data = path + '/xsens_mvnx/' + participant + '/' 
+		path_save = path + '/datasensors_csv/' + participant + '/' 
 
 		print('Loading: ' + participant)
 		
@@ -55,102 +81,48 @@ if __name__ == '__main__':
 
 		for file in list_files:
 			name_seq = os.path.splitext(file)[0]
-			data_base = DataBase(path + '/' + participant, name_seq)
+			data_base = DataBase(path + '/xsens_mvnx/' + participant + '/', name_seq)
 			data_base.load_mvnx_data(path_data)
-			data, time, list_features, dim_features = tools.load_data_from_dataBase(data_base, rf)
-
-			list_all_measure = []
-			for feature, dim in zip(list_features, dim_features):
-				for i in range(dim):
-					list_all_measure.append(feature + '_' + str(i))
-
-			list_all_measure.insert(0, 'timestamps_(s)')
-
-			
+			data, time, list_features, dim_features = tools.load_data_from_dataBase(data_base, config)
 
 			time = np.expand_dims(time, axis=1)
 			all_data = np.concatenate((time, data), axis=1)
 
-			df = pd.DataFrame(all_data, columns = list_all_measure, index=range(len(time)))
+			df = pd.DataFrame(all_data, index=range(len(time)))
+			df.columns = list_all_measure
 
-			df.index.name = 'frame'
+			data_win.append(all_data)
 
-			if(not(os.path.isdir(path_save))):
-				os.makedirs(path_save)
-			df.to_csv(path_save + '/' + name_seq + '.xsens.csv')
+			# path_label = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/annotations/labels_csv2/' + participant + '/'
+			# name_file_label = os.path.splitext(name_seq)[0] + '.labels.csv'
+			# real_labels, list_states = tools.load_labels_ref(time, path_label + name_file_label, 'general_posture', GT = 1)
 
-			list_track = ['general_posture', 'detailed_posture', 'current_action']
-			header = ['timestamps']
+			# print(np.shape(real_labels))
+	# pickle.dump( data_win, open("save_data_all_dump.pkl", "wb" ) )
+	# pickle.dump( data_win, open("save_listfeatures_joint_dump.pkl", "wb" ) )
 
-			count_track = 0
-			for name_track in list_track:
-				# Load the annotation files
-				df_labels = pd.read_csv(path + '/' + participant + '/' + labels_folder + '/' + 'Segments_' + name_seq + '_' + name_track + '_3A.csv')
-				t_sample = (np.asarray(time) - time[0]).tolist()
-	
-				count = 0
-				labels = []
-				for t in t_sample:
-					labels_temp = df_labels.iloc[count, 3:6].values
-
-					# Change the label for shorter codes
-					for lab, i in zip(labels_temp, range(len(labels_temp))):
-						labels_temp[i] = labels_temp[i].replace("standing", "St")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("walking", "Wa")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("crouching", "Cr")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("kneeling", "Kn")
-
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("upright", "U")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("_forward","")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("strongly_bent","BS")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("bent","BF")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("overhead_work_hands_above_head","OH")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("overhead_work_elbow_at_above_shoulder","OS")
-
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("fine_manipulation_no_task","idle")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("release_no_task","idle")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("reaching_no_task","idle")
-						labels_temp[i] = labels_temp[i].replace("standing", "St").replace("picking","Pi")
-						labels_temp[i] = labels_temp[i].replace("placing","Pl")
-						labels_temp[i] = labels_temp[i].replace("release","Rl")
-						labels_temp[i] = labels_temp[i].replace("reaching","Re")
-						labels_temp[i] = labels_temp[i].replace("screwing","Sc")
-						labels_temp[i] = labels_temp[i].replace("fine_manipulation","Fm")
-						labels_temp[i] = labels_temp[i].replace("carrying","Ca")
-						labels_temp[i] = labels_temp[i].replace("idle","Id") 
-
-					labels.append(labels_temp)
-
-					if(t > df_labels.iloc[count, 1:2].values):
-						count += 1
-						if(count == len(df_labels)):
-							labels.append(labels_temp)
-							break
-
-				t_sample = pd.DataFrame(time)
+			name_file = path_save + '/' + name_seq + '.csv'
 
 
-				for i in range((np.shape(labels)[1])):
-					header.append(name_track + '_Annotator' + str(i+1))
 
-				labels = pd.DataFrame(labels)
+			# if(not(os.path.isdir(path_save))):
+			# 	os.makedirs(path_save)
+			# df.to_csv(name_file, index = None, header = True)
 
-				if(count_track == 0):	
-					df_annotation =  pd.concat([t_sample, labels], axis = 1, join='inner')
-					count_track = 1
-				else:
-					df_annotation = pd.concat([df_annotation, labels], axis = 1, join='inner')
+			# with open(name_file,newline='') as f:
+			# 	r = csv.reader(f)
+			# 	data = [line for line in r]
+			# with open(name_file,'w',newline='') as f:
+			# 	w = csv.writer(f)
+			# 	w.writerow(header_xsens[0])
+			# 	w.writerow(header_xsens[1])
+			# 	w.writerows(data)
+
+	pickle.dump( data_win, open(path_save + "save_data_dump_sensors.pkl", "wb" ) )
+	pickle.dump( list_all_measure, open(path_save + "save_listfeatures_datasensors_dump.pkl", "wb" ) )
 
 
-			df_annotation.columns = header
-			df_annotation.index.name = 'frame'
-			
 
-			path_save = path + '/' + participant + '/labels_csv/'
-
-			if(not(os.path.isdir(path_save))):
-				os.makedirs(path_save)
-			df_annotation.to_csv(path_save + '/' + name_seq + '.labels.csv')
 
 
 

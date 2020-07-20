@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	nbr_features = 50
 	
 
-	list_participant = ['541', '909', '3327', '5124', '5521', '5535', '8410', '9266', '9875']
+	# list_participant = ['541', '909', '3327', '5124', '5521', '5535', '8410', '9266', '9875']
 
 	print('Loading data...')
 
@@ -156,7 +156,9 @@ if __name__ == '__main__':
 
 	del sorted_features_fisher[50:]
 
-	score_totaux.to_csv('fisher_' + name_track + ".csv", index=False)
+	print(score_totaux)
+
+	# score_totaux.to_csv('fisher_' + name_track + ".csv", index=False)
 	best_features = sorted_features_fisher[0:nbr_features]
 
 	file_name = 'wrapper_' + name_track + ".csv"

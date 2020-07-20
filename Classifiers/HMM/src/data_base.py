@@ -393,7 +393,7 @@ class DataBase():
 						items = []
 						for key in config[related_items]: items.append(key)
 						del items[0:2]
-						del items[-5::]
+						del items[-7::]
 
 					else: 
 						items = deepcopy(list_items)

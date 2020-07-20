@@ -16,6 +16,7 @@ import re
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import pickle
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -41,14 +42,18 @@ if __name__ == '__main__':
 	rf.setDefaultConfigFile("default.ini")
 	rf.configure(sys.argv)
 
+	flag_save = False
+
 	path = rf.find('path_data_base').toString()
 	path_model = rf.find('path_model').toString()
 	name_model = rf.find('name_model').toString()
 	name_track = rf.find('level_taxonomy').toString()
 	labels_folder = rf.find('labels_folder').toString()
 
+	path = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/'
+
 	path_data_root = path + '/xsens/allFeatures_csv/'
-	path_wrapper = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/'
+	path_wrapper = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/results/T3_loc/'
 
 
 	list_participant = os.listdir(path_data_root)
@@ -74,33 +79,44 @@ if __name__ == '__main__':
 	list_states = [[], [], [], []]
 
 	tracks = ['general_posture', 'detailed_posture', 'details', 'current_action']
+	# tracks = ['detailed_posture']
 
 	path_annotation = '/home/amalaise/Documents/These/experiments/ANDY_DATASET/AndyData-lab-onePerson/annotations/labels_csv2/'
 
-	for participant, nbr in zip(list_participant, range(len(list_participant))):
-		path_data = path_data_root  + participant
-		print('Loading: ' + participant)
+	# for participant, nbr in zip(list_participant, range(len(list_participant))):
+	# 	path_data = path_data_root  + participant
+	# 	print('Loading: ' + participant)
 		
-		list_files = os.listdir(path_data)[0:4]
-		list_files.sort()
+	# 	list_files = os.listdir(path_data)
+	# 	list_files.sort()
 
 
-		for file in list_files:
-			name_seq = os.path.splitext(file)[0]
+	# 	for file in list_files:
+	# 		name_seq = os.path.splitext(file)[0]
 			
-			data, labels, time, list_s, list_features = tools.load_data(path, participant, name_seq, 'general_posture', labels_folder)
-			data_win2.append(data)
+	# 		data, labels, time, list_s, list_features = tools.load_data(path, participant, name_seq, 'general_posture', labels_folder)
+	# 		data_win2.append(data)
 
-			for name_track, num_track in zip(tracks, range(len(tracks))):
-				labels, states = tools.load_labels_ref(time, path_annotation + participant + '/' + name_seq + '.labels.csv',
-					name_track, participant, 1)
-				real_labels[num_track].append(labels)
+	# 		for name_track, num_track in zip(tracks, range(len(tracks))):
+	# 			labels, states = tools.load_labels_ref(time, path_annotation + participant + '/' + name_seq + '.labels.csv',
+	# 				name_track, participant, 1)
+	# 			real_labels[num_track].append(labels)
 
-				for state in states:
-					if(state not in list_states[num_track]):
-						list_states[num_track].append(state)
-						list_states[num_track] = sorted(list_states[num_track])
-			
+	# 			for state in states:
+	# 				if(state not in list_states[num_track]):
+	# 					list_states[num_track].append(state)
+	# 					list_states[num_track] = sorted(list_states[num_track])
+
+	path_save = '/home/amalaise/Documents/These/code/score'
+
+	with open(path_save + '/save_data_dump.pkl', 'rb') as input:
+		data_win2 = pickle.load(input)
+	with open(path_save + '/save_labels_dump.pkl', 'rb') as input:
+		real_labels = pickle.load(input)
+	with open(path_save + '/save_liststates_dump.pkl', 'rb') as input:
+		list_states = pickle.load(input)
+	with open(path_save + '/save_listfeatures_dump.pkl', 'rb') as input:
+		list_features = pickle.load(input)
 
 	print(list_states)
 
@@ -110,8 +126,8 @@ if __name__ == '__main__':
 		dim_score = []
 		feaures_save = []
 		
-		dim = 11
-		file_wrapper = path_wrapper + 'wrapper_' + name_track + ".csv_" + str(dim)
+		dim = 1
+		file_wrapper = path_wrapper + 'wrapper_' + name_track + ".csv" + str(dim)
 		# for dim in range(1, 11):
 		while(os.path.isfile(file_wrapper)):
 			print(file_wrapper)
@@ -152,9 +168,11 @@ if __name__ == '__main__':
 			 'features': feaures_save
 			})
 
-			score_totaux.to_csv('score/score_model_wrapper_' + name_track + "2.csv", index=False)
+			if flag_save == True:
+				score_totaux.to_csv('score/score_model_wrapper_' + name_track + "_local.csv", index=False)
+
 			dim += 1
-			file_wrapper = path_wrapper + 'wrapper_' + name_track + ".csv_" + str(dim)
+			file_wrapper = path_wrapper + 'wrapper_' + name_track + ".csv" + str(dim)
 
 
 
