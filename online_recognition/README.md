@@ -5,6 +5,8 @@
 
 ## Xsens module: sensor_processing.py
 
+python3 sensor_processing.py --from [context]
+
 ### Yarp port:
 
 input: 
@@ -13,15 +15,9 @@ input:
 output:
 * /processing/xsens/"NameSignal":o
 
-## Eglove module: eglove_processing.py
-
-### Yarp port:
-
-input: 
-
-output:
-
 ## Activity recognition module
+
+python3 activity_recognition.py --from [context]
 
 ### Yarp port:
 
