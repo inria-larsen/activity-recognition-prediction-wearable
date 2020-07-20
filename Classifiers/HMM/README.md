@@ -18,12 +18,19 @@ The objective of this project is to adress the problem of recognizing the curren
 
 ## Requirement
 
-* The software was tested on windows
+* The software was tested on windows and ubuntu
 * python3.6
 * numpy: http://www.numpy.org/
 * hmmlearn : https://github.com/hmmlearn/hmmlearn
 * yarp: http://www.yarp.it/
 
+## Compute the feature selection
+
+python3 main.py --from [context_file]
+
+## Create a model
+
+python3 model_simple.py -f [config_file] -c [configuration]
 
 ## Acknowledgments
 
