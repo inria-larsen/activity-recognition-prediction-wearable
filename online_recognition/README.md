@@ -108,7 +108,7 @@ On the Windows machine (AnDyExpe):
 
 ## Select your input: pre-recorded Xsens sequence or online stream from Xsens 
 
-### with a pre-recorded Xsens sequence
+### Option A: with a pre-recorded Xsens sequence
 
 You can run the demo with pre-recorded data from Xsens simply by charging a Xsens sequence. 
 On your Windows machine where you have installed your Xsens MVN software: run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
@@ -120,7 +120,7 @@ On the Windows machine (AnDyExpe):
 * Click "Play"
 * Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
-### connected to the Xsens MVN suit
+### Option B: connected to the Xsens MVN suit
 
 You need to start by preparing the Xsens suit.
 
