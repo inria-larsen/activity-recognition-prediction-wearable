@@ -75,26 +75,40 @@ You must configure your Windows machine where you have your Xsens software insta
       
     Change the configuration from a terminal: yarp namespace /demo_andy
     
-  * Configure and launch our Xsens streamer:
+  * Configure our Xsens streamer:
   
-    Option > Preferences > Network Streamer : 
+    Option > Preferences > Network Streamer :  
     
-    add/enable configuration with HotSpot IP (192.168.137.1)
+       add/enable configuration with HotSpot IP (192.168.137.1)
     
-    Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :
+    Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
     
       IP_this_machine 192.168.137.1
       server_port_xsens 9763
-      
-   Launch: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe  
     
 
 
 
 ## Running the demo 
 
-### Prepare Windows machine with Xsens
+### Prepare the Windows machine with Xsens and the Ubuntu machine with the activity recognition
 
+On the Windows machine (AnDyExpe):
+
+* Connect the Windows laptop to a network
+* Open Network Settings -> Mobile Hotspot, and enable the HotSpot network. 
+This is important because the Ubuntu laptop running the activity recognition modules must be connected to the Windows machine running the Xsens software, so that the demo can be executed independently of the wireless network, and both computers are on the same YARP network.
+
+
+On the Ubuntu PC with the activity recognition module:
+
+* Connect to the AnDyExpe HotSpot Network
+* Start Yarp Server (yarp server [--write])
+
+
+On the Windows machine (AnDyExpe):
+* Launch MVN 2018 software
+* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
 
 ### Select your input: pre-recorded Xsens sequence or online stream from Xsens 
@@ -146,15 +160,9 @@ output:
 * Installing the Battery and BodyPack
 * Turn on the BodyPack Xsens
 
-### AnDyExpe
 
-* Connecting to a network
-* Launch HotSpot network
 
-### PC with activity recognition module
 
-* Connecting to the AnDyExpe HotSpot Network
-Start Yarp Server (yarp server [--write])
 
 ### AnDyExpe
 
