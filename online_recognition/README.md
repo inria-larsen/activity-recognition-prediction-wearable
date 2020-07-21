@@ -88,10 +88,7 @@ You must configure your Windows machine where you have your Xsens software insta
     
 
 
-
-## Running the demo 
-
-### Prepare the Windows machine with Xsens and the Ubuntu machine with the activity recognition
+## Prepare the Windows machine with Xsens and the Ubuntu machine with the activity recognition
 
 On the Windows machine (AnDyExpe):
 
@@ -99,93 +96,81 @@ On the Windows machine (AnDyExpe):
 * Open Network Settings -> Mobile Hotspot, and enable the HotSpot network. 
 This is important because the Ubuntu laptop running the activity recognition modules must be connected to the Windows machine running the Xsens software, so that the demo can be executed independently of the wireless network, and both computers are on the same YARP network.
 
-
 On the Ubuntu PC with the activity recognition module:
 
 * Connect to the AnDyExpe HotSpot Network
 * Start Yarp Server (yarp server [--write])
 
-
 On the Windows machine (AnDyExpe):
-* Launch MVN 2018 software
-* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+
+* verify that you are on the same yarp network (should be, if you configured yarp correctly)
 
 
-### Select your input: pre-recorded Xsens sequence or online stream from Xsens 
+## Select your input: pre-recorded Xsens sequence or online stream from Xsens 
 
-* with a pre-recorded Xsens sequence
+### with a pre-recorded Xsens sequence
 
 You can run the demo with pre-recorded data from Xsens simply by charging a Xsens sequence. 
 On your Windows machine where you have installed your Xsens MVN software: run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
 
-* connected to the Xsens MVN suit
+On the Windows machine (AnDyExpe):
 
+* Launch MVN 2018 software
+* Open sequence file
+* Click "Play"
+* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
+### connected to the Xsens MVN suit
 
+You need to start by preparing the Xsens suit.
 
-
-
-## Xsens module: sensor_processing.py
-
-python3 sensor_processing.py --from [context]
-
-### Yarp port:
-
-input: 
-* /processing/xsens/"NameSignal":i
-
-output:
-* /processing/xsens/"NameSignal":o
-
-## Activity recognition module
-
-python3 activity_recognition.py --from [context]
-
-### Yarp port:
-
-input: 
-* /activity_recognition/"NameSignal":i
-
-output:
-* /activity_recognition/state:o
-* /activity_recognition/probabilities:o
-
-
-## How to use it :
-
-### Xsens
-
-* Turn on the router/Access Point Xsens
-* Equipping the suit
-* Installing the Battery and BodyPack
+* Turn on the router/Access Point of the Xsens suit.
+* Wear the Xsens suit
+* Install the Battery and BodyPack asking the help of a colleague.
 * Turn on the BodyPack Xsens
 
+On the Windows machine (AnDyExpe):
 
-
-
-
-### AnDyExpe
-
-
-    
 * Launch MVN 2018 software
-    New session
-    
-    Wait for connection to the access point
-    
-    Perform calibration
-    
+* Start New session
+* Wait for connection to the access point
+* Perform calibration of the Xsens suit (with the walking calibration phase, just follow instructions)
+* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
+## Run the demo
 
-### PC with activity recognition module
-
-* Launch scripts :
+On the Ubuntu machine with the activity recognition module, launch the two scripts for the modules:
 
         python3 sensor_processing --from [context_file]
-    
         python3 activity_recognition.py --from [context_file]
 
-### AnDyExpe
-* Connect the streamer ports with sensor_processing :
+The context_file is the same for both modules. It is the YARP context folder where you have your configuration files. 
+Example:
+
+        python3 sensor_processing --from general_posture.ini
+        python3 activity_recognition.py --from general_posture.ini
+
+Check that you have all the YARP ports.
+For the sensor processing module:
+* input: 
+        /processing/xsens/"NameSignal":i
+* output: 
+        /processing/xsens/"NameSignal":o
+For the activity recognition module:
+* input:
+        /activity_recognition/"NameSignal":i
+
+* output:
+        /activity_recognition/state:o
+        /activity_recognition/probabilities:o
+
+Note that Activity Recognition is automatically connecting the ports of Sensor Processing at startup. So You must launch it imperatively after the other. 
+If all the YARP ports are ok, then you can connect Sensor processing to the Xsens streamer and the demo will run automatically.
 
         yarp connect /xsens/Signal /processing/xsens/signal:i
+        
+## Visualization
+
+To visualize the output of the demo, you can connect the YARP port of activity recognition to any GUI.
+You can use those in https://github.com/inria-larsen/activity-recognition-prediction-wearable/tree/master/visualisation
+
