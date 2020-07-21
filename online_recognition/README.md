@@ -61,7 +61,7 @@ Start Yarp Server (yarp server [--write])
       192.168.137.130 10000 yarp
       192.168.137.1 10000 yarp
       
-    Change the configuration from a terminal: yarp namespace --config /demo_andy
+    Change the configuration from a terminal: yarp namespace /demo_andy
     
 * Launch MVN 2018 software
     New session
@@ -71,7 +71,7 @@ Start Yarp Server (yarp server [--write])
     Perform calibration
     
 * Configure and launch Xsens streamer
-    Preferences > Network Streamer : 
+    Option > Preferences > Network Streamer : 
     
     add/enable configuration with HotSpot IP (192.168.137.1)
     
