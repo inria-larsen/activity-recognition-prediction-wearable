@@ -82,7 +82,7 @@ Note that feature selection can take a lot of time: on a single computer, explor
 
 ### Use a trained model to recognize an activity or posture
 
-This is explained in online_recognition (other folder).
+This is explained in online_recognition: https://github.com/inria-larsen/activity-recognition-prediction-wearable/tree/master/online_recognition
 
 
 
