@@ -3,31 +3,174 @@
 
 ![alt text](https://github.com/inria-larsen/activity-recognition-prediction-wearable/blob/master/Classifiers/HMM/doc/img/diagram_online.png "Architecture online")
 
-## Xsens module: sensor_processing.py
+There are two main modules.
 
-### Yarp port:
+SensorProcessingModule (in sensor_processing.py) is used to retrieve the data from the Xsens suit. It process the data with a sliding window: the Xsens is at 240Hz, the window enables to lower the Hz and computes a mean of the signals over the window. It reads the data from a YARP port and outputs the result on another YARP port.
 
-input: 
-* /processing/xsens/"NameSignal":i
+ActivityRecognitionModule (in activity_recognition.py) is the main module for online recognition. It reads the processed data from a YARP port connected to SensorProcessingModule, then outputs the result on two YARP ports: the first is /activity_recognition/probabilities:o, which contains the probabilities of every possible state (i.e., action label); the second is /activity_recognition/state:o is the most probable state, i.e., the action label with the highest probability.
 
-output:
-* /processing/xsens/"NameSignal":o
+The config files for these modules are YARP context files (to put in /build/share/yarp/context/online_recognition). 
+For example, 
 
-## Eglove module: eglove_processing.py
 
-### Yarp port:
 
-input: 
 
-output:
 
-## Activity recognition module
+## Installation
 
-### Yarp port:
+### Supported sensors
 
-input: 
-* /activity_recognition/"NameSignal":i
+* MVN link suit from Xsens (MVN studio 4.4 used)
+* e-glove from Emphasis Telematics SA
 
-output:
-* /activity_recognition/state:o
-* /activity_recognition/probabilities:o
+### Requirements
+
+* The software was tested on windows and ubuntu 16
+
+* You need to have installed the class ModelHMM that is in Classifiers, that has the same requirements of these online reocgnition modules:
+
+* python3.6
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.6
+
+* numpy: http://www.numpy.org/
+
+sudo apt-get install python3-pip
+pip3 install numpy
+
+python3.6 -m pip install numpy
+python3.6 -m pip install --upgrade pip
+
+* hmmlearn : https://github.com/hmmlearn/hmmlearn
+
+python3.6 -m pip install hmmlearn
+
+* yarp: http://www.yarp.it/
+
+it is used to read data from the Xsens system through a yarp server. it is not used for training HMM models, so it is not necessary for visualization or local testing. it is however necessary for online use of the HMM models for action recognition using the Xsens system.
+You must install it in your Ubuntu machine (where you run the activity recognition modules in python) and in the Windows machine where you have your Xsens software. Follow the yarp instructions to install it.
+
+* Xsens streamer for Windows: https://gitlab.inria.fr/H2020-AnDy/sensors
+
+this contains a mini server for streaming the Xsens data on a YARP port, as well a mini server for streaming the e-glove data on a YARP port.
+Both are only available for Windows, and must run on the machine where the Xsens SDK is installed.
+
+
+### Configure your Windows machine with the Xsens software
+
+You must configure your Windows machine where you have your Xsens software installed. In our lab it is "AnDyExpe".
+
+* Setting up yarp namespace : 
+
+    Folder C:/Users/Researcher/AppData/Roaming/yarp/config/
+    
+    Create a file containing the IP address of the PC from which the yarp server is launched 
+    
+    For example: _demo_andy.conf :
+    
+      192.168.137.130 10000 yarp
+      192.168.137.1 10000 yarp
+      
+    Change the configuration from a terminal: yarp namespace /demo_andy
+    
+  * Configure our Xsens streamer:
+  
+    Option > Preferences > Network Streamer :  
+    
+       add/enable configuration with HotSpot IP (192.168.137.1)
+    
+    Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
+    
+      IP_this_machine 192.168.137.1
+      server_port_xsens 9763
+    
+
+
+## Prepare the Windows machine with Xsens and the Ubuntu machine with the activity recognition
+
+On the Windows machine (AnDyExpe):
+
+* Connect the Windows laptop to a network
+* Open Network Settings -> Mobile Hotspot, and enable the HotSpot network. 
+This is important because the Ubuntu laptop running the activity recognition modules must be connected to the Windows machine running the Xsens software, so that the demo can be executed independently of the wireless network, and both computers are on the same YARP network.
+
+On the Ubuntu PC with the activity recognition module:
+
+* Connect to the AnDyExpe HotSpot Network
+* Start Yarp Server (yarp server [--write])
+
+On the Windows machine (AnDyExpe):
+
+* verify that you are on the same yarp network (should be, if you configured yarp correctly)
+
+
+## Select your input: pre-recorded Xsens sequence or online stream from Xsens 
+
+### Option A: with a pre-recorded Xsens sequence
+
+You can run the demo with pre-recorded data from Xsens simply by charging a Xsens sequence. 
+On your Windows machine where you have installed your Xsens MVN software: run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
+
+On the Windows machine (AnDyExpe):
+
+* Launch MVN 2018 software
+* Open sequence file
+* Click "Play"
+* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+
+### Option B: connected to the Xsens MVN suit
+
+You need to start by preparing the Xsens suit.
+
+* Turn on the router/Access Point of the Xsens suit.
+* Wear the Xsens suit
+* Install the Battery and BodyPack asking the help of a colleague.
+* Turn on the BodyPack Xsens
+
+On the Windows machine (AnDyExpe):
+
+* Launch MVN 2018 software
+* Start New session
+* Wait for connection to the access point
+* Perform calibration of the Xsens suit (with the walking calibration phase, just follow instructions)
+* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+
+## Run the demo
+
+On the Ubuntu machine with the activity recognition module, launch the two scripts for the modules:
+
+        python3 sensor_processing --from [context_file]
+        python3 activity_recognition.py --from [context_file]
+
+The context_file is the same for both modules. It is the YARP context folder where you have your configuration files. 
+Example:
+
+        python3 sensor_processing --from general_posture.ini
+        python3 activity_recognition.py --from general_posture.ini
+
+Check that you have all the YARP ports.
+For the sensor processing module:
+* input: 
+        /processing/xsens/"NameSignal":i
+* output: 
+        /processing/xsens/"NameSignal":o
+For the activity recognition module:
+* input:
+        /activity_recognition/"NameSignal":i
+
+* output:
+        /activity_recognition/state:o
+        /activity_recognition/probabilities:o
+
+Note that Activity Recognition is automatically connecting the ports of Sensor Processing at startup. So You must launch it imperatively after the other. 
+If all the YARP ports are ok, then you can connect Sensor processing to the Xsens streamer and the demo will run automatically.
+
+        yarp connect /xsens/Signal /processing/xsens/signal:i
+        
+## Visualization
+
+To visualize the output of the demo, you can connect the YARP port of activity recognition to any GUI.
+You can use those in https://github.com/inria-larsen/activity-recognition-prediction-wearable/tree/master/visualisation
+
