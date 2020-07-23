@@ -19,6 +19,8 @@ if __name__ == '__main__':
 	"""
 	local_path = os.path.abspath(os.path.dirname(__file__))
 
+	taxonomy = ['general_posture', 'detailed_posture', 'details', 'current_action']
+
 	# Get arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--file', '-f', help='Configuration file', default="config_model.ini")
@@ -48,6 +50,7 @@ if __name__ == '__main__':
 
 	num_track = 0
 	name_track = tracks[num_track]
+	num_track = taxonomy.index(name_track)
 
 	# Loop on all the tracks from the taxonomy
 	# for num_track, name_track in enumerate(tracks):
@@ -76,10 +79,7 @@ if __name__ == '__main__':
 
 		F1_score.append(np.mean(F1_temp))
 
-		# print(F1_score)
-	trans_mat = model.get_trans_mat()
-	v_tools.plot_transition_diagram(name_track, trans_mat, list_states[num_track])
-
+		print(F1_score)
 
 	if(flag_save):
 		model.save_model(path_model, name_model, "load_handling_" + name_track)

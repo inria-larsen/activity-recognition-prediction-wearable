@@ -79,10 +79,6 @@ if __name__ == '__main__':
 		for file in list_files:
 			name_seq = os.path.splitext(file)[0]
 
-			if(name_seq == 'Participant_909_Setup_A_Seq_3_Trial_4'):
-				print(name_seq)
-				continue
-
 			info_participant.append(participant)
 			info_sequences.append(name_seq)
 

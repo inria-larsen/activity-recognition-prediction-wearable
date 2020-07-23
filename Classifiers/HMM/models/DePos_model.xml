@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="DePos_model" name_sequences="load_handling_detailed_posture">
+    <features/>
+    <states>
+      <state index="0" label="Cr_BF"/>
+      <state index="1" label="Cr_U"/>
+      <state index="2" label="Kn_BF"/>
+      <state index="3" label="Kn_U"/>
+      <state index="4" label="St_BF"/>
+      <state index="5" label="St_BS"/>
+      <state index="6" label="St_OH"/>
+      <state index="7" label="St_OS"/>
+      <state index="8" label="St_U"/>
+      <state index="9" label="Wa_U"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>

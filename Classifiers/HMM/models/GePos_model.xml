@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="GePos_model" name_sequences="load_handling_general_posture">
+    <features/>
+    <states>
+      <state index="0" label="Cr"/>
+      <state index="1" label="Kn"/>
+      <state index="2" label="St"/>
+      <state index="3" label="Wa"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>

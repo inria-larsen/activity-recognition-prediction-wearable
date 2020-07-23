@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<HMM-Model>
+  <model name_model="Det_model" name_sequences="load_handling_details">
+    <features/>
+    <states>
+      <state index="0" label="BF"/>
+      <state index="1" label="BS"/>
+      <state index="2" label="OH"/>
+      <state index="3" label="OS"/>
+      <state index="4" label="U"/>
+    </states>
+    <features/>
+  </model>
+</HMM-Model>
