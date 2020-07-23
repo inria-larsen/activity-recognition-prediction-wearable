@@ -156,12 +156,9 @@ class SensorProcessingModule(yarp.RFModule):
 						self.output_port.append(yarp.BufferedPortBottle())
 						self.output_port[nb_output_port].open("/processing" + output_port_name + '/' + item_name + ':o')
 						related_items = info_signal.find("related_items").toString()
-						if(item == 'jL5S1'):
-							id_item = int(rf.findGroup(related_items).find(item).toString()) + 2
-							dimension = 1
-						else:
-							id_item = int(rf.findGroup(related_items).find(item).toString())
-							dimension = int(rf.findGroup(related_items).find('dimension').toString())
+
+						id_item = int(rf.findGroup(related_items).find(item).toString())
+						dimension = int(rf.findGroup(related_items).find('dimension').toString())
 
 						id_item = id_item*dimension + dim_item
 						dimension = 1
@@ -236,17 +233,27 @@ class SensorProcessingModule(yarp.RFModule):
 							else:
 								out = np.asarray(data_output)
 
-							if out_port.getName() == '/processing/xsens/Orientation:o':
-								out = out[:,69:161]
-							elif out_port.getName() == '/processing/xsens/Position:o':
-								out = out[:,0:69]
-								
+							if in_port.getName() == "/processing/xsens/PoseQuaternion:i":
+
+								if 'Position' in out_port.getName() or 'Velocity' in out_port.getName() or 'Acceleration' in out_port.getName():
+									temp_data_out = np.zeros((len(data_output), 69))
+									for k in range(0,23):
+										temp_data_out[:,k*3:k*3+3] = out[:,k*7:k*7+3]
+
+									out = temp_data_out
+
+								else:
+									temp_data_out = np.zeros((len(data_output), 92))
+									for k in range(0,23):
+										temp_data_out[:,k*4:k*4+4] = out[:,k*7+3:k*7+7]
+
+									out = temp_data_out
+						
 							# Compute the average signals on the sliding window
-							# output = np.mean(np.asarray(out[:,id_items[0]:id_items[-1]+1]), axis = 0)
 							if(len(np.shape(out)) == 1):
 								out = np.expand_dims(out, axis=1)
 
-							output = np.median(np.asarray(out[:,id_items*dimension:id_items*dimension+dimension]), axis = 0)
+							output = np.mean(np.asarray(out[:,id_items*dimension:id_items*dimension+dimension]), axis = 0)
 							# output = np.median(np.asarray(out[:,id_items:id_items+1]), axis = 0)
 
 							if(out_port.getName() == '/processing/xsens/CoMVelocityNorm:o'):

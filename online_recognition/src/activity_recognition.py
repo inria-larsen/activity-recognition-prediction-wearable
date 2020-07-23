@@ -131,7 +131,7 @@ class ActivityRecognitionModule(yarp.RFModule):
 				for prob, index in zip(probabilities[-1], range(len(probabilities[-1]))):
 					b_prob.addString(self.list_states[index])
 					b_prob.addDouble(prob)
-				self.probPort.write()				
+				self.probPort.write()
 
 		return True
 
