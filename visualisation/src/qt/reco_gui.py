@@ -13,15 +13,16 @@ import numpy as np
 import yarp
 
 ListActivities = {
-    'walking_upright'
-    'standing_upright'
-    'standing_bent_forward'
-    'standing_strongly_bent_forward'
-    'standing_overhead_work_elbow_at_above_shoulder'
-    'standing_overhead_work_hands_above_head'
-    'kneeling_upright'
-    'kneeling_bent'
-    'kneeling_elbow_at_above_shoulder'
+    'Wa_U'
+    'St_U'
+    'St_BF'
+    'St_BS'
+    'St_OS'
+    'St_OH'
+    'Kn_U'
+    'Kn_BF'
+    'Cr_U'
+    'Cr_BF'
 }
 
 class CallbackData(yarp.BottleCallback):
@@ -91,15 +92,15 @@ class Cockpit(QtWidgets.QMainWindow, andy_reco.Ui_MainWindow):
 
             self.current_activity_image.setPixmap(QPixmap('/home/amalaise/Documents/These/code/activity-recognition-prediction-wearable/visualisation/app/figs/' + current_state + '.png'))
             self.current_activity_image.setScaledContents( True )
-            self.standing_strongly_bent.setValue(float(data[data.index('standing_strongly_bent_forward') + 1]) * 100)
-            self.standing_bent_forward.setValue(float(data[data.index('standing_bent_forward') + 1]) * 100)
-            self.walking_upright.setValue(float(data[data.index('walking_upright') + 1]) * 100)
-            self.standing_upright.setValue(float(data[data.index('standing_upright') + 1]) * 100)
+            self.standing_strongly_bent.setValue(float(data[data.index('St_BS') + 1]) * 100)
+            self.standing_bent_forward.setValue(float(data[data.index('St_BF') + 1]) * 100)
+            self.walking_upright.setValue(float(data[data.index('Wa_U') + 1]) * 100)
+            self.standing_upright.setValue(float(data[data.index('St_U') + 1]) * 100)
             # self.standing_overhead_elbow.setValue(float(data[data.index('standing_overhead_work_elbow_at_above_shoulder') + 1]) * 100)
-            self.standing_overhead_hands.setValue(float(data[data.index('standing_overhead_work') + 1]) * 100)
-            # self.kneeling_upright.setValue(float(data[data.index('kneeling_upright') + 1]) * 100)
+            self.standing_overhead_hands.setValue(float(data[data.index('St_OH') + 1]) * 100)
+            self.kneeling_upright.setValue(float(data[data.index('Cr_U') + 1]) * 100)
             self.kneeling_upright.setValue(0)
-            self.kneeling_bent.setValue(float(data[data.index('kneeling_bent') + 1]) * 100)
+            self.kneeling_bent.setValue(float(data[data.index('Cr_BF') + 1]) * 100)
             self.kneeling_elbow.setValue(0)
 
         else:
