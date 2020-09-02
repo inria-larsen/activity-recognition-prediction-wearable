@@ -10,7 +10,7 @@ SensorProcessingModule (in sensor_processing.py) is used to retrieve the data fr
 ActivityRecognitionModule (in activity_recognition.py) is the main module for online recognition. It reads the processed data from a YARP port connected to SensorProcessingModule, then outputs the result on two YARP ports: the first is /activity_recognition/probabilities:o, which contains the probabilities of every possible state (i.e., action label); the second is /activity_recognition/state:o is the most probable state, i.e., the action label with the highest probability.
 
 The config files for these modules are YARP context files (to put in /build/share/yarp/context/online_recognition). 
-For example, 
+
 
 
 
@@ -75,16 +75,16 @@ You must configure your Windows machine where you have your Xsens software insta
       
     Change the configuration from a terminal: yarp namespace /demo_andy
     
-  * Configure our Xsens streamer:
+* Configure our Xsens streamer:
   
-    Option > Preferences > Network Streamer :  
+   Option > Preferences > Network Streamer :  
     
-       add/enable configuration with HotSpot IP (192.168.137.1)
+        add/enable configuration with HotSpot IP (192.168.137.1)
     
-    Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
+   Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
     
-      IP_this_machine 192.168.137.1
-      server_port_xsens 9763
+        IP_this_machine 192.168.137.1. 
+        server_port_xsens 9763
     
 
 
@@ -98,12 +98,21 @@ This is important because the Ubuntu laptop running the activity recognition mod
 
 On the Ubuntu PC with the activity recognition module:
 
-* Connect to the AnDyExpe HotSpot Network
-* Start Yarp Server (yarp server [--write])
+* Connect to the AnDyExpe HotSpot Network 
+* Start Yarp Server:
+
+        yarp server [--write]
 
 On the Windows machine (AnDyExpe):
 
-* verify that you are on the same yarp network (should be, if you configured yarp correctly)
+* verify that you are on the same yarp network (should be, if you configured yarp correctly) by typing:
+        
+        yarp detect --write
+    
+* if you have problems, check that you are in the same yarp namespace:
+        
+        yarp namespace
+        yarp where 
 
 
 ## Select your input: pre-recorded Xsens sequence or online stream from Xsens 
@@ -111,14 +120,17 @@ On the Windows machine (AnDyExpe):
 ### Option A: with a pre-recorded Xsens sequence
 
 You can run the demo with pre-recorded data from Xsens simply by charging a Xsens sequence. 
-On your Windows machine where you have installed your Xsens MVN software: run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
+On your Windows machine where you have installed your Xsens MVN software (MVN Analyze 2018): run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
 
 On the Windows machine (AnDyExpe):
 
 * Launch MVN 2018 software
 * Open sequence file
 * Click "Play"
-* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+* Click "Toggle repeat" to loop the recording
+* Launch the Xsens streamer: 
+
+        Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
 ### Option B: connected to the Xsens MVN suit
 
@@ -135,7 +147,23 @@ On the Windows machine (AnDyExpe):
 * Start New session
 * Wait for connection to the access point
 * Perform calibration of the Xsens suit (with the walking calibration phase, just follow instructions)
-* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+* Launch the Xsens streamer: 
+
+        Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+
+## Check before running the demo
+
+You can now check that the yarp ports are streaming data. The list of available yarp port is:
+        
+        yarp name list
+
+To read the content of a port do:
+        
+        yarp read ... <NAME_OF_THE_PORT>
+
+For example:
+        
+        yarp read ... /xsens/JointAngles
 
 ## Run the demo
 
@@ -153,14 +181,18 @@ Example:
 Check that you have all the YARP ports.
 For the sensor processing module:
 * input: 
+        
         /processing/xsens/"NameSignal":i
 * output: 
+        
         /processing/xsens/"NameSignal":o
 For the activity recognition module:
 * input:
+        
         /activity_recognition/"NameSignal":i
 
 * output:
+        
         /activity_recognition/state:o
         /activity_recognition/probabilities:o
 
