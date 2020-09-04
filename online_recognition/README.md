@@ -308,7 +308,8 @@ Connect ports (from the Windows machine):
         yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
         yarp connect /xsens/COM /processing/xsens/COM:i
         yarp connect /xsens/JointAngles /processing/xsens/JointAngles:i
-        yarp connect /xsens/PoseQuaternion /processing/xsens/PoseQuaternion:i
+        <NOT ANYMORE> yarp connect /xsens/PoseQuaternion /processing/xsens/PoseQuaternion:i
+        yarp connect /xsens/AngularSegmentKinematics /processing/xsens/AngularSegmentKinematics:i
         <DO NOT CONNECT THE INIT COM PORT>
         
 Check that the module is streaming (from the Ubuntu machine):
