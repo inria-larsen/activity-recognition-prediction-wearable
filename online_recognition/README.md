@@ -75,13 +75,23 @@ You must configure your Windows machine where you have your Xsens software insta
       
     Change the configuration from a terminal: yarp namespace /demo_andy
     
-* Configure our Xsens streamer:
+* Configure the Xsens MVN software to enable streaming :
   
-   Option > Preferences > Network Streamer :  
+   Open the Xsens MVN software and open in the tab Option > Preferences > Network Streamer. Check the table with IP and ports, and check the IP with your HotSpot IP.  
     
         add/enable configuration with HotSpot IP (192.168.137.1)
+        
+   In the list of datagram to stream, check that the following are selected:
+        
+        Position + Orientation (Quaternion)
+        Linear Segment Kinematics
+        Angular Segment Kinematics
+        Joint Angles
+        Center of Mass
     
-   Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
+ * Configure our Xsens streamer: 
+ 
+ Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
     
         IP_this_machine 192.168.137.1. 
         server_port_xsens 9763
