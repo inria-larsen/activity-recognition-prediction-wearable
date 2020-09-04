@@ -179,7 +179,7 @@ For example:
 
 On the Ubuntu machine with the activity recognition module, launch the two scripts for the modules:
 
-        python3 sensor_processing --from [context_file]
+        python3 sensor_processing.py --from [context_file]
         python3 activity_recognition.py --from [context_file]
 
 The context_file is the same for both modules. It is the YARP context folder where you have your configuration files. 
@@ -187,6 +187,10 @@ Example:
 
         python3 sensor_processing --from general_posture.ini
         python3 activity_recognition.py --from general_posture.ini
+        
+Example:
+        python3 sensor_processing.py --from demo_andy_final_general_posture.ini
+        
 
 Check that you have all the YARP ports.
 For the sensor processing module:
@@ -196,6 +200,7 @@ For the sensor processing module:
 * output: 
         
         /processing/xsens/"NameSignal":o
+
 For the activity recognition module:
 * input:
         
@@ -208,10 +213,22 @@ For the activity recognition module:
 
 Note that Activity Recognition is automatically connecting the ports of Sensor Processing at startup. So You must launch it imperatively after the other. 
 If all the YARP ports are ok, then you can connect Sensor processing to the Xsens streamer and the demo will run automatically.
+IMPORTANT: do the yarp connect from the Windows machine only!!
 
         yarp connect /xsens/Signal /processing/xsens/signal:i
         
+Example:
+
+        yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
+        <DO NOT CONNECT THE COM PORT>
+        
+        
 ## Visualization
+
+You can check that the ports are sending the processed signals.
+
+        yarp read ... /processing/xsens/Position/Pelvis_z:o
+        yarp read ... /activity_recognition/state:o
 
 To visualize the output of the demo, you can connect the YARP port of activity recognition to any GUI.
 You can use those in https://github.com/inria-larsen/activity-recognition-prediction-wearable/tree/master/visualisation
