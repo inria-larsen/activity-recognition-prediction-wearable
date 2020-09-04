@@ -291,6 +291,36 @@ Check that the activity recognition module is working:
         yarp read ... /activity_recognition/state:o
 
 
+## Recognition with the detailed posture model  
+
+It is only using 5 features. It outputs all the states resulting from the combination of general posture and details (standing upright, standing foward bent, standing overhead work, etc.).
+
+Check that the xsens streamer is streaming (on the Windows machine):
+
+        yarp read ... /xsens/COM
+
+Launch processing (on the Ubuntu machine):
+
+        python3 sensor_processing.py --from demo_andy_final_detailed_posture.ini
+
+Connect ports (from the Windows machine):
+
+        yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
+        yarp connect /xsens/COM /processing/xsens/COM:i
+        yarp connect /xsens/JointAngles /processing/xsens/JointAngles:i
+        yarp connect /xsens/PoseQuaternion /processing/xsens/PoseQuaternion:i
+        <DO NOT CONNECT THE INIT COM PORT>
         
+Check that the module is streaming (from the Ubuntu machine):
+
+        yarp read ... /processing/xsens/COM/z:o
+
+Launch activity recognition:
+
+        python3 activity_recognition.py --from demo_andy_final_details.ini
+        
+Check that the activity recognition module is working:
+
+        yarp read ... /activity_recognition/state:o
 
 
