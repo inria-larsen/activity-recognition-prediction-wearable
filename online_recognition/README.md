@@ -10,7 +10,7 @@ SensorProcessingModule (in sensor_processing.py) is used to retrieve the data fr
 ActivityRecognitionModule (in activity_recognition.py) is the main module for online recognition. It reads the processed data from a YARP port connected to SensorProcessingModule, then outputs the result on two YARP ports: the first is /activity_recognition/probabilities:o, which contains the probabilities of every possible state (i.e., action label); the second is /activity_recognition/state:o is the most probable state, i.e., the action label with the highest probability.
 
 The config files for these modules are YARP context files (to put in /build/share/yarp/context/online_recognition). 
-For example, 
+
 
 
 
@@ -75,16 +75,26 @@ You must configure your Windows machine where you have your Xsens software insta
       
     Change the configuration from a terminal: yarp namespace /demo_andy
     
-  * Configure our Xsens streamer:
+* Configure the Xsens MVN software to enable streaming :
   
-    Option > Preferences > Network Streamer :  
+   Open the Xsens MVN software and open in the tab Option > Preferences > Network Streamer. Check the table with IP and ports, and check the IP with your HotSpot IP.  
     
-       add/enable configuration with HotSpot IP (192.168.137.1)
+        add/enable configuration with HotSpot IP (192.168.137.1)
+        
+   In the list of datagram to stream, check that the following are selected:
+        
+        Position + Orientation (Quaternion)
+        Linear Segment Kinematics
+        Angular Segment Kinematics
+        Joint Angles
+        Center of Mass
     
-    Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
+ * Configure our Xsens streamer: 
+ 
+ Edit the streamer configuration file C:/ProgramData/yarp/xsens.ini :  
     
-      IP_this_machine 192.168.137.1
-      server_port_xsens 9763
+        IP_this_machine 192.168.137.1. 
+        server_port_xsens 9763
     
 
 
@@ -98,12 +108,21 @@ This is important because the Ubuntu laptop running the activity recognition mod
 
 On the Ubuntu PC with the activity recognition module:
 
-* Connect to the AnDyExpe HotSpot Network
-* Start Yarp Server (yarp server [--write])
+* Connect to the AnDyExpe HotSpot Network 
+* Start Yarp Server:
+
+        yarp server [--write]
 
 On the Windows machine (AnDyExpe):
 
-* verify that you are on the same yarp network (should be, if you configured yarp correctly)
+* verify that you are on the same yarp network (should be, if you configured yarp correctly) by typing:
+        
+        yarp detect --write
+    
+* if you have problems, check that you are in the same yarp namespace:
+        
+        yarp namespace
+        yarp where 
 
 
 ## Select your input: pre-recorded Xsens sequence or online stream from Xsens 
@@ -111,14 +130,17 @@ On the Windows machine (AnDyExpe):
 ### Option A: with a pre-recorded Xsens sequence
 
 You can run the demo with pre-recorded data from Xsens simply by charging a Xsens sequence. 
-On your Windows machine where you have installed your Xsens MVN software: run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
+On your Windows machine where you have installed your Xsens MVN software (MVN Analyze 2018): run the Xsens MVN software, open the file with your sequence, then click on "Play". You can also click on "Toggle repeat" so that the recording will loop. 
 
 On the Windows machine (AnDyExpe):
 
 * Launch MVN 2018 software
 * Open sequence file
 * Click "Play"
-* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+* Click "Toggle repeat" to loop the recording
+* Launch the Xsens streamer: 
+
+        Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
 
 ### Option B: connected to the Xsens MVN suit
 
@@ -135,42 +157,171 @@ On the Windows machine (AnDyExpe):
 * Start New session
 * Wait for connection to the access point
 * Perform calibration of the Xsens suit (with the walking calibration phase, just follow instructions)
-* Launch the Xsens streamer: Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+* Launch the Xsens streamer: 
+
+        Desktop/andy/sensors/xsens/yarp/build/Release/xsens.exe 
+
+## Check before running the demo
+
+You can now check that the yarp ports are streaming data. The list of available yarp port is:
+        
+        yarp name list
+
+To read the content of a port do:
+        
+        yarp read ... <NAME_OF_THE_PORT>
+
+For example:
+        
+        yarp read ... /xsens/JointAngles
 
 ## Run the demo
 
 On the Ubuntu machine with the activity recognition module, launch the two scripts for the modules:
 
-        python3 sensor_processing --from [context_file]
+        python3 sensor_processing.py --from [context_file]
         python3 activity_recognition.py --from [context_file]
 
 The context_file is the same for both modules. It is the YARP context folder where you have your configuration files. 
 Example:
 
-        python3 sensor_processing --from general_posture.ini
+        python3 sensor_processing.py --from general_posture.ini
         python3 activity_recognition.py --from general_posture.ini
+                
 
 Check that you have all the YARP ports.
 For the sensor processing module:
 * input: 
+        
         /processing/xsens/"NameSignal":i
 * output: 
+        
         /processing/xsens/"NameSignal":o
+
 For the activity recognition module:
 * input:
+        
         /activity_recognition/"NameSignal":i
 
 * output:
+        
         /activity_recognition/state:o
         /activity_recognition/probabilities:o
 
 Note that Activity Recognition is automatically connecting the ports of Sensor Processing at startup. So You must launch it imperatively after the other. 
 If all the YARP ports are ok, then you can connect Sensor processing to the Xsens streamer and the demo will run automatically.
+IMPORTANT: do the yarp connect from the Windows machine only!!
 
         yarp connect /xsens/Signal /processing/xsens/signal:i
-        
+                
+
+    
 ## Visualization
+
+You can check that the ports are sending the processed signals.
+For example:
+
+        yarp read ... /processing/xsens/Position/Pelvis_z:o
+        yarp read ... /activity_recognition/state:o
 
 To visualize the output of the demo, you can connect the YARP port of activity recognition to any GUI.
 You can use those in https://github.com/inria-larsen/activity-recognition-prediction-wearable/tree/master/visualisation
+
+
+    
+# DEMOs with the different activity models
+
+## Recognition with the general posture model   
+
+It is only using 3 features. It outputs 4 main states (walking, standing, crouching, kneeling).
+
+Check that the xsens streamer is streaming (on the Windows machine):
+
+        yarp read ... /xsens/COM
+
+Launch processing (on the Ubuntu machine):
+
+        python3 sensor_processing.py --from demo_andy_final_general_posture.ini
+
+Connect ports (from the Windows machine):
+
+        yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
+        <DO NOT CONNECT THE INIT COM PORT>
+        
+Check that the module is streaming (from the Ubuntu machine):
+
+        yarp read ... /processing/xsens/Position/Pelvis_z:o
+
+Launch activity recognition:
+
+        python3 activity_recognition.py --from general_posture.ini
+        
+Check that the activity recognition module is working:
+
+        yarp read ... /activity_recognition/state:o
+        
+## Recognition with the details model  
+
+It is only using 6 features. It outputs 5 main states (overhead work, work above shoulder, upright, forward bent, strongly forward bent).
+
+Check that the xsens streamer is streaming (on the Windows machine):
+
+        yarp read ... /xsens/COM
+
+Launch processing (on the Ubuntu machine):
+
+        python3 sensor_processing.py --from demo_andy_final_details.ini
+
+Connect ports (from the Windows machine):
+
+        yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
+        yarp connect /sens/AngularSegmentKinematics /processing/xsens/AngularSegmentKInematics:i
+        <DO NOT CONNECT THE INIT COM PORT>
+        
+Check that the module is streaming (from the Ubuntu machine):
+
+        yarp read ... /processing/xsens/Position/RightHand_x:o
+
+Launch activity recognition:
+
+        python3 activity_recognition.py --from demo_andy_final_details.ini
+        
+Check that the activity recognition module is working:
+
+        yarp read ... /activity_recognition/state:o
+
+
+## Recognition with the detailed posture model  
+
+It is only using 5 features. It outputs all the states resulting from the combination of general posture and details (standing upright, standing foward bent, standing overhead work, etc.).
+
+Check that the xsens streamer is streaming (on the Windows machine):
+
+        yarp read ... /xsens/COM
+
+Launch processing (on the Ubuntu machine):
+
+        python3 sensor_processing.py --from demo_andy_final_detailed_posture.ini
+
+Connect ports (from the Windows machine):
+
+        yarp connect /xsens/LinearSegmentKinematics /processing/xsens/LinearSegmentKinematics:i
+        yarp connect /xsens/COM /processing/xsens/COM:i
+        yarp connect /xsens/JointAngles /processing/xsens/JointAngles:i
+        <NOT ANYMORE> yarp connect /xsens/PoseQuaternion /processing/xsens/PoseQuaternion:i
+        yarp connect /xsens/AngularSegmentKinematics /processing/xsens/AngularSegmentKinematics:i
+        <DO NOT CONNECT THE INIT COM PORT>
+        
+Check that the module is streaming (from the Ubuntu machine):
+
+        yarp read ... /processing/xsens/COM/z:o
+
+Launch activity recognition:
+
+        python3 activity_recognition.py --from demo_andy_final_details.ini
+        
+Check that the activity recognition module is working:
+
+        yarp read ... /activity_recognition/state:o
+
 
