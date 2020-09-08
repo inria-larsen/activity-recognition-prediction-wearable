@@ -43,6 +43,12 @@ not necessary to train models or visualize their output, but useful if you use t
 * e-glove from Emphasis Telematics SA
 
 
+## Dataset for training
+
+We train from datasets collected with Xsens MVN.
+You can download the training files from Zenodo (LINK TO ANDY DATASET).
+
+
 
 
 ## Using the library offline

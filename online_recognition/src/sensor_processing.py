@@ -170,9 +170,48 @@ class SensorProcessingModule(yarp.RFModule):
 
 		return True
 
+# when you close the program with CTRL+C
 	def close(self):
-		for port in self.input_port:
+
+		print('*** Closing the ports of this module ***')
+
+		for port in self.input_port:	
+			print('closing port ', port.getName())
 			port.close()
+
+		for port in self.output_port:
+			print('closing port ', port.getName())
+			port.close()
+			
+
+		print('closing port ', self.port_init_com.getName())
+		self.port_init_com.close()
+
+		print('closing port ', self.handlerPort.getName())
+		self.handlerPort.close()
+
+		print('Finished closing ports ')
+
+		return True
+
+
+	def interruptModule(self):
+
+		print('*** Interrupt the ports of this module ***')
+
+		for port in self.input_port:
+			port.interrupt()
+			print('interrupt port ', port.getName())
+
+		for port in self.output_port:
+			port.interrupt()
+			print('interrupt port ', port.getName())
+
+		self.port_init_com.interrupt()
+		self.handlerPort.interrupt()
+
+		print('Finished interrupt ports ')
+
 		return True
 
 	def updateModule(self):
@@ -192,7 +231,7 @@ class SensorProcessingModule(yarp.RFModule):
 					del self.buffer[id_input][0]
 
 				if(len(self.buffer[id_input]) > 0):
-					length = int(len(self.buffer[id_input])/2)
+					length = int(len(self.buffer[id_input])/2) #pour superposer les fenetres je garde la moitié des données
 					
 					data_output = self.buffer[id_input]
 
@@ -233,60 +272,119 @@ class SensorProcessingModule(yarp.RFModule):
 							else:
 								out = np.asarray(data_output)
 
-							if in_port.getName() == "/processing/xsens/PoseQuaternion:i":
+							if in_port.getName() == "/processing/xsens/LinearSegmentKinematics:i":
+								# 23 segments
+								# 3 dimension for every segment 
+								# to debug, you must check the Xsens MVN streamer documentation [MVN real time 
+								# network streaming protocol specifications], section 2.7.2 Linear Segment Kinematics:
+								#
+								#  (segment ID, coord X segment, Y, Z, Vx, Vy, Vz, Ax, Ay, Az)
+								#
+								# attention, yarp ports add an extra number to the bottle, so segment ID is at index 1,
+								# coord X is at index 2.
+								# the numbering of the segments is fund in the MVN User Manual, page 105:
+								#  1 = pelvis (index 0 in the numpy matrix temp_data_out)
+								#  2 = L5 (index 1)
+								#  3 = L3
+								#  4 = T12
+								#  5 = T8
+								#  6 = Neck
+								#  7 = Head
+								#  8 = Right Shoulder
+								#  9 = Right Upper Arm
+								# 10 = Right Forearm
+								# 11 = Right Hand
+								# 12 - 15 = Left Shoulder / Upper Arm / Forearm / Hand
+								# 16 - 19 = Right Upper Leg / LOwer Leg / Foot / Toe
+								# 20 - 23 = Left Upper Leg / LOwer Leg / Foot / Toe 
 
-								if 'Position' in out_port.getName() or 'Velocity' in out_port.getName() or 'Acceleration' in out_port.getName():
-									temp_data_out = np.zeros((len(data_output), 69))
+
+								temp_data_out = np.zeros((len(data_output), 69))
+								if 'Position' in out_port.getName():
+									for k in range(0,23):   # from 0 (pelvis) to 22 (left toe)
+										temp_data_out[:,k*3:k*3+3] = out[:,k*10+2:k*10+5]  #takes values 2, 3, 4 only!
+
+								elif 'Velocity' in out_port.getName():
 									for k in range(0,23):
-										temp_data_out[:,k*3:k*3+3] = out[:,k*7:k*7+3]
+										temp_data_out[:,k*3:k*3+3] = out[:,k*10+5:k*10+8] #takes values 5, 6, 7 only!
 
-									out = temp_data_out
+								elif 'Acceleration' in out_port.getName():
+									for k in range(0,23):
+										temp_data_out[:,k*3:k*3+3] = out[:,k*10+8:k*10+11]
 
-								else:
+								out = temp_data_out
+
+							elif in_port.getName() == "/processing/xsens/AngularSegmentKinematics:i":
+
+								# we have 4 here because it's quaternions 
+
+
+								if 'Orientation' in out_port.getName():
 									temp_data_out = np.zeros((len(data_output), 92))
 									for k in range(0,23):
-										temp_data_out[:,k*4:k*4+4] = out[:,k*7+3:k*7+7]
+										temp_data_out[:,k*4:k*4+4] = out[:,k*11+2:k*11+6]
 
-									out = temp_data_out
+								elif 'AngularVelocity' in out_port.getName():
+									temp_data_out = np.zeros((len(data_output), 69))
+									for k in range(0,23):
+										# attention: to be checked and confirmed
+										# AndyDataset (used for training) uses radians
+										# Xsens MVN streamer streams in degrees 
+										# temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+6:k*11+9])
+										temp_data_out[:,k*3:k*3+3] = out[:,k*11+6:k*11+9]
+										
+								elif 'AngularAcceleration' in out_port.getName():
+									temp_data_out = np.zeros((len(data_output), 69))
+									for k in range(0,23):
+										# attention: to be checked and confirmed
+										# AndyDataset (used for training) uses radians
+										# Xsens MVN streamer streams in degrees 
+										# temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+9:k*11+12])
+										temp_data_out[:,k*3:k*3+3] = out[:,k*11+9:k*11+12]
+
+								out = temp_data_out
+
 						
 							# Compute the average signals on the sliding window
 							if(len(np.shape(out)) == 1):
 								out = np.expand_dims(out, axis=1)
 
 							output = np.mean(np.asarray(out[:,id_items*dimension:id_items*dimension+dimension]), axis = 0)
-							# output = np.median(np.asarray(out[:,id_items:id_items+1]), axis = 0)
 
-							if(out_port.getName() == '/processing/xsens/CoMVelocityNorm:o'):
-								output = output[0:2]
+							# NOT USED ANYMORE
+							# if(out_port.getName() == '/processing/xsens/CoMVelocityNorm:o'):
+							# 	# norm in x-y only. not used anymore
+							# 	output = output[0:2]
 
+							# this is for the norm of an entire vector; for example for velocity
 							if(self.norm_list[id_ouput]):
 								output = [np.linalg.norm(output)]
 								dimension = 1
 
-							if(self.dist_com_list[id_ouput]):
-								if(len(self.current_com) == 0):
-									continue
 
-								output = np.sqrt(
-									# (output[0] - self.current_com[0]) * (output[0] - self.current_com[0]) +
-									# (output[1] - self.current_com[1]) * (output[1] - self.current_com[1]) +
-									(output[2] - self.current_com[2]) * (output[2] - self.current_com[2]))
-								output = np.expand_dims(output, axis=1)
+							# NOT USED ANYMORE
+							# if(self.dist_com_list[id_ouput]):
+							# 	if(len(self.current_com) == 0):
+							# 		continue
+							# 	output = np.sqrt(
+							# 		# (output[0] - self.current_com[0]) * (output[0] - self.current_com[0]) +
+							# 		# (output[1] - self.current_com[1]) * (output[1] - self.current_com[1]) +
+							# 		(output[2] - self.current_com[2]) * (output[2] - self.current_com[2]))
+							# 	output = np.expand_dims(output, axis=1)
 
-							if(self.normalize[id_ouput][0] == 1):
-								if(self.count == 0):
-									self.median_normalize[id_ouput] = []
 
-								
-								self.count += 1
-								self.median_normalize[id_ouput].append(output[0])
+							# NOT USED ANYMORE
+							# if(self.normalize[id_ouput][0] == 1):
+							# 	if(self.count == 0):
+							# 		self.median_normalize[id_ouput] = []
+							# 	self.count += 1
+							# 	self.median_normalize[id_ouput].append(output[0])
+							# 	if(self.count >=  1000):
+							# 		del self.median_normalize[id_ouput][0]
+							# 	# output = output - np.median(self.median_normalize)
+							# 	# output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
+							# 	output = (output - np.median(self.init_com[id_items]))/np.median(self.init_com[id_items])
 
-								if(self.count >=  1000):
-									del self.median_normalize[id_ouput][0]
-						
-								# output = output - np.median(self.median_normalize)
-								# output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
-								output = (output - np.median(self.init_com[id_items]))/np.median(self.init_com[id_items])
 
 							# Send data to the ouput port
 							dimension = np.shape(output)[0]
@@ -372,15 +470,20 @@ if __name__=="__main__":
 
 	mod_sensor = SensorProcessingModule()
 	mod_sensor.configure(rf)
-	# mod_sensor.runModule(rf)
+	
+	# testing.. comment if it doesnt zork and restore the part below
+	mod_sensor.runModule(rf)
 
-	while(True):
-		try:
-			yarp.Time.delay(mod_sensor.getPeriod())
-			mod_sensor.updateModule()
+	# while(True):
+	# 	try:
+	# 		yarp.Time.delay(mod_sensor.getPeriod())
+	# 		mod_sensor.updateModule()
 			
-		except KeyboardInterrupt:
-			break
+	# 	except KeyboardInterrupt:
+	# 		print('*** I detected a CTRL+C ... ')
+	# 		#mod_sensor.close()
+	# 		break
 
-	mod_sensor.close()
+	print('Exited after CTRL+C')
+
 	yarp.Network.fini();

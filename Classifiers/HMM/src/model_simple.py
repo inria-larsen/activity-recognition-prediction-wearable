@@ -73,6 +73,10 @@ if __name__ == '__main__':
 		# Testing the model
 		pred_labels, proba = model.test_model(test_set)
 
+		#debug sere
+		#pred_labels, proba les ecrire dans un fichier
+		
+
 		F1_temp = []
 		for i in range(len(labels_test)):
 			F1_temp.append(tools.compute_F1_score(labels_test[i], pred_labels[i], list_states[num_track]))

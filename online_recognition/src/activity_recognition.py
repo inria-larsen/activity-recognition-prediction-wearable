@@ -78,10 +78,42 @@ class ActivityRecognitionModule(yarp.RFModule):
 
 		return True
 
+
+
 	def close(self):
+
+		print('*** Closing the ports of this module ***')
+
 		for port in self.list_port:
 			port.close()
+
+		self.statePort.close()
+		self.probPort.close()
+		self.handlerPort.close()
+
+		print('Finished closing ports ')
+
 		return True
+
+
+	def interruptModule(self):
+
+		print('*** Interrupt the ports of this module ***')
+
+		for port in self.list_port:
+			port.interrupt()
+
+		self.statePort.interrupt()
+		self.probPort.interrupt()
+		self.handlerPort.interrupt()
+
+		print('Finished interrupt ports ')
+
+		return True
+
+
+
+
 
 	def updateModule(self):
 		data_model = []
@@ -159,6 +191,10 @@ class CallbackData(yarp.BottleCallback):
 		self.buffer = []
 		return data
 
+
+
+###############################################################################""
+
 if __name__=="__main__":
 	yarp.Network.init()
 
@@ -171,12 +207,18 @@ if __name__=="__main__":
 	mod_recognition = ActivityRecognitionModule()
 	mod_recognition.configure(rf)
 
-	while(True):
-		try:
-			yarp.Time.delay(mod_recognition.getPeriod())
-			mod_recognition.updateModule();
-		except KeyboardInterrupt:
-			break
 
-	mod_recognition.close()
+	# testing.. comment if it doesnt zork and restore the part below
+	mod_recognition.runModule(rf)
+
+	# while(True):
+	# 	try:
+	# 		yarp.Time.delay(mod_recognition.getPeriod())
+	# 		mod_recognition.updateModule();
+	# 	except KeyboardInterrupt:
+	# 		break
+
+	print('Exited after CTRL+C')
+
+	#mod_recognition.close()
 	yarp.Network.fini();
