@@ -307,10 +307,11 @@ class DataBase():
 				# else:
 				# 	is_norm = int(is_norm)
 
-				# if(normalize == 'NONE'):
-				# 	normalize = 0
-				# else:
-				# 	normalize = int(normalize)
+				#used to normalize the COM
+				if(normalize == 'NONE'):
+					normalize = 0
+				else:
+					normalize = int(normalize)
 
 				# if(dist_com == 'NONE'):
 				# 	dist_com = 0
@@ -344,7 +345,6 @@ class DataBase():
 
 
 				# Normalize the data regarding the initial position
-				normalize = 0
 				order_diff = 0
 				if(normalize == 1):				
 					data_normalize = deepcopy(data)

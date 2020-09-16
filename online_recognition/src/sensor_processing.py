@@ -5,6 +5,9 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal
+import scipy.spatial
+from scipy.spatial.transform import Rotation as R
+import time
 
 class SensorProcessingModule(yarp.RFModule):
 	def __init__(self):
@@ -107,13 +110,13 @@ class SensorProcessingModule(yarp.RFModule):
 						print(item_carac)
 
 						if len(item_carac) == 2:
-							if item_carac[1] in ['x', 'q1']:
+							if item_carac[1] in ['x', 'q0']:
 								dim_item = 0
-							elif item_carac[1] in ['y', 'q2']:
+							elif item_carac[1] in ['y', 'q1']:
 								dim_item = 1
-							elif item_carac[1] in ['z', 'q3']:
+							elif item_carac[1] in ['z', 'q2']:
 								dim_item = 2
-							elif item_carac[1] in ['q4']:
+							elif item_carac[1] in ['q3']:
 								dim_item = 3
 						else:
 							dim_item = 0
@@ -159,8 +162,12 @@ class SensorProcessingModule(yarp.RFModule):
 
 						id_item = int(rf.findGroup(related_items).find(item).toString())
 						dimension = int(rf.findGroup(related_items).find('dimension').toString())
+						dimension_orientation = int(rf.findGroup(related_items).find('dimension_orientation').toString())
 
-						id_item = id_item*dimension + dim_item
+						if signal == "orientation":
+							id_item = id_item*dimension_orientation + dim_item
+						else:
+							id_item = id_item*dimension + dim_item
 						dimension = 1
 
 						nb_output_port += 1
@@ -176,18 +183,24 @@ class SensorProcessingModule(yarp.RFModule):
 		print('*** Closing the ports of this module ***')
 
 		for port in self.input_port:	
-			print('closing port ', port.getName())
+			print('DEBUG closing port input ')
+			tic = time.time()
 			port.close()
+			toc = time.time()
+			print('DEBUG closed input port in ',toc-tic)
 
 		for port in self.output_port:
-			print('closing port ', port.getName())
+			print('closing port output ')
+			tic = time.time()
 			port.close()
+			toc = time.time()
+			print('DEBUG closed port output in ',toc-tic)
 			
 
-		print('closing port ', self.port_init_com.getName())
+		print('DEBUG closing port INIT COM')
 		self.port_init_com.close()
 
-		print('closing port ', self.handlerPort.getName())
+		print('DEBUG closing port HANDLER ')
 		self.handlerPort.close()
 
 		print('Finished closing ports ')
@@ -201,11 +214,9 @@ class SensorProcessingModule(yarp.RFModule):
 
 		for port in self.input_port:
 			port.interrupt()
-			print('interrupt port ', port.getName())
 
 		for port in self.output_port:
 			port.interrupt()
-			print('interrupt port ', port.getName())
 
 		self.port_init_com.interrupt()
 		self.handlerPort.interrupt()
@@ -222,8 +233,10 @@ class SensorProcessingModule(yarp.RFModule):
 		# Slidding Window
 		if((current_time - self.clock) >= self.window_size):
 			initalization = self.cback_init.get_data()
-
+			#debug
+			#print('delta window size ',str(current_time - self.clock))
 			self.clock = current_time
+
 
 			# Get the data from each input port corresponding to the window
 			for in_port, id_input in zip(self.input_port, range(len(self.input_port))):	
@@ -237,6 +250,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 					if(in_port.getName() == '/processing/xsens/COM:i'):
 						self.current_com = np.mean(np.asarray(data_output), axis = 0)
+						#DEBUG
+						#print(' DEBUG current COM  ',str(self.current_com))
 						if(self.count == 0 or initalization == 1):
 							self.init_com = self.current_com
 
@@ -259,7 +274,6 @@ class SensorProcessingModule(yarp.RFModule):
 								out = np.diff(np.asarray(data_output), self.diff_order_list[id_ouput], axis=0)
 								for j in range(self.diff_order_list[id_ouput]):
 									out = np.insert(out, 0, 0, axis=0)
-
 								order = 6
 								fs = 240
 								nyq = 0.5 * fs
@@ -322,25 +336,35 @@ class SensorProcessingModule(yarp.RFModule):
 								if 'Orientation' in out_port.getName():
 									temp_data_out = np.zeros((len(data_output), 92))
 									for k in range(0,23):
+										# ATTENTION: in YARP Xsens streamer the orientation signals are converted 
+										# in deg using rad2deg even if they are quaternions
+										# while the original xsens signal is simply quaternions:
+										# this means that the training is done with quaternions but in the online
+										# recognition demo we need to convert these signals to match
+										# the input used in the training 
+										#temp_data_out[:,k*4:k*4+4] = np.deg2rad(out[:,k*11+2:k*11+6])
+										# 
+										# ATTENTION: this is only if YARP xsens streamer does not make
+										# a rad2deg (debugged version by Serena)
 										temp_data_out[:,k*4:k*4+4] = out[:,k*11+2:k*11+6]
 
 								elif 'AngularVelocity' in out_port.getName():
 									temp_data_out = np.zeros((len(data_output), 69))
 									for k in range(0,23):
-										# attention: to be checked and confirmed
+										# attention: 
 										# AndyDataset (used for training) uses radians
-										# Xsens MVN streamer streams in degrees 
-										# temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+6:k*11+9])
-										temp_data_out[:,k*3:k*3+3] = out[:,k*11+6:k*11+9]
+										# Xsens MVN streamer streams in radians
+										# but our YARP xsens streamer converts in degrees (makes rad2deg)
+										temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+6:k*11+9])
 										
 								elif 'AngularAcceleration' in out_port.getName():
 									temp_data_out = np.zeros((len(data_output), 69))
 									for k in range(0,23):
-										# attention: to be checked and confirmed
+										# attention: 
 										# AndyDataset (used for training) uses radians
-										# Xsens MVN streamer streams in degrees 
-										# temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+9:k*11+12])
-										temp_data_out[:,k*3:k*3+3] = out[:,k*11+9:k*11+12]
+										# YARP Xsens MVN streamer streams in degrees (makes rad2deg)
+										temp_data_out[:,k*3:k*3+3] = np.deg2rad(out[:,k*11+9:k*11+12])
+										# temp_data_out[:,k*3:k*3+3] = out[:,k*11+9:k*11+12]
 
 								out = temp_data_out
 
@@ -363,6 +387,7 @@ class SensorProcessingModule(yarp.RFModule):
 
 
 							# NOT USED ANYMORE
+							# distance of COM - not used
 							# if(self.dist_com_list[id_ouput]):
 							# 	if(len(self.current_com) == 0):
 							# 		continue
@@ -373,18 +398,22 @@ class SensorProcessingModule(yarp.RFModule):
 							# 	output = np.expand_dims(output, axis=1)
 
 
-							# NOT USED ANYMORE
-							# if(self.normalize[id_ouput][0] == 1):
-							# 	if(self.count == 0):
-							# 		self.median_normalize[id_ouput] = []
-							# 	self.count += 1
-							# 	self.median_normalize[id_ouput].append(output[0])
-							# 	if(self.count >=  1000):
-							# 		del self.median_normalize[id_ouput][0]
-							# 	# output = output - np.median(self.median_normalize)
-							# 	# output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
-							# 	output = (output - np.median(self.init_com[id_items]))/np.median(self.init_com[id_items])
+							# NORMALIZING THE VALUES OF THE SIGNAL BETWEEN 0,-1 (approx)
+							# used for the COM
+							# it takes the first 1000 values to consider that this is the zero of the human COM
+							# because it is supposed to start upright (the standing pose of xsens for calibration)
+							# important: it is like that in the binary dataset 
+							if(self.normalize[id_ouput][0] == 1):
+								if(self.count == 0):
+									self.median_normalize[id_ouput] = []
+								self.count += 1
+								self.median_normalize[id_ouput].append(output[0])
+								if(self.count >=  1000):
+									del self.median_normalize[id_ouput][0]
 
+								#print('DEBUG output ',output)
+								output = (output - np.median(self.median_normalize[id_ouput]))/np.median(self.median_normalize[id_ouput])
+								#print('DEBUG output normalized ',output)
 
 							# Send data to the ouput port
 							dimension = np.shape(output)[0]
