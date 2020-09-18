@@ -15,14 +15,16 @@ segment_features = [
 			'orientation',
 			'position',
 			'velocity',
-			'acceleration'
+			'acceleration',
+			'angularVelocity',
+			'angularAcceleration'
 					]
 
 joint_features = [
 			'jointAngle',
-			'jointAngleXZY',
-			'angularVelocity',
-			'angularAcceleration'
+			'jointAngleXZY' #,
+			#'angularVelocity',
+			#'angularAcceleration'
 					]
 
 sensor_features = [
@@ -198,6 +200,7 @@ class DataBase():
 		timestamps = timestamps - timestamps[0]
 		# timestamps = np.array(df_labels['t_video'])
 
+		# sliding window 
 		T = 0.25
 
 		# t_sample = pd.DataFrame({'t': t_sample})
@@ -324,22 +327,35 @@ class DataBase():
 				# If processing = True, the position data are processed with transformation to 
 				# be in relative position regarding pelvis
 				if(related_data == 'position' and processing == True):
+
+					# IMPORTANT
+					# all this part is to transform the reference of the cartesian positions
+					# wrt to the pelvis and not to the absolute world frame of the xsens
+					# e.g. we want to have the hand position wrt to the pelvis
+					# and for tall the segments as well
+					# this transformation must be done also in sensor_processing to have the same
+					# online values
 					orientation = self.mvnx_tree.get_data('orientation')
 					for t in range(len(data)):
 						abs_data = deepcopy(data[t])
 						o_data = orientation[t]
 
+						# get pevis orientation
 						i = 0
 						q0 = o_data[i*4]
 						q1 = o_data[i*4 + 1]
 						q2 = o_data[i*4 + 2]
 						q3 = o_data[i*4 + 3]
 
+						# compute pelvis orientation matrix using quaternion orinetation matrix 
+						# cf. xsens manual page 123, section 23.2.2
 						R = np.array([[q0*q0 + q1*q1 - q2*q2 - q3*q3, 2*q1*q2 - 2*q0*q3, 2*q1*q3 + 2*q0*q2],
 							[2*q1*q2 + 2*q0*q3, q0*q0 - q1*q1 + q2*q2 - q3*q3, 2*q2*q3 - 2*q0*q1],
 							[2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, q0*q0 - q1*q1 - q2*q2 + q3*q3]])
 
+						# TO FIX LATER: this should be from 1 to 23 -> range(1,23)
 						for i in range(0, 23):
+							# compute distance position wrt the pelvis position (pelvis is zero)
 							data[t, i*3:i*3+3] = abs_data[i*3:i*3+3] - abs_data[0:3]
 							data[t, i*3:i*3+3] = R@data[t,i*3:i*3+3]
 

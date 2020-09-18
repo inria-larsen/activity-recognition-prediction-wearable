@@ -120,13 +120,15 @@ class ActivityRecognitionModule(yarp.RFModule):
 		index = 0
 		received_data = 0
 
-		print('DEBUG liste portes ', self.list_port)
+		#print('DEBUG liste portes ', self.list_port)
 
 		for port, i in zip(self.list_port, range(len(self.list_port))):
 
-			print('DEBUG port get name', port.getName())
+			#print('DEBUG port get name', port.getName())
 
+			#read port data 
 			data = self.cback[i].get_data()
+
 			if(len(data)>0):
 				self.buffer_model[i] = data
 				self.flag_model[i] = 1
@@ -138,8 +140,7 @@ class ActivityRecognitionModule(yarp.RFModule):
 					data_model = np.concatenate((data_model, data))
 
 
-		print ('DEBUG DATA MODEL ', data_model)
-
+		# if we read from all the ports, we launch the model recognition 
 		if(np.sum(self.flag_model) == len(self.list_port)):
 			self.flag_model = np.zeros(len(self.list_port))
 
@@ -149,10 +150,15 @@ class ActivityRecognitionModule(yarp.RFModule):
 				else:
 					data_model = np.concatenate((data_model, self.buffer_model[i]))
 
+			# if we are here, we have all the data to input on our model 
+			#print ('DEBUG DATA MODEL data in input to the model ', data_model)
+
 
 			self.obs.append(data_model)
 			if(len(self.obs) > 500):
 				del self.obs[0]
+
+			#print ('DEBUG OBSERVATIONS ', self.obs)
 
 
 			if(len(self.obs) > 10):

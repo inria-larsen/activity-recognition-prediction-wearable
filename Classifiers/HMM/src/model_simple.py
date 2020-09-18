@@ -6,6 +6,7 @@ import tools
 import os
 import argparse
 import configparser
+import matplotlib.pyplot as plt
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -58,6 +59,7 @@ if __name__ == '__main__':
 
 	F1_score = []
 
+
 	for n_iter in range(nbr_cross_val):
 		data_train, labels_train, data_test, labels_test, id_train, id_test = tools.split_data_base(data_win, real_labels[num_track], ratio_split)
 
@@ -65,6 +67,11 @@ if __name__ == '__main__':
 		train_set = tools.reduce_data_to_features(data_train, list_features, list_features_final)
 		test_set = tools.reduce_data_to_features(data_test, list_features, list_features_final)
 		dim_features = np.ones(len(list_features_final))
+
+		print('DEBUG  list of final features ',list_features_final)
+		plt.plot(train_set[0][:,3])
+		plt.show()
+
 
 		# Training the model
 		model = ModelHMM()

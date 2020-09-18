@@ -8,6 +8,7 @@ import scipy.signal
 import scipy.spatial
 from scipy.spatial.transform import Rotation as R
 import time
+from copy import deepcopy
 
 class SensorProcessingModule(yarp.RFModule):
 	def __init__(self):
@@ -31,6 +32,7 @@ class SensorProcessingModule(yarp.RFModule):
 		self.current_com = []
 		self.flag_timer = 0
 		self.init_com = []
+		self.last_orientation_data = []
 
 		self.port_init_com = yarp.BufferedPortBottle()
 		self.port_init_com.open('/processing/init_com:i')
@@ -47,6 +49,17 @@ class SensorProcessingModule(yarp.RFModule):
 		nb_output_port = 0
 
 		self.buffer = []
+
+
+		# the orientation port must always be created
+		self.input_port.append(yarp.BufferedPortBottle())
+		self.input_port[nb_active_port].open("/processing/xsens/AngularSegmentKinematics:i")			
+		self.list_name_ports.append("/xsens/AngularSegmentKinematics")
+		self.cback.append(CallbackData(size_buffer))
+		self.input_port[nb_active_port].useCallback(self.cback[nb_active_port])
+		self.buffer.append([])
+		nb_active_port += 1
+
 
 		for signal in signals:
 			info_signal = rf.findGroup(signal)
@@ -70,6 +83,7 @@ class SensorProcessingModule(yarp.RFModule):
 						self.list_name_ports.append(input_port_name)
 						self.cback.append(CallbackData(size_buffer))
 						self.input_port[nb_active_port].useCallback(self.cback[nb_active_port])
+						self.buffer.append([])
 						nb_active_port += 1
 
 					self.output_port.append(yarp.BufferedPortBottle())
@@ -175,6 +189,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 		self.clock = yarp.Time.now()
 
+		print(self.list_name_ports)
+
 		return True
 
 # when you close the program with CTRL+C
@@ -240,6 +256,8 @@ class SensorProcessingModule(yarp.RFModule):
 
 			# Get the data from each input port corresponding to the window
 			for in_port, id_input in zip(self.input_port, range(len(self.input_port))):	
+				#print("DEBUG input port ", in_port.getName(), id_input)
+				#print("debug received data", len(self.buffer), len(received_data))
 				if(received_data[id_input] == 0 and len(self.buffer[id_input]) > 0):
 					del self.buffer[id_input][0]
 
@@ -318,6 +336,37 @@ class SensorProcessingModule(yarp.RFModule):
 									for k in range(0,23):   # from 0 (pelvis) to 22 (left toe)
 										temp_data_out[:,k*3:k*3+3] = out[:,k*10+2:k*10+5]  #takes values 2, 3, 4 only!
 
+									# DEBUG 17-09-2020
+									# in Data_base.py there's a processing of position data that was enables during the 
+									# binary dataset creation. the positions are all transformed to be wrt the pelvis.
+									# pelvis is the "zero" for the cartesian coordinates
+									# we need to do the same
+
+									for t in range(len(temp_data_out)):
+										abs_data = deepcopy(temp_data_out[t])
+										o_data = self.last_orientation_data
+
+										# get pevis orientation
+										id_pelvis = 0
+										q0 = o_data[id_pelvis*4]
+										q1 = o_data[id_pelvis*4 + 1]
+										q2 = o_data[id_pelvis*4 + 2]
+										q3 = o_data[id_pelvis*4 + 3]
+
+										# compute pelvis orientation matrix using quaternion orinetation matrix 
+										# cf. xsens manual page 123, section 23.2.2
+										R = np.array([[q0*q0 + q1*q1 - q2*q2 - q3*q3, 2*q1*q2 - 2*q0*q3, 2*q1*q3 + 2*q0*q2],
+											[2*q1*q2 + 2*q0*q3, q0*q0 - q1*q1 + q2*q2 - q3*q3, 2*q2*q3 - 2*q0*q1],
+											[2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, q0*q0 - q1*q1 - q2*q2 + q3*q3]])
+
+										# TO FIX LATER: this should be from 1 to 23 -> range(1,23)
+										for i in range(0, 23):
+											# compute distance position wrt the pelvis position (pelvis is zero)
+											temp_data_out[t,i*3:i*3+3] = abs_data[i*3:i*3+3] - abs_data[0:3]
+											temp_data_out[t,i*3:i*3+3] = R@temp_data_out[t,i*3:i*3+3]
+
+
+
 								elif 'Velocity' in out_port.getName():
 									for k in range(0,23):
 										temp_data_out[:,k*3:k*3+3] = out[:,k*10+5:k*10+8] #takes values 5, 6, 7 only!
@@ -327,6 +376,9 @@ class SensorProcessingModule(yarp.RFModule):
 										temp_data_out[:,k*3:k*3+3] = out[:,k*10+8:k*10+11]
 
 								out = temp_data_out
+
+
+
 
 							elif in_port.getName() == "/processing/xsens/AngularSegmentKinematics:i":
 
@@ -436,6 +488,20 @@ class SensorProcessingModule(yarp.RFModule):
 
 		for port, i in zip(self.input_port, range(len(self.input_port))):
 			data = self.cback[i].get_data()
+
+			# 17-09-2020
+			# this is dirty, but we need to save always the orientation values to process the position
+			# data wrt to the pelvis - check update() function
+			if(len(data)>0):
+
+				#print("DEBUG data from ori ", np.shape(data))
+				#print("DEBUG DATA ", data)
+
+				if port.getName() == "/processing/xsens/AngularSegmentKinematics:i":
+					temp_data_orientation = np.zeros(92) #np.zeros((len(data), 92))
+					for k in range(0,23):
+						temp_data_orientation[k*4:k*4+4] = data[0][k*11+2:k*11+6]
+					self.last_orientation_data = temp_data_orientation
 
 			if(len(data)>0):
 				received_data[i] = 1
